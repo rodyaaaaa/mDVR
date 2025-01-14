@@ -1,0 +1,13 @@
+[Unit]
+Description=dvr web
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dvr_web
+ExecStart=/opt/dvr/venv/bin/python /opt/dvr/dvr_web/server.py 0.0.0.0:80
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
