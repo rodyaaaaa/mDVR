@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=oneshot
 User=root
-WorkingDirectory=/opt/dvr_video
-ExecStart=/opt/dvr_video/venv/bin/python /opt/dvr_video/ftp_upload.py
+WorkingDirectory=/opt/dvr/dvr_video
+ExecStart=/opt/dvr/venv/bin/python /opt/dvr/dvr_video/ftp_upload.py
 
 [Install]
 WantedBy=multi-user.target
