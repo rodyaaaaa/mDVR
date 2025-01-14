@@ -1,0 +1,12 @@
+[Unit]
+Description=control daemon
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/home/orangepi/dvrbackend_video/scripts
+ExecStart=/home/orangepi/dvrbackend_video/scripts/modem_connector.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVR "Leaveamark"</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
+</head>
+<body>
+    <div class="main-container">
+        <header>
+            <h1>🎥 Налаштування системи DVR "Leaveamark"</h1>
+        </header>
+
+        <main>
+            <!-- Настройки камер -->
+            <section>
+                <h2>📡 Камери</h2>
+                <div class="camera-section">
+                    <!-- Камера URLs -->
+                    <div class="camera-config">
+                        <label>URL RTSP потока (CAM 1):</label>
+                        <input id="camera1_url" type="text" placeholder="Введіте RTSP URL" value="{{camera_list.cam0}}">
+
+                        <label>URL RTSP потока (CAM 2):</label>
+                        <input id="camera2_url" type="text" placeholder="Введіте RTSP URL" value="{{camera_list.cam1}}">
+
+                        <label>URL RTSP потока (CAM 3):</label>
+                        <input id="camera3_url" type="text" placeholder="Введіте RTSP URL" value="{{camera_list.cam2}}">
+
+                        <label>URL RTSP потока (CAM 4):</label>
+                        <input id="camera4_url" type="text" placeholder="Введіте RTSP URL" value="{{camera_list.cam3}}">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Общие настройки видео -->
+            <section>
+                <h2>🎬 Загальні налаштування відео</h2>
+                <div class="video-section">
+                    <label>RTSP Протокол:</label>
+                    <select id="video_protocol">
+                        {% if 'tcp' in video_options.rtsp_transport %}
+                        <option value="tcp" selected>TCP</option>
+                        {% else %}
+                        <option value="tcp">TCP</option>
+                        {%endif%}
+                        {% if 'udp' in video_options.rtsp_transport %}
+                        <option value="udp" selected>UDP</option>
+                        {% else %}
+                        <option value="udp">UDP</option>
+                        {% endif %}
+                    </select>
+
+                    <label>Роздільна здатність відео (X):</label>
+                    <input id="video_resolution_x" type="number" placeholder="720" value="{{ video_options.video_resolution_x }}">
+
+                    <label>Роздільна здатність відео (Y):</label>
+                    <input id="video_resolution_y" type="number" placeholder="480" value="{{video_options.video_resolution_y}}">
+
+                    <label>FPS:</label>
+                    <input id="video_fps" type="number" placeholder="20" value="{{video_options.fps}}">
+
+                    <label>Тривалість відео (гг:хх:сс):</label>
+                    <input id="video_duration" type="text" placeholder="00:00:30" value="{{video_options.time}}">
+                </div>
+            </section>
+
+            <!-- Настройки FTP -->
+            <section>
+                <h2>💾 Налаштування FTP</h2>
+                <div class="ftp-section">
+                    <label>Сервер FTP:</label>
+                    <input id="ftp_address" type="text" placeholder="Введіте адресу FTP" value="{{ftp.server}}">
+
+                    <label>Користувач:</label>
+                    <input id="ftp_login" type="text" placeholder="Введіте им'я користувача" value="{{ftp.user}}">
+
+                    <label>Пароль:</label>
+                    <input id="ftp_password" type="password" placeholder="Введіте пароль" value="{{ftp.password}}">
+
+                    <label>Порт:</label>
+                    <input id="ftp_port" type="number" placeholder="21" value="{{ftp.port}}">
+                </div>
+            </section>
+
+            <!-- Настройки автомобиля -->
+            <section>
+                <h2>🚗 Інформація про автомобіль</h2>
+                <label>Номер автомобіля:</label>
+                <input id="car_name" type="text" placeholder="Введіть номер авто - AA 0101 AA" value="{{car_name}}">
+            </section>
+
+            <button id="saveConfig">💾 Зберегти налаштування</button>
+
+            <div id="message" class="message"></div>
+        </main>
+    </div>
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

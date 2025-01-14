@@ -1,0 +1,15 @@
+[Unit]
+Description=control daemon
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dvr_video
+ExecStart=/opt/dvr_video/venv/bin/python /opt/dvr_video/main.py
+Restart=always
+RestartSec=10
+WatchdogSec=360
+
+[Install]
+WantedBy=multi-user.target

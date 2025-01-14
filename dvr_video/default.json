@@ -1,0 +1,19 @@
+{
+  "camera_list": [
+    "link"
+  ],
+  "video_options": {
+    "rtsp_transport": "tcp",
+    "video_resolution_x": 720,
+    "video_resolution_y": 480,
+    "time": "00:00:30",
+    "fps": 20
+  },
+  "ftp": {
+    "server": "",
+    "user": "",
+    "password": "",
+    "port": 21
+  },
+  "car_name": ""
+}
