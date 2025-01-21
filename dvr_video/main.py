@@ -54,6 +54,7 @@ async def main():
             if len(jobs) >= len(config['camera_list']):
                 for process in jobs:
                     process.communicate()
+                    notifier.notify("WATCHDOG=1")
                     if process.returncode != 0:
                         logger.error(f"Камера {current_link} не вдалось записати відео")
                 jobs.clear()
