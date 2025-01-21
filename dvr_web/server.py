@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify, render_template
 import json
 
 CONFIG_FILE = 'data_config.json'
-CONFIG_PATH = '/opt/dvr_video'
+CONFIG_PATH = '/opt/dvr/dvr_video'
 # CONFIG_PATH = '/home/vms/PycharmProjects/dvr_video'
 CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, CONFIG_FILE)
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_PATH, 'default.json')
