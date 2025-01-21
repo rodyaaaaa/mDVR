@@ -1,6 +1,6 @@
 [Unit]
 Description=control daemon
-After=network.target
+Wants=dvr_upload.timer
 
 [Service]
 Type=oneshot

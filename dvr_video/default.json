@@ -15,5 +15,6 @@
     "password": "",
     "port": 21
   },
-  "car_name": ""
+  "car_name": "",
+  "size_folder_limit_gb": 10
 }
