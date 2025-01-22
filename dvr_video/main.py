@@ -10,6 +10,7 @@ from sdnotify import SystemdNotifier
 config = read_config()
 logger = Logger('dvr')
 notifier = SystemdNotifier()
+notifier.notify('READY=1')
 
 async def async_write_video(current_link, video_name):
     stream = ffmpeg.input(config['camera_list'][current_link], t=str(config['video_options']['time']), rtsp_transport='tcp')
@@ -54,7 +55,6 @@ async def main():
             if len(jobs) >= len(config['camera_list']):
                 for process in jobs:
                     process.communicate()
-                    notifier.notify("WATCHDOG=1")
                     if process.returncode != 0:
                         logger.error(f"Камера {current_link} не вдалось записати відео")
                 jobs.clear()
