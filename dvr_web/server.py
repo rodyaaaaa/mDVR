@@ -61,7 +61,7 @@ def save_config():
         h, m, s = map(int, time.split(":"))
         seconds = timedelta(hours=h, minutes=m, seconds=s).total_seconds()
         print(int(seconds))  # Виведе: 150
-        new_watchdog_value = int(seconds * 5)  # Нове значення для WatchdogSec
+        new_watchdog_value = int(seconds * 10)  # Нове значення для WatchdogSec
         result = update_watchdog(new_watchdog_value)
         print(result)
         os.system("systemctl restart dvr")
