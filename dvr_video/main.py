@@ -34,7 +34,6 @@ async def main():
     ftp = FTPCon(server, port, user, password, car_name)
 
     await move()
-    await ftp.upload_to_ftp()
 
     while True:
         notifier.notify("WATCHDOG=1")
