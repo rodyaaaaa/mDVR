@@ -15,7 +15,7 @@ class FTPCon:
 
     async def upload_to_ftp(self):
         async with aioftp.Client.context(self.host, self.port, self.username, self.password) as client:
-            if self.car_name not in await client.list():
+            if await client.exists(self.car_name) is False:
                 await client.make_directory(self.car_name)
             await client.change_directory(self.car_name)
 
@@ -27,9 +27,12 @@ class FTPCon:
             for video in videos:
                 data = await get_date(video)
                 print(data)
-                if data not in await client.list():
+                if await client.exists(data) is False:
                     await client.make_directory(data)
                 await client.change_directory(data)
+
+                if await client.exists(video):
+                    await client.remove(video)
 
                 vd = pathlib.Path("materials", video)
                 await client.upload(vd)
