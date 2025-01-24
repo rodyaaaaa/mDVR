@@ -1,6 +1,5 @@
 [Unit]
 Description=Run check modem scripts every 1 hour
-Requires=dvr_modem.service
 
 [Timer]
 Unit=dvr_modem.service

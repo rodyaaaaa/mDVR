@@ -1,6 +1,5 @@
 [Unit]
-Description=Run My Custom Service every 3 minutes
-Requires=dvr_upload.service
+Description=Upload video to ftp
 
 [Timer]
 Unit=dvr_upload.service

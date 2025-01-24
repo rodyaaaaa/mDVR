@@ -1,6 +1,5 @@
 [Unit]
 Description=run space_check every day
-Requires=space_check.service
 
 [Timer]
 Unit=space_check.service
