@@ -1,0 +1,8 @@
+services:
+  flask:
+    container_name: dvr_web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8005:8005"

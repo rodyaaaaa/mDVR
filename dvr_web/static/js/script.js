@@ -1,58 +1,24 @@
-document.getElementById('saveConfig').addEventListener('click', async () => {
-    try {
-        // Збираємо дані з форми
-        const configData = {
-            camera_list: [
-                document.getElementById('camera1_url')?.value,
-                document.getElementById('camera2_url')?.value,
-                document.getElementById('camera3_url')?.value,
-                document.getElementById('camera4_url')?.value,
-            ].filter(url => url), // Видаляємо порожні URL
-            video_options: {
-                rtsp_transport: document.getElementById('video_protocol')?.value || 'tcp',
-                video_resolution_x: parseInt(document.getElementById('video_resolution_x')?.value) || 720,
-                video_resolution_y: parseInt(document.getElementById('video_resolution_y')?.value) || 480,
-                time: document.getElementById('video_duration')?.value || '00:00:30',
-                fps: parseInt(document.getElementById('video_fps')?.value) || 20,
-            },
-            ftp: {
-                server: document.getElementById('ftp_address')?.value || '',
-                user: document.getElementById('ftp_login')?.value || '',
-                password: document.getElementById('ftp_password')?.value || '',
-                port: parseInt(document.getElementById('ftp_port')?.value) || 21,
-            },
-            car_name: document.getElementById('car_name')?.value || '',
-        };
+function showTab(tabId) {
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+}
 
-        // Відправляємо запит на сервер
-        const response = await fetch('/save-config', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(configData),
-        });
-        console.log(response)
-        const messageDiv = document.getElementById('message');
+let camCounter = 4;
 
-        // Обробка відповіді
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
+function addCam() {
+    camCounter++;
+    const camFields = document.getElementById('cam-fields');
+    const newCamField = document.createElement('div');
+    newCamField.classList.add('cam-field');
+    newCamField.innerHTML = `<label>Cam ${camCounter}:</label><input type="text" placeholder="Select RTSP url://">`;
+    camFields.appendChild(newCamField);
+}
 
-        const result = await response.json();
+function changeStream(select) {
+    const videoPlayer = document.getElementById('videoPlayer');
+    videoPlayer.src = `https://example.com/${select.value}.mp4`;
+}
 
-        if (result.success) {
-            messageDiv.textContent = 'Введенна конфігурація успішно збережена!';
-            messageDiv.style.color = 'green';
-        } else {
-            throw new Error(result.error || 'Невідома помилка серверу');
-        }
-    } catch (error) {
-        // Обробка помилок
-        const messageDiv = document.getElementById('message');
-        messageDiv.textContent = `Помилка збереження: ${error.message}`;
-        messageDiv.style.color = 'red';
-        console.error('Помилка:', error);
-    }
-});
+function changeLog(select) {
+    alert(`You a select: ${select.value}`);
+}
