@@ -10,24 +10,24 @@
 <header>
     <div class="radio-group">
         <input type="radio" id="video" name="mode" checked>
-        <label for="video">Video</label>
-        <input type="radio" id="photo" name="mode">
-        <label for="photo">Photo</label>
+        <label for="video">Відео</label>
+        <input type="radio" id="photo" name="mode" disabled>
+        <label for="photo">Фото</label>
     </div>
     <h1>mDVR</h1>
 </header>
 <div class="container">
     <aside class="sidebar">
-        <button onclick="showTab('cam-config')">RTSP config</button>
-        <button onclick="showTab('video-options')">CAM config</button>
-        <button onclick="showTab('ftp-config')">FTP config</button>
-        <button onclick="showTab('vpn-config')">VPN config</button>
-        <button onclick="showTab('stream')">Stream</button>
-        <button onclick="showTab('log-info')">Log info</button>
+        <button onclick="showTab('cam-config')">RTSP-посилання</button>
+        <button onclick="showTab('video-options')">Налаштування відео</button>
+        <button onclick="showTab('ftp-config')">FTP</button>
+        <button onclick="showTab('vpn-config')">Wireguard</button>
+        <button onclick="showTab('stream')" disabled>Stream</button>
+        <button onclick="showTab('log-info')" disabled>Логування</button>
     </aside>
     <main class="content">
         <div id="cam-config" class="tab active">
-            <h2>CAM Configuration</h2>
+            <h2>Список RTSP-посилань</h2>
             <div id="cam-fields">
                 {% for cam, url in camera_list.items() %}
                     <div class="cam-field">
@@ -38,12 +38,12 @@
                 {% endfor %}
             </div>
             <div class="input-row">
-                <button onclick="addCam()">+ Add Cam</button>
+                <button onclick="addCam()">+ Добавити камеру</button>
             </div>
-            <button onclick="saveVideoLinks()"> Save</button>
+            <button onclick="saveVideoLinks()">Зберегти</button>
         </div>
         <div id="video-options" class="tab">
-            <h2>Video Options Configuration</h2>
+            <h2>Налаштування параметрів запису відео</h2>
             <div class="input-row">
                 <label for="rtsp-transport">RTSP Transport:</label>
                 <select id="rtsp-transport">
@@ -52,7 +52,7 @@
                 </select>
             </div>
             <div class="input-row">
-                <label for="video-resolution">Video Resolution:</label>
+                <label for="video-resolution">Роздільна здатність:</label>
                 <select id="video-resolution">
                     <option value="1920x1080"
                             {% if video_options.video_resolution_x == 1920 and video_options.video_resolution_y == 1080 %}selected{% endif %}>
@@ -73,7 +73,7 @@
                 </select>
             </div>
             <div class="input-row">
-                <label for="video-time">Video Duration:</label>
+                <label for="video-time">Тривалість відео:</label>
                 <input type="text" id="video-time" value="{{ video_options.time }}"
                        placeholder="e.g., 00:05:00 or 5 for 5 minutes">
             </div>
@@ -81,10 +81,10 @@
                 <label for="video-fps">Frames Per Second (FPS):</label>
                 <input type="number" id="video-fps" value="{{ video_options.fps }}" placeholder="e.g., 30">
             </div>
-            <button onclick="saveVideoOptions()">Save Video Options</button>
+            <button onclick="saveVideoOptions()">Зберегти</button>
         </div>
         <div id="ftp-config" class="tab">
-            <h2>FTP Configuration</h2>
+            <h2>Налаштування FTP</h2>
             <div class="input-row">
                 <input type="text" value="{{ ftp.server }}" placeholder="Select URL://">
                 <input type="text" value="{{ ftp.port }}" placeholder="Select port">
@@ -92,12 +92,12 @@
             <input type="text" value="{{ ftp.user }}" placeholder="Select Login">
             <input type="password" value="{{ ftp.password }}" placeholder="Select Password">
             <input type="text" value="{{ car_name }}" placeholder="Car Name" id="car-name">
-            <button onclick="saveFtpConfig()"> Save FTP Config</button>
+            <button onclick="saveFtpConfig()">Зберегти</button>
         </div>
         <div id="vpn-config" class="tab">
-            <h2>VPN Configuration</h2>
+            <h2>Wireguard конфіг</h2>
             <textarea placeholder="wgo.conf WireGuard"></textarea>
-            <button onclick="ButSave()"> Save</button>
+            <button onclick="ButSave()">Зберегти</button>
         </div>
         <div id="stream" class="tab">
             <h2>Stream</h2>
