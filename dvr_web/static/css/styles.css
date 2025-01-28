@@ -136,6 +136,26 @@ button:hover {
     background: #778da9;
 }
 
+.delete-cam {
+    background: #e63946 !important;
+    padding: 5px 12px !important;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+.delete-cam:hover {
+    background: #d62828 !important;
+    transform: scale(1.1);
+}
+
+.cam-field {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
 #video-options .input-row {
     display: flex;
     align-items: center;

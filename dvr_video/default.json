@@ -16,5 +16,6 @@
     "port": 21
   },
   "car_name": "",
-  "size_folder_limit_gb": 10
+  "size_folder_limit_gb": 10,
+  "photo_mode": 0
 }

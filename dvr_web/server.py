@@ -51,7 +51,7 @@ def index():
     config = load_config()
 
     # Перетворюємо список камер у словник для зручності відображення на фронтенді
-    config['camera_list'] = {f'cam{i + 1}': value for i, value in enumerate(config['camera_list'])}
+    config['camera_list'] = {f'Cam {i + 1}': value for i, value in enumerate(config['camera_list'])}
 
     # Відображаємо сторінку з конфігурацією
     return render_template('index.html', **config)

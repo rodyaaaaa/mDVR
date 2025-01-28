@@ -9,6 +9,10 @@ RUN pip install --upgrade pip
 
 COPY . .
 
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get install -y ffmpeg
+
 RUN pip install -r requirements.txt
 
 EXPOSE 8005

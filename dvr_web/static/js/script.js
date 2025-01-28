@@ -3,15 +3,34 @@ function showTab(tabId) {
     document.getElementById(tabId).classList.add('active');
 }
 
-let camCounter = 4;
+let camCounter = document.querySelectorAll('#cam-fields .cam-field').length;
+
+function deleteCam(button) {
+    const camField = button.closest('.cam-field');
+    camField.remove();
+    updateCamLabels(); // Обновить нумерацию после удаления
+}
+
+function updateCamLabels() {
+    const camFields = document.querySelectorAll('#cam-fields .cam-field');
+    camFields.forEach((field, index) => {
+        field.querySelector('label').textContent = `Cam ${index + 1}:`;
+    });
+    camCounter = camFields.length; // Обновить счетчик
+}
 
 function addCam() {
     camCounter++;
     const camFields = document.getElementById('cam-fields');
     const newCamField = document.createElement('div');
     newCamField.classList.add('cam-field');
-    newCamField.innerHTML = `<label>Cam ${camCounter}:</label><input type="text" placeholder="Select RTSP url://">`;
+    newCamField.innerHTML = `
+        <label>Cam ${camCounter}:</label>
+        <input type="text" placeholder="Select RTSP url://">
+        <button class="delete-cam" onclick="deleteCam(this)">×</button>
+    `;
     camFields.appendChild(newCamField);
+    updateCamLabels(); // Обновить нумерацию
 }
 
 function changeStream(select) {

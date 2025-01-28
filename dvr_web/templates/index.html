@@ -33,6 +33,7 @@
                     <div class="cam-field">
                         <label>{{ cam }}:</label>
                         <input type="text" value="{{ url }}" placeholder="Select RTSP url://">
+                        <button class="delete-cam" onclick="deleteCam(this)">×</button>
                     </div>
                 {% endfor %}
             </div>

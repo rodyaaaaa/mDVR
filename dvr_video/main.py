@@ -15,7 +15,7 @@ notifier.notify('READY=1')
 async def async_write_video(current_link, video_name):
     stream = ffmpeg.input(config['camera_list'][current_link], t=str(config['video_options']['time']), rtsp_transport='tcp')
     stream = ffmpeg.filter(stream, 'scale', width=config['video_options']['video_resolution_x'], height=config['video_options']['video_resolution_y'])
-    stream = ffmpeg.output(stream, f"temp/{current_link+1}24{video_name}.mp4", vcodec="libx265")
+    stream = ffmpeg.output(stream, f"temp/{current_link+1}24{video_name}.mp4", vcodec="libx264")
     process = ffmpeg.run_async(stream)
 
     return process
