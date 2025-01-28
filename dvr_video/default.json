@@ -4,10 +4,10 @@
   ],
   "video_options": {
     "rtsp_transport": "tcp",
-    "video_resolution_x": 720,
+    "video_resolution_x": 640,
     "video_resolution_y": 480,
-    "time": "00:00:30",
-    "fps": 20
+    "time": "00:02:00",
+    "fps": 15
   },
   "ftp": {
     "server": "",

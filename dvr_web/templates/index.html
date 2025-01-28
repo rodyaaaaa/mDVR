@@ -29,10 +29,12 @@
         <div id="cam-config" class="tab active">
             <h2>CAM Configuration</h2>
             <div id="cam-fields">
-                <div class="cam-field"><label>cam1:</label><input type="text" placeholder="Select RTSP url://"></div>
-                <div class="cam-field"><label>cam2:</label><input type="text" placeholder="Select RTSP url://"></div>
-                <div class="cam-field"><label>cam3:</label><input type="text" placeholder="Select RTSP url://"></div>
-                <div class="cam-field"><label>cam4:</label><input type="text" placeholder="Select RTSP url://"></div>
+                {% for cam, url in camera_list.items() %}
+                    <div class="cam-field">
+                        <label>{{ cam }}:</label>
+                        <input type="text" value="{{ url }}" placeholder="Select RTSP url://">
+                    </div>
+                {% endfor %}
             </div>
             <div class="input-row">
                 <button onclick="addCam()">+ Add Cam</button>
@@ -44,38 +46,51 @@
             <div class="input-row">
                 <label for="rtsp-transport">RTSP Transport:</label>
                 <select id="rtsp-transport">
-                    <option value="tcp">TCP</option>
-                    <option value="udp">UDP</option>
+                    <option value="tcp" {% if video_options.rtsp_transport == 'tcp' %}selected{% endif %}>TCP</option>
+                    <option value="udp" {% if video_options.rtsp_transport == 'udp' %}selected{% endif %}>UDP</option>
                 </select>
             </div>
             <div class="input-row">
                 <label for="video-resolution">Video Resolution:</label>
                 <select id="video-resolution">
-                    <option value="1920x1080">1920x1080 (Full HD)</option>
-                    <option value="1280x720">1280x720 (HD)</option>
-                    <option value="640x480">640x480 (SD)</option>
-                    <option value="320x240">320x240 (Low Res)</option>
+                    <option value="1920x1080"
+                            {% if video_options.video_resolution_x == 1920 and video_options.video_resolution_y == 1080 %}selected{% endif %}>
+                        1920x1080 (Full HD)
+                    </option>
+                    <option value="1280x720"
+                            {% if video_options.video_resolution_x == 1280 and video_options.video_resolution_y == 720 %}selected{% endif %}>
+                        1280x720 (HD)
+                    </option>
+                    <option value="640x480"
+                            {% if video_options.video_resolution_x == 640 and video_options.video_resolution_y == 480 %}selected{% endif %}>
+                        640x480 (SD)
+                    </option>
+                    <option value="320x240"
+                            {% if video_options.video_resolution_x == 320 and video_options.video_resolution_y == 240 %}selected{% endif %}>
+                        320x240 (Low Res)
+                    </option>
                 </select>
             </div>
             <div class="input-row">
                 <label for="video-time">Video Duration:</label>
-                <input type="text" id="video-time" placeholder="e.g., 00:05:00 or 5 for 5 minutes">
+                <input type="text" id="video-time" value="{{ video_options.time }}"
+                       placeholder="e.g., 00:05:00 or 5 for 5 minutes">
             </div>
             <div class="input-row">
                 <label for="video-fps">Frames Per Second (FPS):</label>
-                <input type="number" id="video-fps" placeholder="e.g., 30">
+                <input type="number" id="video-fps" value="{{ video_options.fps }}" placeholder="e.g., 30">
             </div>
             <button onclick="saveVideoOptions()">Save Video Options</button>
         </div>
         <div id="ftp-config" class="tab">
             <h2>FTP Configuration</h2>
             <div class="input-row">
-                <input type="text" placeholder="Select URL://">
-                <input type="text" placeholder="Select port">
+                <input type="text" value="{{ ftp.server }}" placeholder="Select URL://">
+                <input type="text" value="{{ ftp.port }}" placeholder="Select port">
             </div>
-            <input type="text" placeholder="Select Login">
-            <input type="password" placeholder="Select Password">
-            <input type="text" placeholder="Car Name" id="car-name"> <!-- Окреме поле для car_name -->
+            <input type="text" value="{{ ftp.user }}" placeholder="Select Login">
+            <input type="password" value="{{ ftp.password }}" placeholder="Select Password">
+            <input type="text" value="{{ car_name }}" placeholder="Car Name" id="car-name">
             <button onclick="saveFtpConfig()"> Save FTP Config</button>
         </div>
         <div id="vpn-config" class="tab">
@@ -86,10 +101,9 @@
         <div id="stream" class="tab">
             <h2>Stream</h2>
             <select onchange="changeStream(this)">
-                <option value="Cam 1">cam1</option>
-                <option value="Cam 2">cam2</option>
-                <option value="Cam 3">cam3</option>
-                <option value="Cam 4">cam4</option>
+                {% for cam, url in camera_list.items() %}
+                    <option value="{{ url }}">{{ cam }}</option>
+                {% endfor %}
             </select>
             <video id="videoPlayer" controls></video>
         </div>
