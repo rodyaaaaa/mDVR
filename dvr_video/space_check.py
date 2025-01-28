@@ -1,10 +1,14 @@
 import asyncio
 import logging
 import os
+
 from datetime import datetime
+
+from data.utils import read_config
 
 
 logging.basicConfig(level=logging.INFO)
+config = read_config()
 
 
 async def extract_date_from_filename(filename):
@@ -41,11 +45,22 @@ async def get_dir_size(path='.'):
     return total
 
 
+async def from_gb_to_bytes(gb: int) -> int:
+    return gb * 1000000000
+
+
 async def main():
     bt = await get_dir_size("materials")
 
-    if bt > 1000000000:
-        while bt > 1000000000:
+    folder_size_limit = config['size_folder_limit_gb']
+
+    folder_size_limit= await from_gb_to_bytes(folder_size_limit)
+
+    print(folder_size_limit)
+    logging.info(folder_size_limit)
+
+    if bt > folder_size_limit:
+        while bt > folder_size_limit:
             print(os.listdir("materials"))
             logging.info(os.listdir("materials"))
 
