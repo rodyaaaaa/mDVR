@@ -7,75 +7,104 @@
     <link rel="stylesheet" href="../static/css/styles.css">
 </head>
 <body>
-    <header>
-        <div class="radio-group">
-            <input type="radio" id="video" name="mode" checked>
-            <label for="video">Video</label>
-            <input type="radio" id="photo" name="mode">
-            <label for="photo">Photo</label>
-        </div>
-        <h1>mDVR</h1>
-    </header>
-    <div class="container">
-        <aside class="sidebar">
-            <button onclick="showTab('cam-config')">CAM config</button>
-            <button onclick="showTab('ftp-config')">FTP config</button>
-            <button onclick="showTab('vpn-config')">VPN config</button>
-            <button onclick="showTab('stream')">Stream</button>
-            <button onclick="showTab('log-info')">Log info</button>
-        </aside>
-        <main class="content">
-            <div id="cam-config" class="tab active">
-                <h2>CAM Configuration</h2>
-                <div id="cam-fields">
-                    <div class="cam-field"><label>cam1:</label><input type="text" placeholder="Select RTSP url://"></div>
-                    <div class="cam-field"><label>cam2:</label><input type="text" placeholder="Select RTSP url://"></div>
-                    <div class="cam-field"><label>cam3:</label><input type="text" placeholder="Select RTSP url://"></div>
-                    <div class="cam-field"><label>cam4:</label><input type="text" placeholder="Select RTSP url://"></div>
-                </div>
-                <div class="input-row">
-                <button onclick="addCam()">+ Add Cam </button>
-                </div>
-                <button onclick="ButSave()"> Save </button>
-            </div>
-            <div id="ftp-config" class="tab">
-                <h2>FTP Configuration</h2>
-                <div class="input-row">
-                    <input type="text" placeholder="Select URL://">
-                    <input type="text" placeholder="Select port">
-                </div>
-                <input type="text" placeholder="Select Login">
-                <input type="password" placeholder="Select Password">
-                <input type="text" placeholder="Name Folder">
-                <button onclick="ButSave"> Save </button>
-            </div>
-            <div id="vpn-config" class="tab">
-                <h2>VPN Configuration</h2>
-                <textarea placeholder="wgo.conf WireGuard"></textarea>
-                <button onclick="ButSave()"> Save </button>
-            </div>
-            <div id="stream" class="tab">
-                <h2>Stream</h2>
-                <select onchange="changeStream(this)">
-                    <option value="Cam 1">cam1</option>
-                    <option value="Cam 2">cam2</option>
-                    <option value="Cam 3">cam3</option>
-                    <option value="Cam 4">cam4</option>
-                </select>
-                <video id="videoPlayer" controls></video>
-            </div>
-            <div id="log-info" class="tab">
-                <h2>Log Info</h2>
-                <select id="logSelect" onchange="changeLog(this)">
-                    <option>Log - Cam connect</option>
-                    <option>Log - ping connect</option>
-                    <option>Log - VPN connect</option>
-                    <option>Log - FTP connect</option>
-                </select>
-                <textarea placeholder="Log info"></textarea>
-            </div>
-        </main>
+<header>
+    <div class="radio-group">
+        <input type="radio" id="video" name="mode" checked>
+        <label for="video">Video</label>
+        <input type="radio" id="photo" name="mode">
+        <label for="photo">Photo</label>
     </div>
-    <script src="../static/js/script.js"></script>
+    <h1>mDVR</h1>
+</header>
+<div class="container">
+    <aside class="sidebar">
+        <button onclick="showTab('cam-config')">RTSP config</button>
+        <button onclick="showTab('video-options')">CAM config</button>
+        <button onclick="showTab('ftp-config')">FTP config</button>
+        <button onclick="showTab('vpn-config')">VPN config</button>
+        <button onclick="showTab('stream')">Stream</button>
+        <button onclick="showTab('log-info')">Log info</button>
+    </aside>
+    <main class="content">
+        <div id="cam-config" class="tab active">
+            <h2>CAM Configuration</h2>
+            <div id="cam-fields">
+                <div class="cam-field"><label>cam1:</label><input type="text" placeholder="Select RTSP url://"></div>
+                <div class="cam-field"><label>cam2:</label><input type="text" placeholder="Select RTSP url://"></div>
+                <div class="cam-field"><label>cam3:</label><input type="text" placeholder="Select RTSP url://"></div>
+                <div class="cam-field"><label>cam4:</label><input type="text" placeholder="Select RTSP url://"></div>
+            </div>
+            <div class="input-row">
+                <button onclick="addCam()">+ Add Cam</button>
+            </div>
+            <button onclick="saveVideoLinks()"> Save</button>
+        </div>
+        <div id="video-options" class="tab">
+            <h2>Video Options Configuration</h2>
+            <div class="input-row">
+                <label for="rtsp-transport">RTSP Transport:</label>
+                <select id="rtsp-transport">
+                    <option value="tcp">TCP</option>
+                    <option value="udp">UDP</option>
+                </select>
+            </div>
+            <div class="input-row">
+                <label for="video-resolution">Video Resolution:</label>
+                <select id="video-resolution">
+                    <option value="1920x1080">1920x1080 (Full HD)</option>
+                    <option value="1280x720">1280x720 (HD)</option>
+                    <option value="640x480">640x480 (SD)</option>
+                    <option value="320x240">320x240 (Low Res)</option>
+                </select>
+            </div>
+            <div class="input-row">
+                <label for="video-time">Video Duration:</label>
+                <input type="text" id="video-time" placeholder="e.g., 00:05:00 or 5 for 5 minutes">
+            </div>
+            <div class="input-row">
+                <label for="video-fps">Frames Per Second (FPS):</label>
+                <input type="number" id="video-fps" placeholder="e.g., 30">
+            </div>
+            <button onclick="saveVideoOptions()">Save Video Options</button>
+        </div>
+        <div id="ftp-config" class="tab">
+            <h2>FTP Configuration</h2>
+            <div class="input-row">
+                <input type="text" placeholder="Select URL://">
+                <input type="text" placeholder="Select port">
+            </div>
+            <input type="text" placeholder="Select Login">
+            <input type="password" placeholder="Select Password">
+            <input type="text" placeholder="Car Name" id="car-name"> <!-- Окреме поле для car_name -->
+            <button onclick="saveFtpConfig()"> Save FTP Config</button>
+        </div>
+        <div id="vpn-config" class="tab">
+            <h2>VPN Configuration</h2>
+            <textarea placeholder="wgo.conf WireGuard"></textarea>
+            <button onclick="ButSave()"> Save</button>
+        </div>
+        <div id="stream" class="tab">
+            <h2>Stream</h2>
+            <select onchange="changeStream(this)">
+                <option value="Cam 1">cam1</option>
+                <option value="Cam 2">cam2</option>
+                <option value="Cam 3">cam3</option>
+                <option value="Cam 4">cam4</option>
+            </select>
+            <video id="videoPlayer" controls></video>
+        </div>
+        <div id="log-info" class="tab">
+            <h2>Log Info</h2>
+            <select id="logSelect" onchange="changeLog(this)">
+                <option>Log - Cam connect</option>
+                <option>Log - ping connect</option>
+                <option>Log - VPN connect</option>
+                <option>Log - FTP connect</option>
+            </select>
+            <textarea placeholder="Log info"></textarea>
+        </div>
+    </main>
+</div>
+<script src="../static/js/script.js"></script>
 </body>
 </html>

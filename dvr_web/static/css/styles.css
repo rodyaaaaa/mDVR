@@ -73,6 +73,15 @@ header {
     border-radius: 10px;
 }
 
+.content-config {
+    flex-grow: 1;
+    padding: 30px;
+    background: #0d1b2a;
+    border-left: 2px solid #415a77;
+    overflow-y: auto;
+    border-radius: 10px;
+}
+
 .tab {
     display: none;
     animation: fadeIn 0.5s ease-in-out;
@@ -124,6 +133,46 @@ button {
 }
 
 button:hover {
+    background: #778da9;
+}
+
+#video-options .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#video-options label {
+    font-size: 16px;
+    width: 150px;
+    text-align: left;
+}
+
+#video-options select,
+#video-options input {
+    padding: 10px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #1b263b;
+    color: #ffffff;
+    font-size: 16px;
+    flex-grow: 1;
+}
+
+#video-options button {
+    padding: 12px 20px;
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+#video-options button:hover {
     background: #778da9;
 }
 
