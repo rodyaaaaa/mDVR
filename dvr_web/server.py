@@ -101,11 +101,8 @@ def save_ftp_config():
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
-        os.system("systemctl restart dvr")
-
         return jsonify({"success": True, "message": "FTP configuration and car name saved successfully"})
     except Exception as e:
-        os.system("systemctl restart dvr")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -159,4 +156,4 @@ def save_vpn_config():
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8005)
+    app.run(host='0.0.0.0', port=80)

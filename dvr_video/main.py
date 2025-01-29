@@ -25,14 +25,6 @@ async def main():
     pathlib.Path("temp").mkdir(exist_ok=True)
     pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
 
-    server = config['ftp']['server']
-    user = config['ftp']['user']
-    password = config['ftp']['password']
-    port = config['ftp']['port']
-    car_name = config['car_name']
-
-    ftp = FTPCon(server, port, user, password, car_name)
-
     await move()
 
     while True:
