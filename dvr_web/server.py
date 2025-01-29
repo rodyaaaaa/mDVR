@@ -38,7 +38,6 @@ app = Flask(__name__)
 
 
 def load_config():
-    """Завантажує конфігурацію з data_config.json або default.json, якщо data_config.json не існує."""
     if not os.path.exists(CONFIG_FULL_PATH):
         shutil.copyfile(DEFAULT_CONFIG_PATH, CONFIG_FULL_PATH)
 
@@ -48,13 +47,10 @@ def load_config():
 
 @app.route('/')
 def index():
-    # Завантажуємо конфігурацію
     config = load_config()
 
-    # Перетворюємо список камер у словник для зручності відображення на фронтенді
     config['camera_list'] = {f'Cam {i + 1}': value for i, value in enumerate(config['camera_list'])}
 
-    # Відображаємо сторінку з конфігурацією
     return render_template('index.html', **config)
 
 
@@ -65,7 +61,6 @@ def save_video_links():
         return jsonify({"success": False, "error": "No data received"}), 400
 
     try:
-        # Завантажуємо поточну конфігурацію
         config = load_config()
 
         # Оновлюємо лише список камер

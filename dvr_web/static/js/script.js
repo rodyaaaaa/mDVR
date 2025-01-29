@@ -8,7 +8,7 @@ let camCounter = document.querySelectorAll('#cam-fields .cam-field').length;
 function deleteCam(button) {
     const camField = button.closest('.cam-field');
     camField.remove();
-    updateCamLabels(); // Обновить нумерацию после удаления
+    updateCamLabels();
 }
 
 function updateCamLabels() {
@@ -16,7 +16,7 @@ function updateCamLabels() {
     camFields.forEach((field, index) => {
         field.querySelector('label').textContent = `Cam ${index + 1}:`;
     });
-    camCounter = camFields.length; // Обновить счетчик
+    camCounter = camFields.length;
 }
 
 function addCam() {
@@ -30,7 +30,7 @@ function addCam() {
         <button class="delete-cam" onclick="deleteCam(this)">×</button>
     `;
     camFields.appendChild(newCamField);
-    updateCamLabels(); // Обновить нумерацию
+    updateCamLabels();
 }
 
 function changeStream(select) {
@@ -75,17 +75,17 @@ function saveFtpConfig() {
     const inputs = activeTab.querySelectorAll('input');
 
     const ftpConfig = {
-        url: inputs[0].value,
-        port: inputs[1].value,
-        login: inputs[2].value,
+        server: inputs[0].value,
+        user: inputs[2].value,
         password: inputs[3].value,
+        port: inputs[1].value,
     };
 
-    const carName = inputs[4].value; // Окремо збираємо car_name
+    const carName = inputs[4].value;
 
     const data = {
-        ftp: ftpConfig, // FTP-налаштування
-        car_name: carName, // Окреме поле car_name
+        ftp: ftpConfig,
+        car_name: carName,
     };
 
     fetch('/save-ftp-config', {
@@ -115,16 +115,13 @@ function saveVideoOptions() {
     const videoTimeInput = document.getElementById('video-time').value;
     const videoFps = document.getElementById('video-fps').value;
 
-    // Перевіряємо, чи введено число (хвилини)
     let videoTime;
     if (!isNaN(videoTimeInput) && videoTimeInput.trim() !== "") {
-        // Якщо введено число, конвертуємо у формат HH:MM:SS
         const minutes = parseInt(videoTimeInput);
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = minutes % 60;
         videoTime = `${String(hours).padStart(2, '0')}:${String(remainingMinutes).padStart(2, '0')}:00`;
     } else {
-        // Якщо введено не число, залишаємо як є (формат HH:MM:SS)
         videoTime = videoTimeInput;
     }
 
