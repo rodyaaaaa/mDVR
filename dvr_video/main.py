@@ -4,7 +4,6 @@ import ffmpeg
 from datetime import datetime
 from data.logger import Logger
 from data.utils import read_config, move
-from data.ftp import FTPCon
 from sdnotify import SystemdNotifier
 
 config = read_config()
