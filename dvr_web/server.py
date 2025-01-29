@@ -9,6 +9,7 @@ CONFIG_PATH = '/opt/dvr/dvr_video'
 CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, CONFIG_FILE)
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_PATH, 'default.json')
 SERVICE_PATH = "/etc/systemd/system/dvr.service"
+VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
 
 
 def update_watchdog(value):
@@ -140,6 +141,22 @@ def save_video_options():
         os.system("systemctl restart dvr")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/save-vpn-config', methods=['POST'])
+def save_vpn_config():
+    data = request.get_json()
+    if not data or 'vpn_config' not in data:
+        return jsonify({"success": False, "error": "No config data received"}), 400
+
+    try:
+        with open(VPN_CONFIG_PATH, 'w') as file:
+            file.write(data['vpn_config'])
+
+        os.system("systemctl enable wg-quick@wg0")
+        os.system("systemctl restart wg-quick@wg0")
+        return jsonify({"success": True, "message": "VPN config saved successfully"})
+    except Exception as e:
+        os.system("systemctl restart wg-quick@wg0")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8005)

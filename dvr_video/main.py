@@ -8,7 +8,7 @@ from data.ftp import FTPCon
 from sdnotify import SystemdNotifier
 
 config = read_config()
-logger = Logger('dvr')
+logger = Logger('main_dvr')
 notifier = SystemdNotifier()
 notifier.notify('READY=1')
 

@@ -1,14 +1,13 @@
 import asyncio
-import logging
 import os
 
 from datetime import datetime
 
 from data.utils import read_config
+from data.logger import Logger
 
-
-logging.basicConfig(level=logging.INFO)
 config = read_config()
+logger = Logger('space_check_dvr')
 
 
 async def extract_date_from_filename(filename):
@@ -57,17 +56,17 @@ async def main():
     folder_size_limit= await from_gb_to_bytes(folder_size_limit)
 
     print(folder_size_limit)
-    logging.info(folder_size_limit)
+    logger.info(f"{folder_size_limit}")
 
     if bt > folder_size_limit:
         while bt > folder_size_limit:
             print(os.listdir("materials"))
-            logging.info(os.listdir("materials"))
+            logger.info(f"{os.listdir('materials')}")
 
             oldest_file, oldest_date = await find_oldest_video("materials")
 
             print(oldest_file, oldest_date)
-            logging.info(f"{oldest_file}, {oldest_date}")
+            logger.info(f"{oldest_file}, {oldest_date}")
 
             filepath = os.path.join("materials", oldest_file)
 

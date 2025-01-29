@@ -8,12 +8,6 @@
 </head>
 <body>
 <header>
-    <div class="radio-group">
-        <input type="radio" id="video" name="mode" checked>
-        <label for="video">Відео</label>
-        <input type="radio" id="photo" name="mode" disabled>
-        <label for="photo">Фото</label>
-    </div>
     <h1>mDVR</h1>
 </header>
 <div class="container">
@@ -22,8 +16,6 @@
         <button onclick="showTab('video-options')">Налаштування відео</button>
         <button onclick="showTab('ftp-config')">FTP</button>
         <button onclick="showTab('vpn-config')">Wireguard</button>
-        <button onclick="showTab('stream')" disabled>Stream</button>
-        <button onclick="showTab('log-info')" disabled>Логування</button>
     </aside>
     <main class="content">
         <div id="cam-config" class="tab active">
@@ -97,26 +89,7 @@
         <div id="vpn-config" class="tab">
             <h2>Wireguard конфіг</h2>
             <textarea placeholder="wgo.conf WireGuard"></textarea>
-            <button onclick="ButSave()">Зберегти</button>
-        </div>
-        <div id="stream" class="tab">
-            <h2>Stream</h2>
-            <select onchange="changeStream(this)">
-                {% for cam, url in camera_list.items() %}
-                    <option value="{{ url }}">{{ cam }}</option>
-                {% endfor %}
-            </select>
-            <video id="videoPlayer" controls></video>
-        </div>
-        <div id="log-info" class="tab">
-            <h2>Log Info</h2>
-            <select id="logSelect" onchange="changeLog(this)">
-                <option>Log - Cam connect</option>
-                <option>Log - ping connect</option>
-                <option>Log - VPN connect</option>
-                <option>Log - FTP connect</option>
-            </select>
-            <textarea placeholder="Log info"></textarea>
+            <button onclick="saveVpnConfig()">Зберегти</button>
         </div>
     </main>
 </div>

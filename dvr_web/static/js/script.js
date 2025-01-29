@@ -159,3 +159,26 @@ function saveVideoOptions() {
         console.error('Error saving video options:', error);
     });
 }
+
+function saveVpnConfig() {
+    const vpnConfig = document.querySelector('#vpn-config textarea').value;
+
+    fetch('/save-vpn-config', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ vpn_config: vpnConfig }),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('VPN config saved successfully!');
+        } else {
+            alert(`Error: ${result.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving VPN config:', error);
+    });
+}
