@@ -1,12 +1,12 @@
 [Unit]
 Description=control daemon
-Wants=dvr_modem.timer
+Wants=mdvr_modem.timer
 
 [Service]
 Type=oneshot
 User=root
-WorkingDirectory=/opt/dvr/scripts
-ExecStart=/opt/dvr/scripts/modem_connector.sh
+WorkingDirectory=/opt/mDVR/scripts
+ExecStart=/opt/mDVR/scripts/modem_connector.sh
 
 [Install]
 WantedBy=multi-user.target

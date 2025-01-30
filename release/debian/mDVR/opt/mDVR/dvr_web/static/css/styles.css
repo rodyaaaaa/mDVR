@@ -1,0 +1,306 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #0d1b2a, #1b263b);
+    color: #ffffff;
+}
+
+header {
+    background: linear-gradient(90deg, #1b263b, #0d1b2a);
+    color: #ffffff;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+}
+
+.radio-group input {
+    display: none;
+}
+
+.radio-group label {
+    cursor: pointer;
+    font-size: 18px;
+    padding: 10px 20px;
+    background: #415a77;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.radio-group input:checked + label {
+    background: #778da9;
+}
+
+.container {
+    display: flex;
+    height: calc(100vh - 80px);
+}
+
+.sidebar {
+    width: 20%;
+    background: linear-gradient(180deg, #1b263b, #0d1b2a);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.sidebar button {
+    background: #415a77;
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    font-size: 16px;
+}
+
+.sidebar button:hover {
+    transform: scale(1.05);
+    background: #778da9;
+}
+
+.content {
+    flex-grow: 1;
+    padding: 30px;
+    background: #0d1b2a;
+    border-left: 2px solid #415a77;
+    overflow-y: auto;
+    border-radius: 10px;
+}
+
+.content-config {
+    flex-grow: 1;
+    padding: 30px;
+    background: #0d1b2a;
+    border-left: 2px solid #415a77;
+    overflow-y: auto;
+    border-radius: 10px;
+}
+
+.tab {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.tab.active {
+    display: block;
+}
+
+h2 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.cam-field {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.cam-field label {
+    font-size: 18px;
+    width: 80px;
+}
+
+input, textarea, select {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #1b263b;
+    color: #ffffff;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+button {
+    padding: 12px 20px;
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+button:hover {
+    background: #778da9;
+}
+
+.delete-cam {
+    background: #e63946 !important;
+    padding: 5px 12px !important;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+.delete-cam:hover {
+    background: #d62828 !important;
+    transform: scale(1.1);
+}
+
+.cam-field {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+#video-options .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#video-options label {
+    font-size: 16px;
+    width: 150px;
+    text-align: left;
+}
+
+#video-options select,
+#video-options input {
+    padding: 10px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #1b263b;
+    color: #ffffff;
+    font-size: 16px;
+    flex-grow: 1;
+}
+
+#video-options button {
+    padding: 12px 20px;
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+#video-options button:hover {
+    background: #778da9;
+}
+
+#videoPlayer {
+    width: 100%;
+    height: 350px;
+    border-radius: 10px;
+    background: black;
+    margin-top: 20px;
+}
+
+select {
+    width: 100%;
+    margin-top: 15px;
+}
+
+textarea {
+    width: 100%;
+    height: 200px;
+    resize: none;
+}
+
+#ftp-config input {
+    display: block;
+    width: calc(50% - 10px);
+    margin-bottom: 15px;
+}
+
+#ftp-config .input-row {
+    display: flex;
+    gap: 20px;
+}
+
+#ftp-config input[type="text"],
+#ftp-config input[type="password"] {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #1b263b;
+    color: #ffffff;
+    font-size: 16px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #1b263b;
+    color: #ffffff;
+    font-size: 16px;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .content {
+        padding: 20px;
+    }
+
+    input, textarea, select {
+        font-size: 14px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    #videoPlayer {
+        height: 250px;
+    }
+}
+
+@media (max-width: 600px) {
+    .cam-field {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .cam-field label {
+        width: 100%;
+        text-align: left;
+    }
+
+    input, textarea, select {
+        font-size: 14px;
+    }
+
+    button {
+        font-size: 14px;
+    }
+
+    #videoPlayer {
+        height: 200px;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

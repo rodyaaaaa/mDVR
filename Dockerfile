@@ -17,6 +17,6 @@ RUN pip install -r requirements.txt
 
 EXPOSE 8005
 
-COPY services/dvr.service /etc/systemd/system
+COPY services/mdvr.service /etc/systemd/system
 
 CMD python3 dvr_web/server.py

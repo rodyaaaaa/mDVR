@@ -5,10 +5,10 @@ from flask import Flask, request, jsonify, render_template
 import json
 
 CONFIG_FILE = 'data_config.json'
-CONFIG_PATH = '/opt/dvr/dvr_video'
+CONFIG_PATH = '/opt/mDVR/dvr_video'
 CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, CONFIG_FILE)
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_PATH, 'default.json')
-SERVICE_PATH = "/etc/systemd/system/dvr.service"
+SERVICE_PATH = "/etc/systemd/system/mdvr.service"
 VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
 
 
@@ -28,7 +28,7 @@ def update_watchdog(value):
             file.writelines(updated_lines)
 
         os.system("systemctl daemon-reload")
-        os.system("systemctl restart dvr")
+        os.system("systemctl restart mdvr")
         return {"success": True, "message": "WatchdogSec updated successfully"}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -70,11 +70,11 @@ def save_video_links():
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
-        os.system("systemctl restart dvr")
+        os.system("systemctl restart mdvr")
 
         return jsonify({"success": True, "message": "Video links saved successfully"})
     except Exception as e:
-        os.system("systemctl restart dvr")
+        os.system("systemctl restart mdvr")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -126,11 +126,11 @@ def save_video_options():
         result = update_watchdog(new_watchdog_value)
         print(result)
 
-        os.system("systemctl restart dvr")
+        os.system("systemctl restart mdvr")
 
         return jsonify({"success": True, "message": "Video options saved successfully"})
     except Exception as e:
-        os.system("systemctl restart dvr")
+        os.system("systemctl restart mdvr")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/save-vpn-config', methods=['POST'])

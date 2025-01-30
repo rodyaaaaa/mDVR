@@ -1,0 +1,18 @@
+#!/bin/bash
+
+cd /opt/mDVR/
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+systemctl enable mdvr_space_check.timer
+systemctl enable mdvr.service
+systemctl enable mdvr_web.service
+systemctl enable mdvr_upload.timer
+
+# Apply new venv
+systemctl daemon-reload
+systemctl restart mdvr.service
+systemctl restart mdvr_upload.timer
+systemctl restart mdvr_web.service
+systemctl restart mdvr_space_check.timer

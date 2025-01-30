@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/dvr/dvr_video
-ExecStart=/opt/dvr/venv/bin/python /opt/dvr/dvr_video/main.py
+WorkingDirectory=/opt/mDVR/dvr_video
+ExecStart=/opt/mDVR/venv/bin/python /opt/mDVR/dvr_video/main.py
 Restart=always
 RestartSec=10
 WatchdogSec=360

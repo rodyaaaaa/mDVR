@@ -12,5 +12,5 @@ else
     mmcli -m 0 --simple-connect="apn=internet"
     dhclient wwan0
     systemctl restart tracker.service
-    systemctl restart dvr.service
+    systemctl restart mdvr.service
 fi

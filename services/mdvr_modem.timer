@@ -2,7 +2,7 @@
 Description=Run check modem scripts every 1 hour
 
 [Timer]
-Unit=dvr_modem.service
+Unit=mdvr_modem.service
 OnBootSec=10min
 OnUnitActiveSec=60min
 Persistent=true

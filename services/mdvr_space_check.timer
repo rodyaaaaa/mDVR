@@ -2,7 +2,7 @@
 Description=run space_check every day
 
 [Timer]
-Unit=space_check.service
+Unit=mdvr_space_check.service
 OnCalendar=daily
 
 [Install]
