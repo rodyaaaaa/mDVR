@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SERVICES_PATH="mDVR/etc/systemd/system"
-PROJECT_PATH="mDVR/opt/mDVR"
+SERVICES_PATH="mdvr/etc/systemd/system"
+PROJECT_PATH="mdvr/opt/mdvr"
 
 echo "Check on folder exists."
 
@@ -12,6 +12,11 @@ if [ ! -d "$SERVICES_PATH" ]; then
 
   echo "Success!"
 fi
+
+echo "Clear $SERVICES_PATH"
+
+# shellcheck disable=SC2115
+rm -rf $SERVICES_PATH/*
 
 if [ ! -d "$PROJECT_PATH" ]; then
   echo "$PROJECT_PATH does not exists. Try to create it."
@@ -59,8 +64,8 @@ fi
 
 echo "All is ready. Try to build deb package!"
 
-dpkg --build mDVR
+dpkg --build mdvr
 
-if [ -f "mDVR.deb" ]; then
+if [ -f "mdvr.deb" ]; then
   echo "Success"
 fi

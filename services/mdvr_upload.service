@@ -5,8 +5,8 @@ Wants=mdvr_upload.timer
 [Service]
 Type=oneshot
 User=root
-WorkingDirectory=/opt/mDVR/dvr_video
-ExecStart=/opt/mDVR/venv/bin/python /opt/mDVR/dvr_video/ftp_upload.py
+WorkingDirectory=/opt/mdvr/dvr_video
+ExecStart=/opt/mdvr/venv/bin/python /opt/mdvr/dvr_video/ftp_upload.py
 
 [Install]
 WantedBy=multi-user.target

@@ -5,8 +5,8 @@ Wants=mdvr_modem.timer
 [Service]
 Type=oneshot
 User=root
-WorkingDirectory=/opt/mDVR/scripts
-ExecStart=/opt/mDVR/scripts/modem_connector.sh
+WorkingDirectory=/opt/mdvr/scripts
+ExecStart=/opt/mdvr/scripts/modem_connector.sh
 
 [Install]
 WantedBy=multi-user.target

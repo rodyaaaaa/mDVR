@@ -5,8 +5,8 @@ Wants=mdvr_space_check.timer
 [Service]
 Type=oneshot
 User=root
-WorkingDirectory=/opt/mDVR/dvr_video
-ExecStart=/opt/mDVR/venv/bin/python /opt/mDVR/dvr_video/space_check.py
+WorkingDirectory=/opt/mdvr/dvr_video
+ExecStart=/opt/mdvr/venv/bin/python /opt/mdvr/dvr_video/space_check.py
 
 [Install]
 WantedBy=multi-user.target
