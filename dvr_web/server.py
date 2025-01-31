@@ -42,96 +42,132 @@ def load_config():
         shutil.copyfile(DEFAULT_CONFIG_PATH, CONFIG_FULL_PATH)
 
     with open(CONFIG_FULL_PATH, 'r') as file:
-        return json.load(file)
+        config = json.load(file)
+        # Backward compatibility for old configs
+        if "rtsp_options" not in config:
+            config["rtsp_options"] = {
+                "rtsp_transport": config.get("video_options", {}).get("rtsp_transport", "tcp"),
+                "rtsp_resolution_x": config.get("video_options", {}).get("video_resolution_x", 640),
+                "rtsp_resolution_y": config.get("video_options", {}).get("video_resolution_y", 480)
+            }
+        return config
 
 
 @app.route('/')
 def index():
     config = load_config()
-
-    config['camera_list'] = {f'Cam {i + 1}': value for i, value in enumerate(config['camera_list'])}
-
-    return render_template('index.html', **config)
+    # Убрать преобразование в словарь. camera_list теперь список!
+    return render_template('index.html',
+                           camera_list=config['camera_list'],
+                           rtsp_options=config['rtsp_options'],
+                           video_options=config['video_options'],
+                           ftp=config['ftp']
+                           )
 
 
 @app.route('/save-video-links', methods=['POST'])
 def save_video_links():
     data = request.get_json()
-    if not data:
-        return jsonify({"success": False, "error": "No data received"}), 400
-
     try:
         config = load_config()
-
-        # Оновлюємо лише список камер
         config['camera_list'] = data.get('camera_list', [])
 
-        # Зберігаємо оновлену конфігурацію
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
         os.system("systemctl restart mdvr")
-
         return jsonify({"success": True, "message": "Video links saved successfully"})
     except Exception as e:
-        os.system("systemctl restart mdvr")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route('/save-ftp-config', methods=['POST'])
 def save_ftp_config():
     data = request.get_json()
-    if not data:
-        return jsonify({"success": False, "error": "No data received"}), 400
-
     try:
-        # Завантажуємо поточну конфігурацію
         config = load_config()
 
-        # Оновлюємо FTP-налаштування та car_name
-        config['ftp'] = data.get('ftp', {})
-        config['car_name'] = data.get('car_name', '')
+        # Отримуємо дані з об'єкту 'ftp' з клієнта
+        ftp_data = data.get('ftp', {})
+        config['ftp'] = {
+            "server": ftp_data.get('server', ''),
+            "port": ftp_data.get('port', 21),
+            "user": ftp_data.get('user', ''),
+            "password": ftp_data.get('password', ''),
+            "car_name": ftp_data.get('car_name', '')  # Тепер правильно
+        }
 
         # Зберігаємо оновлену конфігурацію
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
-        return jsonify({"success": True, "message": "FTP configuration and car name saved successfully"})
+        return jsonify({"success": True, "message": "Налаштування FTP збережено!"})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": f"Помилка: {str(e)}"}), 500
 
 
 @app.route('/save-video-options', methods=['POST'])
 def save_video_options():
     data = request.get_json()
-    if not data:
-        return jsonify({"success": False, "error": "No data received"}), 400
-
     try:
-        # Завантажуємо поточну конфігурацію
         config = load_config()
 
-        # Оновлюємо video_options
-        config['video_options'] = data.get('video_options', {})
+        # Оновлення RTSP параметрів
+        config['rtsp_options'] = {
+            "rtsp_transport": data.get('rtsp_transport', 'tcp'),
+            "rtsp_resolution_x": data.get('rtsp_resolution_x', 640),
+            "rtsp_resolution_y": data.get('rtsp_resolution_y', 480)
+        }
 
-        # Зберігаємо оновлену конфігурацію
+        # Отримання та очищення введеного часу
+        video_duration = data.get('video_duration', '00:02:00').strip().lower()
+
+        # Видалення всіх нецифрових символів, крім двокрапки
+        cleaned_duration = ''.join([c for c in video_duration if c.isdigit() or c == ':'])
+
+        # Якщо є двокрапка - перевірити формат HH:MM:SS
+        if ':' in cleaned_duration:
+            parts = cleaned_duration.split(':')
+            if len(parts) != 3:
+                raise ValueError("Невірний формат. Використовуйте HH:MM:SS або хвилини (напр. '10 хв')")
+            h, m, s = map(int, parts)
+        else:
+            # Інтерпретувати як хвилини
+            try:
+                minutes = int(cleaned_duration)
+                h = minutes // 60
+                m = minutes % 60
+                s = 0
+            except ValueError:
+                raise ValueError("Невірний формат хвилин. Наприклад: '10' або '10 хв'")
+
+        # Перевірка коректності значень
+        if m > 59 or s > 59:
+            raise ValueError("Невірні значення хвилин/секунд (мають бути ≤ 59)")
+
+        # Форматування у HH:MM:SS
+        formatted_duration = f"{h:02d}:{m:02d}:{s:02d}"
+
+        # Оновлення конфіга
+        config['video_options']['video_duration'] = formatted_duration
+        config['video_options']['fps'] = data.get('fps', 15)
+
+        # Оновлення Watchdog
+        seconds = timedelta(hours=h, minutes=m, seconds=s).total_seconds()
+        update_watchdog(int(seconds * 10))
+
+        # Збереження
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
-        # Оновлюємо WatchdogSec на основі нового часу
-        time = config['video_options']['time']
-        h, m, s = map(int, time.split(":"))
-        seconds = timedelta(hours=h, minutes=m, seconds=s).total_seconds()
-        new_watchdog_value = int(seconds * 10)  # Нове значення для WatchdogSec
-        result = update_watchdog(new_watchdog_value)
-        print(result)
-
         os.system("systemctl restart mdvr")
+        return jsonify({"success": True, "message": "Налаштування збережено!"})
 
-        return jsonify({"success": True, "message": "Video options saved successfully"})
+    except ValueError as ve:
+        return jsonify({"success": False, "error": str(ve)}), 400
     except Exception as e:
-        os.system("systemctl restart mdvr")
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @app.route('/save-vpn-config', methods=['POST'])
 def save_vpn_config():
@@ -149,6 +185,7 @@ def save_vpn_config():
     except Exception as e:
         os.system("systemctl restart wg-quick@wg0")
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80)

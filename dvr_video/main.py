@@ -1,22 +1,27 @@
 import asyncio
 import pathlib
+
 import ffmpeg
-from datetime import datetime
 from data.logger import Logger
 from data.utils import read_config, move
-from sdnotify import SystemdNotifier
 
 config = read_config()
-logger = Logger('mdvr_engine')
-notifier = SystemdNotifier()
-notifier.notify('READY=1')
+logger = Logger('main_dvr')
 
-async def async_write_video(current_link, video_name):
-    stream = ffmpeg.input(config['camera_list'][current_link], t=str(config['video_options']['time']), rtsp_transport='tcp')
-    stream = ffmpeg.filter(stream, 'scale', width=config['video_options']['video_resolution_x'], height=config['video_options']['video_resolution_y'])
-    stream = ffmpeg.output(stream, f"temp/{current_link+1}24{video_name}.mp4", vcodec="libx264")
-    process = ffmpeg.run_async(stream)
+async def async_write_video(current_link):
+    stream = ffmpeg.input(config['camera_list'][current_link], rtsp_transport=config['rtsp_options']['rtsp_transport'])
+    stream = ffmpeg.filter(stream, 'scale', width=config['rtsp_options']['rtsp_resolution_x'], height=config['rtsp_options']['rtsp_resolution_y'])
+    stream = ffmpeg.filter(stream, 'fps', fps=config['video_options']['fps'])
+    stream = ffmpeg.output(stream, f"temp/{current_link+1}24%y%m%d%H%M%S.mp4", vcodec="libx264", format='segment', segment_time=config['video_options']['video_duration'], strftime=1)
+    process = ffmpeg.run_async(stream, quiet=True)
+    return process
 
+
+async def async_write_photo(current_link):
+    stream = ffmpeg.input(config['camera_list'][current_link], rtsp_transport=config['rtsp_options']['rtsp_transport'])
+    stream = ffmpeg.filter(stream, 'fps', fps=1/config['photo_timeout'])
+    stream = ffmpeg.output(stream, f"materials/{current_link+1}24%y%m%d%H%M%S.jpg", format='image2', strftime=1)
+    process = ffmpeg.run_async(stream, quiet=True)
     return process
 
 
@@ -26,31 +31,30 @@ async def main():
 
     await move()
 
-    while True:
-        notifier.notify("WATCHDOG=1")
-        jobs = []
+    jobs = []
 
-        for current_link in range(len(config['camera_list'])):
-            now = datetime.now()
-            video_name = now.strftime("%y%m%d%H%M%S")
-
+    for current_link in range(len(config['camera_list'])):
+        if config['program_options']['write_mode'] == "video":
             try:
-                process = await async_write_video(current_link, video_name)
+                process = await async_write_video(current_link)
                 jobs.append(process)
             except Exception as e:
-                logger.error(f"Не вдалось записати відео {e}")
+                logger.error(f"Не вдалось ініціалізувати відео {e}")
+        elif config['program_options']['write_mode'] == "photo":
+            try:
+                process = await async_write_photo(current_link)
+                jobs.append(process)
+            except Exception as e:
+                logger.error(f"Не вдалось ініціалізувати відео {e}")
 
-
-            # Очікує на завершения усіх фоновых процесів
-            if len(jobs) >= len(config['camera_list']):
-                for process in jobs:
-                    process.communicate()
-                    if process.returncode != 0:
-                        logger.error(f"Камера {current_link} не вдалось записати відео")
-                jobs.clear()
-
-        await move()
+    for process in jobs:
+        process.communicate()
+        if process.returncode != 0:
+            logger.error(f"Камера не вдалось записати відео")
+    jobs.clear()
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+#video_name: 024%y%m%d%H%M%S

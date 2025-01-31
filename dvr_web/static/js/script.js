@@ -57,17 +57,17 @@ function saveVideoLinks() {
         },
         body: JSON.stringify(data),
     })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert('Video links saved successfully!');
-        } else {
-            alert(`Error: ${result.error}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error saving video links:', error);
-    });
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('Video links saved successfully!');
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving video links:', error);
+        });
 }
 
 function saveFtpConfig() {
@@ -75,86 +75,65 @@ function saveFtpConfig() {
     const inputs = activeTab.querySelectorAll('input');
 
     const ftpConfig = {
-        server: inputs[0].value,
-        user: inputs[2].value,
-        password: inputs[3].value,
-        port: inputs[1].value,
+        server: inputs[0].value,    // Сервер
+        port: inputs[1].value,      // Порт
+        user: inputs[2].value,      // Користувач
+        password: inputs[3].value,  // Пароль
+        car_name: inputs[4].value   // Назва авто (тепер всередині об'єкту FTP)
     };
 
-    const carName = inputs[4].value;
-
     const data = {
-        ftp: ftpConfig,
-        car_name: carName,
+        ftp: ftpConfig // Відправляємо весь об'єкт ftp
     };
 
     fetch('/save-ftp-config', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(result => {
-        if (result.success) {
-            alert('FTP configuration and car name saved successfully!');
-        } else {
-            alert(`Error: ${result.error}`);
-        }
+        result.success
+            ? alert('Налаштування FTP збережено!')
+            : alert(`Помилка: ${result.error}`);
     })
-    .catch(error => {
-        console.error('Error saving FTP configuration:', error);
-    });
+    .catch(error => console.error('Помилка:', error));
 }
 
 function saveVideoOptions() {
     const rtspTransport = document.getElementById('rtsp-transport').value;
-    const videoResolution = document.getElementById('video-resolution').value;
-    const [videoResolutionX, videoResolutionY] = videoResolution.split('x');
-    const videoTimeInput = document.getElementById('video-time').value;
-    const videoFps = document.getElementById('video-fps').value;
+    const rtspResolution = document.getElementById('rtsp-resolution').value;
 
-    let videoTime;
-    if (!isNaN(videoTimeInput) && videoTimeInput.trim() !== "") {
-        const minutes = parseInt(videoTimeInput);
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
-        videoTime = `${String(hours).padStart(2, '0')}:${String(remainingMinutes).padStart(2, '0')}:00`;
-    } else {
-        videoTime = videoTimeInput;
+    // Додано перевірку коректного розділення значення
+    if (!rtspResolution.includes('x')) {
+        alert('Невірний формат роздільної здатності! Використовуйте "ШИРИНАxВИСОТА"');
+        return;
     }
 
-    const videoOptions = {
-        rtsp_transport: rtspTransport,
-        video_resolution_x: parseInt(videoResolutionX),
-        video_resolution_y: parseInt(videoResolutionY),
-        time: videoTime,
-        fps: parseInt(videoFps)
-    };
+    const [rtspResX, rtspResY] = rtspResolution.split('x').map(Number);
 
     const data = {
-        video_options: videoOptions
+        rtsp_transport: rtspTransport,
+        rtsp_resolution_x: rtspResX,
+        rtsp_resolution_y: rtspResY,
+        video_duration: document.getElementById('video-duration').value,
+        fps: parseInt(document.getElementById('video-fps').value)
     };
 
     fetch('/save-video-options', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(result => {
         if (result.success) {
-            alert('Video options saved successfully!');
+            alert('Налаштування збережено!');
         } else {
-            alert(`Error: ${result.error}`);
+            alert(`Помилка: ${result.error}`);
         }
     })
-    .catch(error => {
-        console.error('Error saving video options:', error);
-    });
+    .catch(error => alert('Помилка зʼєднання'));
 }
 
 function saveVpnConfig() {
@@ -165,17 +144,17 @@ function saveVpnConfig() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ vpn_config: vpnConfig }),
+        body: JSON.stringify({vpn_config: vpnConfig}),
     })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert('VPN config saved successfully!');
-        } else {
-            alert(`Error: ${result.error}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error saving VPN config:', error);
-    });
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('VPN config saved successfully!');
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving VPN config:', error);
+        });
 }

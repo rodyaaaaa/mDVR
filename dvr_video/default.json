@@ -1,21 +1,26 @@
 {
   "camera_list": [
-    "link"
+    "rtsp://user:passwd@example/live/0/MAIN"
   ],
-  "video_options": {
+  "program_options": {
+    "write_mode": "",
+    "size_folder_limit_gb": 10
+  },
+  "rtsp_options": {
     "rtsp_transport": "tcp",
-    "video_resolution_x": 640,
-    "video_resolution_y": 480,
-    "time": "00:02:00",
+    "rtsp_resolution_x": 640,
+    "rtsp_resolution_y": 480
+  },
+  "video_options": {
+    "video_duration": "00:02:00",
     "fps": 15
   },
+  "photo_timeout": "",
   "ftp": {
     "server": "",
     "user": "",
     "password": "",
-    "port": 21
-  },
-  "car_name": "",
-  "size_folder_limit_gb": 10,
-  "photo_mode": 0
+    "port": 21,
+    "car_name": ""
+  }
 }
