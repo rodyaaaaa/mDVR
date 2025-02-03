@@ -44,6 +44,33 @@ if [ -f "$PROJECT_PATH/dvr_video/data_config.json" ]; then
 
 fi
 
+if [ -d "$PROJECT_PATH/dvr_video/logs" ]; then
+  echo "Folder logs exists. It will be deleted."
+
+  rm -r "$PROJECT_PATH/dvr_video/logs"
+
+  echo "Success"
+
+fi
+
+if [ -d "$PROJECT_PATH/dvr_video/materials" ]; then
+  echo "The folder materials exists. It will be deleted."
+
+  rm -r "$PROJECT_PATH/dvr_video/materials"
+
+  echo "Success"
+
+fi
+
+if [ -d "$PROJECT_PATH/dvr_video/temp" ]; then
+  echo "The folder temp exists. It will be deleted."
+
+  rm -r "$PROJECT_PATH/dvr_video/materials"
+
+  echo "Success"
+
+fi
+
 if [ -f "$SERVICES_PATH/mdvr_modem.service" ]; then
   echo "Delete mdvr_modem.service"
 

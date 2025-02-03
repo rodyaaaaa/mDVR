@@ -1,5 +1,6 @@
 import asyncio
 import os
+import pathlib
 
 from datetime import datetime
 
@@ -7,7 +8,8 @@ from data.utils import read_config
 from data.logger import Logger
 
 config = read_config()
-logger = Logger('mdvr_space_check')
+pathlib.Path("logs/mdvr_space_check").mkdir(parents=True, exist_ok=True)
+logger = Logger('mdvr_space_check', "logs/mdvr_space_check/space_check.log", 10, "S", 2)
 
 
 async def extract_date_from_filename(filename):
@@ -49,6 +51,7 @@ async def from_gb_to_bytes(gb: int) -> int:
 
 
 async def main():
+    logger.info("Space Check start.")
     bt = await get_dir_size("materials")
 
     folder_size_limit = config['size_folder_limit_gb']
@@ -73,6 +76,7 @@ async def main():
             os.remove(filepath)
 
             bt = await get_dir_size("materials")
+            logger.info(bt)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
+import asyncio
 import json
 import os
+import re
 import shutil
 
 from datetime import datetime
@@ -33,5 +35,35 @@ async def move():
             f"temp/{i}",
             f"materials/{i}"
         )
+
+
+def _find_files_with_extra_after_log(directory):
+    result = []
+    pattern = re.compile(r'\.log.+$', re.IGNORECASE)
+
+    for root, dirs, files in os.walk(directory):
+        for filename in files:
+            if pattern.search(filename):
+                result.append(filename)
+
+    return result
+
+
+async def find_files_with_extra_after_log(directory):
+    return await asyncio.to_thread(_find_files_with_extra_after_log, directory)
+
+
+def extract_date_from_filename(filename: str) -> str | None:
+    pattern = re.compile(r'\.log\.(\d{4}-\d{2}-\d{2})')
+    match = pattern.search(filename)
+    if match:
+        date = datetime.strptime(match.group(1), '%Y-%m-%d')
+        date = date.strftime('%d-%m-%Y')
+        return str(date)
+    return None
+
+
+async def extract_date_from_filename_async(filename: str) -> str | None:
+    return await asyncio.to_thread(extract_date_from_filename, filename)
 
 #test
