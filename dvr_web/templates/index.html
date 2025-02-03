@@ -38,7 +38,7 @@
             <h2>Video Settings</h2>
             <div class="input-row">
                 <label for="rtsp-transport">RTSP Transport:</label>
-                <select id="rtsp-transport"> <!-- Правильний ID -->
+                <select id="rtsp-transport">
                     <option value="tcp" {% if rtsp_options.rtsp_transport == 'tcp' %}selected{% endif %}>TCP</option>
                     <option value="udp" {% if rtsp_options.rtsp_transport == 'udp' %}selected{% endif %}>UDP</option>
                 </select>
@@ -46,7 +46,6 @@
             <div class="input-row">
                 <label for="rtsp-resolution">RTSP Resolution:</label>
                 <select id="rtsp-resolution">
-                    <!-- Додано явне вказання значень -->
                     <option value="1920x1080"
                             {% if rtsp_options.rtsp_resolution_x == 1920 and rtsp_options.rtsp_resolution_y == 1080 %}selected{% endif %}>
                         1920x1080
@@ -79,12 +78,12 @@
         <div id="ftp-config" class="tab">
             <h2>FTP settings</h2>
             <div class="input-row">
-                <input type="text" value="{{ ftp.server }}" placeholder="URL сервера">   <!-- 0 -->
-                <input type="text" value="{{ ftp.port }}" placeholder="Порт (напр. 21)"> <!-- 1 -->
+                <input type="text" value="{{ ftp.server }}" placeholder="URL сервера">
+                <input type="text" value="{{ ftp.port }}" placeholder="Порт (напр. 21)">
             </div>
-            <input type="text" value="{{ ftp.user }}" placeholder="Логін">               <!-- 2 -->
-            <input type="password" value="{{ ftp.password }}" placeholder="Пароль">      <!-- 3 -->
-            <input type="text" value="{{ ftp.car_name }}" placeholder="Назва авто">      <!-- 4 -->
+            <input type="text" value="{{ ftp.user }}" placeholder="Логін">
+            <input type="password" value="{{ ftp.password }}" placeholder="Пароль">
+            <input type="text" value="{{ ftp.car_name }}" placeholder="Назва авто">
             <button onclick="saveFtpConfig()">Зберегти</button>
         </div>
         <div id="vpn-config" class="tab">

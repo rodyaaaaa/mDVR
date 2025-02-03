@@ -8,7 +8,6 @@ config = read_config()
 
 
 async def main():
-    pathlib.Path("temp").mkdir(exist_ok=True)
     pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
 
     server = config['ftp']['server']

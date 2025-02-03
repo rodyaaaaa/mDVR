@@ -12,7 +12,7 @@ async def async_write_video(current_link):
     stream = ffmpeg.input(config['camera_list'][current_link], rtsp_transport=config['rtsp_options']['rtsp_transport'])
     stream = ffmpeg.filter(stream, 'scale', width=config['rtsp_options']['rtsp_resolution_x'], height=config['rtsp_options']['rtsp_resolution_y'])
     stream = ffmpeg.filter(stream, 'fps', fps=config['video_options']['fps'])
-    stream = ffmpeg.output(stream, f"temp/{current_link+1}24%y%m%d%H%M%S.mp4", vcodec="libx264", format='segment', segment_time=config['video_options']['video_duration'], strftime=1)
+    stream = ffmpeg.output(stream, f"materials/{current_link+1}24%y%m%d%H%M%S.mp4", vcodec="libx264", format='segment', segment_time=config['video_options']['video_duration'], strftime=1)
     process = ffmpeg.run_async(stream, quiet=True)
     return process
 
@@ -26,10 +26,7 @@ async def async_write_photo(current_link):
 
 
 async def main():
-    pathlib.Path("temp").mkdir(exist_ok=True)
     pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
-
-    await move()
 
     jobs = []
 

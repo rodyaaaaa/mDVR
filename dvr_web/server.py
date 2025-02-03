@@ -101,9 +101,9 @@ def save_ftp_config():
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
-        return jsonify({"success": True, "message": "Налаштування FTP збережено!"})
+        return jsonify({"success": True, "message": "FTP settings saved!"})
     except Exception as e:
-        return jsonify({"success": False, "error": f"Помилка: {str(e)}"}), 500
+        return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
 
 
 @app.route('/save-video-options', methods=['POST'])

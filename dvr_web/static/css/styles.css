@@ -247,7 +247,6 @@ input, textarea, select {
     font-size: 16px;
 }
 
-/* Адаптивность */
 @media (max-width: 1024px) {
     .container {
         flex-direction: column;

@@ -75,15 +75,15 @@ function saveFtpConfig() {
     const inputs = activeTab.querySelectorAll('input');
 
     const ftpConfig = {
-        server: inputs[0].value,    // Сервер
-        port: inputs[1].value,      // Порт
-        user: inputs[2].value,      // Користувач
-        password: inputs[3].value,  // Пароль
-        car_name: inputs[4].value   // Назва авто (тепер всередині об'єкту FTP)
+        server: inputs[0].value,
+        port: inputs[1].value,
+        user: inputs[2].value,
+        password: inputs[3].value,
+        car_name: inputs[4].value
     };
 
     const data = {
-        ftp: ftpConfig // Відправляємо весь об'єкт ftp
+        ftp: ftpConfig
     };
 
     fetch('/save-ftp-config', {
@@ -104,7 +104,6 @@ function saveVideoOptions() {
     const rtspTransport = document.getElementById('rtsp-transport').value;
     const rtspResolution = document.getElementById('rtsp-resolution').value;
 
-    // Додано перевірку коректного розділення значення
     if (!rtspResolution.includes('x')) {
         alert('Невірний формат роздільної здатності! Використовуйте "ШИРИНАxВИСОТА"');
         return;
