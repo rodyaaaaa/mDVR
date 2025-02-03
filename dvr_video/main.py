@@ -16,7 +16,7 @@ async def async_write_video(current_link, video_name):
     stream = ffmpeg.input(config['camera_list'][current_link], t=str(config['video_options']['time']), rtsp_transport='tcp')
     stream = ffmpeg.filter(stream, 'scale', width=config['video_options']['video_resolution_x'], height=config['video_options']['video_resolution_y'])
     stream = ffmpeg.output(stream, f"temp/{current_link+1}24{video_name}.mp4", vcodec="libx264")
-    process = ffmpeg.run_async(stream)
+    process = ffmpeg.run_async(stream, quiet=True)
 
     return process
 
@@ -47,12 +47,13 @@ async def main():
 
             # Очікує на завершения усіх фоновых процесів
             if len(jobs) >= len(config['camera_list']):
-                for count, process in enumerate(jobs):
+                for process in jobs:
                     process.communicate()
+                for count, process in enumerate(jobs):
                     if process.returncode != 0:
-                        logger.error(f"Камера {current_link + 1} не вдалось записати відео: {video_names[count]}")
+                        logger.error(f"Камера {count + 1} не вдалось записати відео: {video_names[count]}")
                     elif process.returncode == 0:
-                        logger.info(f"Камера {current_link + 1} записала відео: {video_names[count]}")
+                        logger.info(f"Камера {count + 1} записала відео: {video_names[count]}")
                 jobs.clear()
 
         await move()
