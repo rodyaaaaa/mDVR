@@ -65,7 +65,7 @@ fi
 if [ -d "$PROJECT_PATH/dvr_video/temp" ]; then
   echo "The folder temp exists. It will be deleted."
 
-  rm -r "$PROJECT_PATH/dvr_video/materials"
+  rm -r "$PROJECT_PATH/dvr_video/temp"
 
   echo "Success"
 
