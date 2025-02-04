@@ -48,10 +48,18 @@ def load_config():
 @app.route('/')
 def index():
     config = load_config()
-
     config['camera_list'] = {f'Cam {i + 1}': value for i, value in enumerate(config['camera_list'])}
 
-    return render_template('index.html', **config)
+    # Додаємо вміст VPN конфігурації
+    vpn_config = ""
+    try:
+        if os.path.exists(VPN_CONFIG_PATH):
+            with open(VPN_CONFIG_PATH, 'r') as f:
+                vpn_config = f.read()
+    except Exception as e:
+        print(f"Error reading VPN config: {str(e)}")
+
+    return render_template('index.html', vpn_config=vpn_config, **config)
 
 
 @app.route('/save-video-links', methods=['POST'])
