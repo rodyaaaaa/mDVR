@@ -7,7 +7,7 @@ from data.logger import Logger
 
 config = read_config()
 pathlib.Path("logs/mdvr_ftp").mkdir(parents=True, exist_ok=True)
-logger = Logger('mdvr_ftp', "logs/mdvr_ftp/ftp.log", 10, "S", 2)
+logger = Logger('mdvr_ftp', "logs/mdvr_ftp/ftp.log", 10, "H", 2)
 
 
 async def main():

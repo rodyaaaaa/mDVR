@@ -8,7 +8,7 @@ from sdnotify import SystemdNotifier
 
 config = read_config()
 pathlib.Path("logs/mdvr_engine").mkdir(parents=True, exist_ok=True)
-logger = Logger('mdvr_engine', "logs/mdvr_engine/engine.log", 10, "S", 2)
+logger = Logger('mdvr_engine', "logs/mdvr_engine/engine.log", 10, "H", 2)
 notifier = SystemdNotifier()
 notifier.notify('READY=1')
 

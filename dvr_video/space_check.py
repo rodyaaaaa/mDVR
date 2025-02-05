@@ -9,7 +9,7 @@ from data.logger import Logger
 
 config = read_config()
 pathlib.Path("logs/mdvr_space_check").mkdir(parents=True, exist_ok=True)
-logger = Logger('mdvr_space_check', "logs/mdvr_space_check/space_check.log", 10, "S", 2)
+logger = Logger('mdvr_space_check', "logs/mdvr_space_check/space_check.log", 10, "H", 2)
 
 
 async def extract_date_from_filename(filename):
