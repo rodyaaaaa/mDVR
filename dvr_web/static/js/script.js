@@ -111,12 +111,15 @@ function saveVideoOptions() {
 
     const [rtspResX, rtspResY] = rtspResolution.split('x').map(Number);
 
+    const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
+
     const data = {
         rtsp_transport: rtspTransport,
         rtsp_resolution_x: rtspResX,
         rtsp_resolution_y: rtspResY,
-        video_duration: document.getElementById('video-duration').value,
-        fps: parseInt(document.getElementById('video-fps').value)
+        video_duration: selectedMode === 'video' ? document.getElementById('video-duration').value : null,
+        fps: selectedMode === 'video' ? parseInt(document.getElementById('video-fps').value) : null,
+        photo_timeout: selectedMode === 'photo' ? parseInt(document.getElementById('photo-timeout').value) : null
     };
 
     fetch('/save-video-options', {
@@ -174,3 +177,42 @@ function updateWriteMode() {
     })
     .catch(error => console.error('Помилка:', error));
 }
+
+function toggleModeSettings(mode) {
+    const videoModeElements = document.querySelectorAll('.video-mode');
+    const photoModeElements = document.querySelectorAll('.photo-mode');
+
+    if (mode === 'video') {
+        videoModeElements.forEach(element => element.style.display = 'flex');
+        photoModeElements.forEach(element => element.style.display = 'none');
+    } else if (mode === 'photo') {
+        videoModeElements.forEach(element => element.style.display = 'none');
+        photoModeElements.forEach(element => element.style.display = 'flex');
+    }
+}
+
+function updateWriteMode() {
+    const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
+
+    fetch('/save-write-mode', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({write_mode: selectedMode})
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            toggleModeSettings(selectedMode);
+            alert('Режим запису оновлено!');
+        } else {
+            alert(`Помилка: ${result.error}`);
+        }
+    })
+    .catch(error => console.error('Помилка:', error));
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
+    toggleModeSettings(initialMode);
+});
