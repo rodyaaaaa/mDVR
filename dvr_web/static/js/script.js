@@ -1,3 +1,14 @@
+function showNotification(message, isError = false) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${isError ? 'error' : 'success'}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
 function showTab(tabId) {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
@@ -39,7 +50,7 @@ function changeStream(select) {
 }
 
 function changeLog(select) {
-    alert(`You a select: ${select.value}`);
+    showNotification(`You a select: ${select.value}`);
 }
 
 function saveVideoLinks() {
@@ -60,9 +71,9 @@ function saveVideoLinks() {
         .then(response => response.json())
         .then(result => {
             if (result.success) {
-                alert('Video links saved successfully!');
+                showNotification('Video links saved successfully!');
             } else {
-                alert(`Error: ${result.error}`);
+                showNotification(`ERROR: ${result.error}`, true);
             }
         })
         .catch(error => {
@@ -94,8 +105,8 @@ function saveFtpConfig() {
     .then(response => response.json())
     .then(result => {
         result.success
-            ? alert('Налаштування FTP збережено!')
-            : alert(`Помилка: ${result.error}`);
+            ? showNotification('The ftp settings is saved!')
+            : showNotification(`ERROR: ${result.error}`, true);
     })
     .catch(error => console.error('Помилка:', error));
 }
@@ -105,7 +116,7 @@ function saveVideoOptions() {
     const rtspResolution = document.getElementById('rtsp-resolution').value;
 
     if (!rtspResolution.includes('x')) {
-        alert('Невірний формат роздільної здатності! Використовуйте "ШИРИНАxВИСОТА"');
+        showNotification('Невірний формат роздільної здатності! Використовуйте "ШИРИНАxВИСОТА"', true);
         return;
     }
 
@@ -130,12 +141,12 @@ function saveVideoOptions() {
     .then(response => response.json())
     .then(result => {
         if (result.success) {
-            alert('Налаштування збережено!');
+            showNotification('The settings is saved!');
         } else {
-            alert(`Помилка: ${result.error}`);
+            showNotification(`ERROR ${result.error}`, true)
         }
     })
-    .catch(error => alert('Помилка зʼєднання'));
+    .catch(error => showNotification('Connection error', true));
 }
 
 function saveVpnConfig() {
@@ -151,9 +162,9 @@ function saveVpnConfig() {
         .then(response => response.json())
         .then(result => {
             if (result.success) {
-                alert('VPN config saved successfully!');
+                showNotification('VPN config saved successfully!');
             } else {
-                alert(`Error: ${result.error}`);
+                showNotification(`ERROR: ${result.error}`, true);
             }
         })
         .catch(error => {
@@ -171,11 +182,16 @@ function updateWriteMode() {
     })
     .then(response => response.json())
     .then(result => {
-        result.success
-            ? alert('Режим запису оновлено!')
-            : alert(`Помилка: ${result.error}`);
+        if (result.success) {
+            toggleModeSettings(selectedMode);
+            showNotification('Режим запису оновлено!'); // Показываем уведомление
+        } else {
+            showNotification(`Помилка: ${result.error}`, true); // Показываем уведомление об ошибке
+        }
     })
-    .catch(error => console.error('Помилка:', error));
+    .catch(error => {
+        showNotification(`Помилка: ${error.message}`, true); // Показываем уведомление об ошибке
+    });
 }
 
 function toggleModeSettings(mode) {
@@ -191,27 +207,6 @@ function toggleModeSettings(mode) {
     }
 }
 
-function updateWriteMode() {
-    const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
-
-    fetch('/save-write-mode', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({write_mode: selectedMode})
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            toggleModeSettings(selectedMode);
-            alert('Режим запису оновлено!');
-        } else {
-            alert(`Помилка: ${result.error}`);
-        }
-    })
-    .catch(error => console.error('Помилка:', error));
-}
-
-// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
     toggleModeSettings(initialMode);
