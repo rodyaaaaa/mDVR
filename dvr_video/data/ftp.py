@@ -41,7 +41,6 @@ class FTPCon:
                 vd = pathlib.Path("materials", video)
                 await client.upload(vd)
                 logger.info(f"The file {video} has been successful upload. Remove from local storage.")
-                os.remove(vd)
 
                 await client.change_directory()
 

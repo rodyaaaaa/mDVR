@@ -157,3 +157,20 @@ function saveVpnConfig() {
             console.error('Error saving VPN config:', error);
         });
 }
+
+function updateWriteMode() {
+    const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
+
+    fetch('/save-write-mode', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({write_mode: selectedMode})
+    })
+    .then(response => response.json())
+    .then(result => {
+        result.success
+            ? alert('Режим запису оновлено!')
+            : alert(`Помилка: ${result.error}`);
+    })
+    .catch(error => console.error('Помилка:', error));
+}

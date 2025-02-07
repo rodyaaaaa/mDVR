@@ -1,6 +1,6 @@
 {
   "camera_list": [
-    "rtsp://user:passwd@example/live/0/MAIN"
+    "rtsp://rtsp:link@example/live/0/MAIN"
   ],
   "program_options": {
     "write_mode": "",

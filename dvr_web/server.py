@@ -56,14 +56,30 @@ def load_config():
 @app.route('/')
 def index():
     config = load_config()
-    # Убрать преобразование в словарь. camera_list теперь список!
+    # Добавить передачу program_options в шаблон
     return render_template('index.html',
                            camera_list=config['camera_list'],
                            rtsp_options=config['rtsp_options'],
                            video_options=config['video_options'],
-                           ftp=config['ftp']
+                           ftp=config['ftp'],
+                           program_options=config['program_options']  # <-- Добавить эту строку
                            )
 
+
+@app.route('/save-write-mode', methods=['POST'])
+def save_write_mode():
+    data = request.get_json()
+    try:
+        config = load_config()
+        config['program_options']['write_mode'] = data.get('write_mode', '')
+
+        with open(CONFIG_FULL_PATH, 'w') as file:
+            json.dump(config, file, indent=4)
+
+        os.system("systemctl restart mdvr")
+        return jsonify({"success": True, "message": "Write mode updated"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/save-video-links', methods=['POST'])
 def save_video_links():
