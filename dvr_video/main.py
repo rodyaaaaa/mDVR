@@ -6,7 +6,8 @@ from data.logger import Logger
 from data.utils import read_config, move
 
 config = read_config()
-logger = Logger('main_dvr')
+pathlib.Path("logs/mdvr_engine").mkdir(parents=True, exist_ok=True)
+logger = Logger('mdvr_engine', "logs/mdvr_engine/engine.log", 10, "H", 2)
 
 async def async_write_video(current_link):
     stream = ffmpeg.input(config['camera_list'][current_link], rtsp_transport=config['rtsp_options']['rtsp_transport'])
@@ -26,6 +27,7 @@ async def async_write_photo(current_link):
 
 
 async def main():
+    logger.info("Start mdvr engine")
     pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
 
     jobs = []
