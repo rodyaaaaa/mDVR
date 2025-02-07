@@ -3,7 +3,7 @@
     "rtsp://rtsp:link@example/live/0/MAIN"
   ],
   "program_options": {
-    "write_mode": "",
+    "write_mode": "video",
     "size_folder_limit_gb": 10
   },
   "rtsp_options": {

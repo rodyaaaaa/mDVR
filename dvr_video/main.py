@@ -46,11 +46,16 @@ async def main():
             except Exception as e:
                 logger.error(f"Не вдалось ініціалізувати відео {e}")
 
-    for process in jobs:
-        process.communicate()
-        if process.returncode != 0:
-            logger.error(f"Камера не вдалось записати відео")
-    jobs.clear()
+    # Очікує на завершения усіх фоновых процесів
+    if len(jobs) >= len(config['camera_list']):
+        for process in jobs:
+            process.communicate()
+        for count, process in enumerate(jobs):
+            if process.returncode != 0:
+                logger.error(f"Камера {count + 1} не вдалось записати відео")
+            elif process.returncode == 0:
+                logger.info(f"Камера {count + 1} записала відео")
+        jobs.clear()
 
 
 if __name__ == "__main__":
