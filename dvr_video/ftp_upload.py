@@ -18,7 +18,7 @@ async def main():
     server = config['ftp']['server']
     user = config['ftp']['user']
     password = config['ftp']['password']
-    port = config['ftp']['port']
+    port = int(config['ftp']['port'])
     car_name = config['car_name']
 
     ftp = FTPCon(server, port, user, password, car_name)
