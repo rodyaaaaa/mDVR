@@ -49,10 +49,6 @@ def _find_files_with_extra_after_log(directory):
     return result
 
 
-async def find_files_with_extra_after_log(directory):
-    return await asyncio.to_thread(_find_files_with_extra_after_log, directory)
-
-
 def extract_date_from_filename(filename: str) -> str | None:
     pattern = re.compile(r'\.log\.(\d{4}-\d{2}-\d{2})')
     match = pattern.search(filename)
@@ -61,6 +57,10 @@ def extract_date_from_filename(filename: str) -> str | None:
         date = date.strftime('%d-%m-%Y')
         return str(date)
     return None
+
+
+async def find_files_with_extra_after_log(directory):
+    return await asyncio.to_thread(_find_files_with_extra_after_log, directory)
 
 
 async def extract_date_from_filename_async(filename: str) -> str | None:

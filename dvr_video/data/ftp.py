@@ -16,7 +16,7 @@ class FTPCon:
     async def upload_to_ftp(self, logger):
         async with aioftp.Client.context(self.host, self.port, self.username, self.password) as client:
             if await client.exists(self.car_name) is False:
-                logger.error(f"Directory {self.car_name} does not exist. It will be create.")
+                logger.error(f"Directory {self.car_name} does not exist. It will be created.")
                 await client.make_directory(self.car_name)
             await client.change_directory(self.car_name)
 
