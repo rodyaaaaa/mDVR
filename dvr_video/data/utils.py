@@ -5,6 +5,7 @@ import re
 import shutil
 
 from datetime import datetime
+from typing import List
 
 
 def read_config():
@@ -36,6 +37,9 @@ async def move():
             f"materials/{i}"
         )
 
+
+def file_date_sort(file_list: List[str]) -> List[str]:
+    return sorted(file_list, key=lambda x: x[3:-4])
 
 def _find_files_with_extra_after_log(directory):
     result = []

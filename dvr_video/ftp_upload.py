@@ -11,7 +11,7 @@ logger = Logger('mdvr_ftp', "logs/mdvr_ftp/ftp.log", 10, "H", 2)
 
 
 async def main():
-    logger.info("FTP engine start")
+    pathlib.Path("temp").mkdir(exist_ok=True)
     pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
 
     server = config['ftp']['server']
@@ -24,8 +24,6 @@ async def main():
 
     await ftp.upload_to_ftp(logger)
     await ftp.upload_logs_to_ftp(logger)
-
-    logger.info("FTP Engine has finished successfully.")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import os
 import pathlib
 import aioftp
 
-from data.utils import get_date, find_files_with_extra_after_log, extract_date_from_filename_async
+from data.utils import get_date, find_files_with_extra_after_log, extract_date_from_filename_async, file_date_sort
 
 
 class FTPCon:
@@ -26,6 +26,10 @@ class FTPCon:
                 logger.error(f"Error {e}")
                 pathlib.Path("materials").mkdir(exist_ok=True)
 
+            print(videos)
+            videos = file_date_sort(videos)
+            print(videos)
+
             for video in videos:
                 data = await get_date(video)
                 print(data)
@@ -41,6 +45,7 @@ class FTPCon:
                 vd = pathlib.Path("materials", video)
                 await client.upload(vd)
                 logger.info(f"The file {video} has been successful upload. Remove from local storage.")
+                os.remove(vd)
 
                 await client.change_directory()
 
@@ -86,7 +91,6 @@ class FTPCon:
                     print(log)
 
                     await client.upload(lg)
-                    logger.info(f"The file {lg} has been successful upload. Remove from local storage.")
                     os.remove(os.path.join("logs", folder, log))
 
                     pt = pathlib.Path("/", self.car_name)
