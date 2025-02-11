@@ -184,13 +184,13 @@ function updateWriteMode() {
         .then(result => {
             if (result.success) {
                 toggleModeSettings(selectedMode);
-                showNotification('Режим запису оновлено!'); // Показываем уведомление
+                showNotification('Режим запису оновлено!');
             } else {
-                showNotification(`Помилка: ${result.error}`, true); // Показываем уведомление об ошибке
+                showNotification(`Помилка: ${result.error}`, true);
             }
         })
         .catch(error => {
-            showNotification(`Помилка: ${error.message}`, true); // Показываем уведомление об ошибке
+            showNotification(`Помилка: ${error.message}`, true);
         });
 }
 
