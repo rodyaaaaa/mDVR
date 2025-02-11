@@ -128,6 +128,7 @@ function saveVideoOptions() {
         rtsp_transport: rtspTransport,
         rtsp_resolution_x: rtspResX,
         rtsp_resolution_y: rtspResY,
+        folder_size: document.getElementById('size-folder-limit-gb').value,
         video_duration: selectedMode === 'video' ? document.getElementById('video-duration').value : null,
         fps: selectedMode === 'video' ? parseInt(document.getElementById('video-fps').value) : null,
         photo_timeout: selectedMode === 'photo' ? parseInt(document.getElementById('photo-timeout').value) : null
@@ -138,15 +139,15 @@ function saveVideoOptions() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
     })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                showNotification('The settings is saved!');
-            } else {
-                showNotification(`ERROR ${result.error}`, true)
-            }
-        })
-        .catch(error => showNotification('Connection error', true));
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('The settings is saved!');
+        } else {
+            showNotification(`ERROR ${result.error}`, true)
+        }
+    })
+    .catch(error => showNotification('Connection error', true));
 }
 
 function saveVpnConfig() {

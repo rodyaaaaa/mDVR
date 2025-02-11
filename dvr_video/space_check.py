@@ -51,10 +51,9 @@ async def from_gb_to_bytes(gb: int) -> int:
 
 
 async def main():
-    logger.info("Space Check start.")
     bt = await get_dir_size("materials")
 
-    folder_size_limit = config['size_folder_limit_gb']
+    folder_size_limit = config['program_options']['size_folder_limit_gb']
 
     folder_size_limit= await from_gb_to_bytes(folder_size_limit)
 

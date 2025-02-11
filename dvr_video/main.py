@@ -61,9 +61,10 @@ async def main():
         # Очікує на завершения усіх фоновых процесів
         for process in jobs:
             process.communicate()
-        for count, process in enumerate(jobs):
-            if process.returncode != 0 and process.returncode != 234:
-                logger.error(f"Camera {count + 1} failed to record file: {links_names[count]}")
+        if not photo_mode:
+            for count, process in enumerate(jobs):
+                if process.returncode != 0 and process.returncode != 234:
+                    logger.error(f"Returncode: {process.returncode}. Camera {count + 1} failed to record file: {links_names[count]}")
         jobs.clear()
 
         await move()

@@ -62,7 +62,8 @@ def index():
                            rtsp_options=config['rtsp_options'],
                            video_options=config['video_options'],
                            ftp=config['ftp'],
-                           program_options=config['program_options']  # <-- Добавить эту строку
+                           photo_timeout=config['photo_timeout'],
+                           program_options=config['program_options']
                            )
 
 
@@ -129,6 +130,8 @@ def save_video_options():
     try:
         config = load_config()
 
+        config['program_options']['size_folder_limit_gb'] = int(data.get('folder_size'))
+
         # Оновлення RTSP параметрів
         config['rtsp_options'] = {
             "rtsp_transport": data.get('rtsp_transport', 'tcp'),
@@ -136,44 +139,42 @@ def save_video_options():
             "rtsp_resolution_y": data.get('rtsp_resolution_y', 480)
         }
 
-        # Отримання та очищення введеного часу
-        video_duration = data.get('video_duration', '00:02:00').strip().lower()
+        video_duration = data.get('video_duration')
+        if video_duration:
+            video_duration = video_duration.strip().lower()
+            cleaned_duration = ''.join([c for c in video_duration if c.isdigit() or c == ':'])
+            if ':' in cleaned_duration:
+                parts = cleaned_duration.split(':')
+                if len(parts) != 3:
+                    raise ValueError("Невірний формат. Використовуйте HH:MM:SS або хвилини (напр. '10 хв')")
+                h, m, s = map(int, parts)
+            else:
+                try:
+                    minutes = int(cleaned_duration)
+                    h = minutes // 60
+                    m = minutes % 60
+                    s = 0
+                except ValueError:
+                    raise ValueError("Невірний формат хвилин. Наприклад: '10' або '10 хв'")
 
-        # Видалення всіх нецифрових символів, крім двокрапки
-        cleaned_duration = ''.join([c for c in video_duration if c.isdigit() or c == ':'])
+            if m > 59 or s > 59:
+                raise ValueError("Невірні значення хвилин/секунд (мають бути ≤ 59)")
 
-        # Якщо є двокрапка - перевірити формат HH:MM:SS
-        if ':' in cleaned_duration:
-            parts = cleaned_duration.split(':')
-            if len(parts) != 3:
-                raise ValueError("Невірний формат. Використовуйте HH:MM:SS або хвилини (напр. '10 хв')")
-            h, m, s = map(int, parts)
-        else:
-            # Інтерпретувати як хвилини
-            try:
-                minutes = int(cleaned_duration)
-                h = minutes // 60
-                m = minutes % 60
-                s = 0
-            except ValueError:
-                raise ValueError("Невірний формат хвилин. Наприклад: '10' або '10 хв'")
+            formatted_duration = f"{h:02d}:{m:02d}:{s:02d}"
+            config['video_options']['video_duration'] = formatted_duration
+            config['video_options']['fps'] = data.get('fps', 15)
 
-        # Перевірка коректності значень
-        if m > 59 or s > 59:
-            raise ValueError("Невірні значення хвилин/секунд (мають бути ≤ 59)")
+            # Оновлення Watchdog
+            seconds = timedelta(hours=h, minutes=m, seconds=s).total_seconds()
+            update_watchdog(int(seconds * 10))
 
-        # Форматування у HH:MM:SS
-        formatted_duration = f"{h:02d}:{m:02d}:{s:02d}"
+        photo_timeout = data['photo_timeout']
 
-        # Оновлення конфіга
-        config['video_options']['video_duration'] = formatted_duration
-        config['video_options']['fps'] = data.get('fps', 15)
+        # Оновлення Photo Timeout
+        if photo_timeout:
+            config['photo_timeout'] = int(photo_timeout)
+            update_watchdog(int(photo_timeout * 5))
 
-        # Оновлення Watchdog
-        seconds = timedelta(hours=h, minutes=m, seconds=s).total_seconds()
-        update_watchdog(int(seconds * 10))
-
-        # Збереження
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
