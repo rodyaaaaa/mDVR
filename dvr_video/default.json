@@ -15,7 +15,7 @@
     "video_duration": "00:02:00",
     "fps": 15
   },
-  "photo_timeout": "",
+  "photo_timeout": 120,
   "ftp": {
     "server": "",
     "user": "",

@@ -1,6 +1,7 @@
 import asyncio
 import pathlib
 import ffmpeg
+import time
 
 from datetime import datetime
 from data.logger import Logger
@@ -24,7 +25,6 @@ async def async_write_video(current_link, file_name):
 
 async def async_write_photo(current_link, file_name):
     stream = ffmpeg.input(config['camera_list'][current_link], rtsp_transport=config['rtsp_options']['rtsp_transport'])
-    stream = ffmpeg.filter(stream, 'fps', fps=1/config['photo_timeout'])
     stream = ffmpeg.output(stream, f"temp/{current_link+1}24{file_name}.jpg", format='image2')
     process = ffmpeg.run_async(stream, quiet=True)
     return process
@@ -34,6 +34,7 @@ async def main():
     pathlib.Path("temp").mkdir(exist_ok=True)
     pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
     photo_mode = bool(config['program_options']['photo_mode'])
+    photo_timeout = int(config['photo_timeout'])
 
     await move()
 
@@ -61,11 +62,14 @@ async def main():
         for process in jobs:
             process.communicate()
         for count, process in enumerate(jobs):
-            if process.returncode != 0:
-                logger.error(f"Камера {count + 1} не вдалось записати відео: {links_names[count]}")
+            if process.returncode != 0 and process.returncode != 234:
+                logger.error(f"Camera {count + 1} failed to record file: {links_names[count]}")
         jobs.clear()
 
         await move()
+
+        if photo_timeout:
+            time.sleep(photo_timeout)
 
 
 if __name__ == "__main__":
