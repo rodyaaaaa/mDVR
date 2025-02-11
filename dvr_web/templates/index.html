@@ -9,13 +9,13 @@
 <body>
 <header>
     <div class="mode-switch radio-group">
-        <input type="radio" id="mode-video" name="write_mode" value="video"
-               {% if program_options.write_mode == 'video' %}checked{% endif %}
+        <input type="radio" id="mode-video" name="write_mode" value="0"
+               {% if program_options.photo_mode == 0 %}checked{% endif %}
                onchange="updateWriteMode()">
         <label for="mode-video">Video</label>
 
-        <input type="radio" id="mode-photo" name="write_mode" value="photo"
-               {% if program_options.write_mode == 'photo' %}checked{% endif %}
+        <input type="radio" id="mode-photo" name="write_mode" value="1"
+               {% if program_options.photo_mode == 1 %}checked{% endif %}
                onchange="updateWriteMode()">
         <label for="mode-photo">Photo</label>
     </div>

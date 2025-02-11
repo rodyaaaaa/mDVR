@@ -71,7 +71,8 @@ def save_write_mode():
     data = request.get_json()
     try:
         config = load_config()
-        config['program_options']['write_mode'] = data.get('write_mode', '')
+        # Конвертируем 'video' -> 0, 'photo' -> 1
+        config['program_options']['photo_mode'] = 0 if data.get('write_mode') == 'video' else 1
 
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)

@@ -102,13 +102,13 @@ function saveFtpConfig() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
-    .then(result => {
-        result.success
-            ? showNotification('The ftp settings is saved!')
-            : showNotification(`ERROR: ${result.error}`, true);
-    })
-    .catch(error => console.error('Помилка:', error));
+        .then(response => response.json())
+        .then(result => {
+            result.success
+                ? showNotification('The ftp settings is saved!')
+                : showNotification(`ERROR: ${result.error}`, true);
+        })
+        .catch(error => console.error('Помилка:', error));
 }
 
 function saveVideoOptions() {
@@ -138,15 +138,15 @@ function saveVideoOptions() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            showNotification('The settings is saved!');
-        } else {
-            showNotification(`ERROR ${result.error}`, true)
-        }
-    })
-    .catch(error => showNotification('Connection error', true));
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showNotification('The settings is saved!');
+            } else {
+                showNotification(`ERROR ${result.error}`, true)
+            }
+        })
+        .catch(error => showNotification('Connection error', true));
 }
 
 function saveVpnConfig() {
@@ -180,31 +180,27 @@ function updateWriteMode() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({write_mode: selectedMode})
     })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            toggleModeSettings(selectedMode);
-            showNotification('Режим запису оновлено!'); // Показываем уведомление
-        } else {
-            showNotification(`Помилка: ${result.error}`, true); // Показываем уведомление об ошибке
-        }
-    })
-    .catch(error => {
-        showNotification(`Помилка: ${error.message}`, true); // Показываем уведомление об ошибке
-    });
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                toggleModeSettings(selectedMode);
+                showNotification('Режим запису оновлено!'); // Показываем уведомление
+            } else {
+                showNotification(`Помилка: ${result.error}`, true); // Показываем уведомление об ошибке
+            }
+        })
+        .catch(error => {
+            showNotification(`Помилка: ${error.message}`, true); // Показываем уведомление об ошибке
+        });
 }
 
 function toggleModeSettings(mode) {
+    const isPhotoMode = mode === '1'; // теперь значение приходит как '0' или '1'
     const videoModeElements = document.querySelectorAll('.video-mode');
     const photoModeElements = document.querySelectorAll('.photo-mode');
 
-    if (mode === 'video') {
-        videoModeElements.forEach(element => element.style.display = 'flex');
-        photoModeElements.forEach(element => element.style.display = 'none');
-    } else if (mode === 'photo') {
-        videoModeElements.forEach(element => element.style.display = 'none');
-        photoModeElements.forEach(element => element.style.display = 'flex');
-    }
+    videoModeElements.forEach(el => el.style.display = isPhotoMode ? 'none' : 'flex');
+    photoModeElements.forEach(el => el.style.display = isPhotoMode ? 'flex' : 'none');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
