@@ -195,7 +195,7 @@ function updateWriteMode() {
 }
 
 function toggleModeSettings(mode) {
-    const isPhotoMode = mode === '1'; // теперь значение приходит как '0' или '1'
+    const isPhotoMode = mode === 'photo'; // теперь значение приходит как '0' или '1'
     const videoModeElements = document.querySelectorAll('.video-mode');
     const photoModeElements = document.querySelectorAll('.photo-mode');
 
