@@ -54,7 +54,7 @@
                     <option value="udp" {% if rtsp_options.rtsp_transport == 'udp' %}selected{% endif %}>UDP</option>
                 </select>
             </div>
-            <div class="input-row">
+            <div class="input-row video-mode">
                 <label for="rtsp-resolution">RTSP Resolution:</label>
                 <select id="rtsp-resolution">
                     <option value="1920x1080"
@@ -82,7 +82,7 @@
             <div class="input-row video-mode">
                 <label for="video-duration">Video duration:</label>
                 <input type="text" id="video-duration" value="{{ video_options.video_duration }}"
-                       placeholder="HH:MM:SS або хвилини (напр. '10' або '10 хв')">
+                       placeholder="HH:MM:SS or minutes (e.g., '10' or '10 min')">
             </div>
             <div class="input-row video-mode">
                 <label for="video-fps">Frames Per Second (FPS):</label>
@@ -97,12 +97,12 @@
         <div id="ftp-config" class="tab">
             <h2>FTP settings</h2>
             <div class="input-row">
-                <input type="text" value="{{ ftp.server }}" placeholder="URL сервера">
-                <input type="text" value="{{ ftp.port }}" placeholder="Порт (напр. 21)">
+                <input type="text" value="{{ ftp.server }}" placeholder="Server URL">
+                <input type="text" value="{{ ftp.port }}" placeholder="Port (e.g., 21)">
             </div>
-            <input type="text" value="{{ ftp.user }}" placeholder="Логін">
-            <input type="password" value="{{ ftp.password }}" placeholder="Пароль">
-            <input type="text" value="{{ ftp.car_name }}" placeholder="Назва авто">
+            <input type="text" value="{{ ftp.user }}" placeholder="Login">
+            <input type="password" value="{{ ftp.password }}" placeholder="Password">
+            <input type="text" value="{{ ftp.car_name }}" placeholder="Car name">
             <button onclick="saveFtpConfig()">Зберегти</button>
         </div>
         <div id="vpn-config" class="tab">

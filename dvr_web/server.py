@@ -56,14 +56,18 @@ def load_config():
 @app.route('/')
 def index():
     config = load_config()
-    # Добавить передачу program_options в шаблон
+
+    vpn_config = ""
+    try:
+        if os.path.exists(VPN_CONFIG_PATH):
+            with open(VPN_CONFIG_PATH, 'r') as f:
+                vpn_config = f.read()
+    except Exception as e:
+        print(f"Error reading VPN config: {str(e)}")
+
     return render_template('index.html',
-                           camera_list=config['camera_list'],
-                           rtsp_options=config['rtsp_options'],
-                           video_options=config['video_options'],
-                           ftp=config['ftp'],
-                           photo_timeout=config['photo_timeout'],
-                           program_options=config['program_options']
+                           vpn_config=vpn_config,
+                           **config
                            )
 
 
