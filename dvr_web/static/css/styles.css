@@ -247,7 +247,6 @@ input, textarea, select {
     font-size: 16px;
 }
 
-/* Адаптивность */
 @media (max-width: 1024px) {
     .container {
         flex-direction: column;
@@ -303,4 +302,75 @@ input, textarea, select {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.mode-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.mode-switch input[type="radio"] {
+    display: none;
+}
+
+.mode-switch label {
+    cursor: pointer;
+    font-size: 16px;
+    padding: 8px 15px;
+    background: #415a77;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+    color: #ffffff;
+}
+
+.mode-switch label:hover {
+    background: #778da9;
+}
+
+.mode-switch label:has(input:checked) {
+    background: #778da9;
+}
+
+.radio-group input {
+    display: none;
+}
+
+.radio-group label {
+    cursor: pointer;
+    font-size: 18px;
+    padding: 10px 20px;
+    background: #415a77;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    color: #ffffff;
+}
+
+.radio-group input:checked + label {
+    background: #778da9;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    background-color: #415a77;
+    animation: fadeIn 0.5s ease-in-out;
+    z-index: 1000;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.notification.success {
+    background-color: #4caf50;
+}
+
+.notification.error {
+    background-color: #e63946;
 }

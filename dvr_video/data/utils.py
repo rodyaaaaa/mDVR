@@ -5,6 +5,7 @@ import re
 import shutil
 
 from datetime import datetime
+from typing import List
 
 
 def read_config():
@@ -37,6 +38,9 @@ async def move():
         )
 
 
+def file_date_sort(file_list: List[str]) -> List[str]:
+    return sorted(file_list, key=lambda x: x[3:-4])
+
 def _find_files_with_extra_after_log(directory):
     result = []
     pattern = re.compile(r'\.log.+$', re.IGNORECASE)
@@ -49,10 +53,6 @@ def _find_files_with_extra_after_log(directory):
     return result
 
 
-async def find_files_with_extra_after_log(directory):
-    return await asyncio.to_thread(_find_files_with_extra_after_log, directory)
-
-
 def extract_date_from_filename(filename: str) -> str | None:
     pattern = re.compile(r'\.log\.(\d{4}-\d{2}-\d{2})')
     match = pattern.search(filename)
@@ -61,6 +61,10 @@ def extract_date_from_filename(filename: str) -> str | None:
         date = date.strftime('%d-%m-%Y')
         return str(date)
     return None
+
+
+async def find_files_with_extra_after_log(directory):
+    return await asyncio.to_thread(_find_files_with_extra_after_log, directory)
 
 
 async def extract_date_from_filename_async(filename: str) -> str | None:

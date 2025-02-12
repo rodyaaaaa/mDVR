@@ -1,3 +1,14 @@
+function showNotification(message, isError = false) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${isError ? 'error' : 'success'}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
 function showTab(tabId) {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
@@ -39,7 +50,7 @@ function changeStream(select) {
 }
 
 function changeLog(select) {
-    alert(`You a select: ${select.value}`);
+    showNotification(`You a select: ${select.value}`);
 }
 
 function saveVideoLinks() {
@@ -57,17 +68,17 @@ function saveVideoLinks() {
         },
         body: JSON.stringify(data),
     })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert('Video links saved successfully!');
-        } else {
-            alert(`Error: ${result.error}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error saving video links:', error);
-    });
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showNotification('Video links saved successfully!');
+            } else {
+                showNotification(`ERROR: ${result.error}`, true);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving video links:', error);
+        });
 }
 
 function saveFtpConfig() {
@@ -76,85 +87,67 @@ function saveFtpConfig() {
 
     const ftpConfig = {
         server: inputs[0].value,
+        port: inputs[1].value,
         user: inputs[2].value,
         password: inputs[3].value,
-        port: inputs[1].value,
+        car_name: inputs[4].value
     };
 
-    const carName = inputs[4].value;
-
     const data = {
-        ftp: ftpConfig,
-        car_name: carName,
+        ftp: ftpConfig
     };
 
     fetch('/save-ftp-config', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
     })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert('FTP configuration and car name saved successfully!');
-        } else {
-            alert(`Error: ${result.error}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error saving FTP configuration:', error);
-    });
+        .then(response => response.json())
+        .then(result => {
+            result.success
+                ? showNotification('The ftp settings is saved!')
+                : showNotification(`ERROR: ${result.error}`, true);
+        })
+        .catch(error => console.error('Помилка:', error));
 }
 
 function saveVideoOptions() {
     const rtspTransport = document.getElementById('rtsp-transport').value;
-    const videoResolution = document.getElementById('video-resolution').value;
-    const [videoResolutionX, videoResolutionY] = videoResolution.split('x');
-    const videoTimeInput = document.getElementById('video-time').value;
-    const videoFps = document.getElementById('video-fps').value;
+    const rtspResolution = document.getElementById('rtsp-resolution').value;
 
-    let videoTime;
-    if (!isNaN(videoTimeInput) && videoTimeInput.trim() !== "") {
-        const minutes = parseInt(videoTimeInput);
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
-        videoTime = `${String(hours).padStart(2, '0')}:${String(remainingMinutes).padStart(2, '0')}:00`;
-    } else {
-        videoTime = videoTimeInput;
+    if (!rtspResolution.includes('x')) {
+        showNotification('Невірний формат роздільної здатності! Використовуйте "ШИРИНАxВИСОТА"', true);
+        return;
     }
 
-    const videoOptions = {
-        rtsp_transport: rtspTransport,
-        video_resolution_x: parseInt(videoResolutionX),
-        video_resolution_y: parseInt(videoResolutionY),
-        time: videoTime,
-        fps: parseInt(videoFps)
-    };
+    const [rtspResX, rtspResY] = rtspResolution.split('x').map(Number);
+
+    const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
 
     const data = {
-        video_options: videoOptions
+        rtsp_transport: rtspTransport,
+        rtsp_resolution_x: rtspResX,
+        rtsp_resolution_y: rtspResY,
+        folder_size: document.getElementById('size-folder-limit-gb').value,
+        video_duration: selectedMode === 'video' ? document.getElementById('video-duration').value : null,
+        fps: selectedMode === 'video' ? parseInt(document.getElementById('video-fps').value) : null,
+        photo_timeout: selectedMode === 'photo' ? parseInt(document.getElementById('photo-timeout').value) : null
     };
 
     fetch('/save-video-options', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(result => {
         if (result.success) {
-            alert('Video options saved successfully!');
+            showNotification('The settings is saved!');
         } else {
-            alert(`Error: ${result.error}`);
+            showNotification(`ERROR ${result.error}`, true)
         }
     })
-    .catch(error => {
-        console.error('Error saving video options:', error);
-    });
+    .catch(error => showNotification('Connection error', true));
 }
 
 function saveVpnConfig() {
@@ -165,17 +158,53 @@ function saveVpnConfig() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ vpn_config: vpnConfig }),
+        body: JSON.stringify({vpn_config: vpnConfig}),
     })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert('VPN config saved successfully!');
-        } else {
-            alert(`Error: ${result.error}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error saving VPN config:', error);
-    });
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showNotification('VPN config saved successfully!');
+            } else {
+                showNotification(`ERROR: ${result.error}`, true);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving VPN config:', error);
+        });
 }
+
+function updateWriteMode() {
+    const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
+
+    fetch('/save-write-mode', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({write_mode: selectedMode})
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                toggleModeSettings(selectedMode);
+                showNotification('Режим запису оновлено!');
+            } else {
+                showNotification(`Помилка: ${result.error}`, true);
+            }
+        })
+        .catch(error => {
+            showNotification(`Помилка: ${error.message}`, true);
+        });
+}
+
+function toggleModeSettings(mode) {
+    const isPhotoMode = mode === 'photo'; // теперь значение приходит как '0' или '1'
+    const videoModeElements = document.querySelectorAll('.video-mode');
+    const photoModeElements = document.querySelectorAll('.photo-mode');
+
+    videoModeElements.forEach(el => el.style.display = isPhotoMode ? 'none' : 'flex');
+    photoModeElements.forEach(el => el.style.display = isPhotoMode ? 'flex' : 'none');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
+    toggleModeSettings(initialMode);
+});
