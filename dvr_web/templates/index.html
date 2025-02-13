@@ -19,21 +19,24 @@
                onchange="updateWriteMode()">
         <label for="mode-photo">Photo</label>
     </div>
-    <div class="dvr-label">
-        <h1>mDVR</h1>
-        <p aria-placeholder="None">IMEI: {{ program_options.imei }}</p>
-    </div>
+    <h1>mDVR</h1>
+    <p aria-placeholder="None">IMEI: {{ program_options.imei }}</p>
 </header>
 <div class="container">
     <aside class="sidebar">
-        <button onclick="showTab('cam-config')">RTSP links</button>
+        <button class="active" onclick="showTab('cam-config')">RTSP links</button>
         <button onclick="showTab('video-options')">Video Settings</button>
         <button onclick="showTab('ftp-config')">FTP</button>
         <button onclick="showTab('vpn-config')">VPN</button>
     </aside>
     <main class="content">
         <div id="cam-config" class="tab active">
-            <h2>List of RTSP links</h2>
+            <div>
+                <div class="cam-config-header">
+                    <h2>List of RTSP links</h2>
+                    <button onclick="openModal()">Add rtsp-link</button>
+                </div>
+            </div>
             <div id="cam-fields">
                 {% for url in camera_list %}
                     <div class="cam-field">
@@ -43,10 +46,6 @@
                     </div>
                 {% endfor %}
             </div>
-            <div class="input-row">
-                <button onclick="addCam()">+ Add</button>
-            </div>
-            <button onclick="saveVideoLinks()">Save</button>
         </div>
         <div id="video-options" class="tab">
             <h2>Video Settings</h2>
@@ -80,7 +79,8 @@
             </div>
             <div class="input-row">
                 <label for="size-folder-limit-gb">Maximum file size (GB)</label>
-                <input type="text" id="size-folder-limit-gb" value="{{ program_options.size_folder_limit_gb }}" placeholder="Size in gb (example: 10)">
+                <input type="text" id="size-folder-limit-gb" value="{{ program_options.size_folder_limit_gb }}"
+                       placeholder="Size in gb (example: 10)">
             </div>
             <div class="input-row video-mode">
                 <label for="video-duration">Video duration:</label>
@@ -114,6 +114,14 @@
             <button onclick="saveVpnConfig()">Save</button>
         </div>
     </main>
+</div>
+<div id="addCamModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Добавить RTSP ссылку</h2>
+        <input type="text" id="rtspUrlInput" placeholder="Введите RTSP ссылку">
+        <button onclick="confirmAddCam()">Добавить</button>
+    </div>
 </div>
 <script src="../static/js/script.js"></script>
 </body>

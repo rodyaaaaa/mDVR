@@ -14,6 +14,9 @@ VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
 REGULAR_SEARCH_IP = r"\b(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}\b"
 
 
+app = Flask(__name__)
+
+
 def update_watchdog(value):
     try:
         with open(SERVICE_PATH, 'r') as file:
@@ -34,9 +37,6 @@ def update_watchdog(value):
         return {"success": True, "message": "WatchdogSec updated successfully"}
     except Exception as e:
         return {"success": False, "error": str(e)}
-
-
-app = Flask(__name__)
 
 
 def load_config():
@@ -81,25 +81,6 @@ def update_imei():
         config['program_options']['imei'] = imei
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
-
-
-@app.route('/')
-def index():
-    update_imei()
-    config = load_config()
-
-    vpn_config = ""
-    try:
-        if os.path.exists(VPN_CONFIG_PATH):
-            with open(VPN_CONFIG_PATH, 'r') as f:
-                vpn_config = f.read()
-    except Exception as e:
-        print(f"Error reading VPN config: {str(e)}")
-
-    return render_template('index.html',
-                           vpn_config=vpn_config,
-                           **config
-                           )
 
 
 @app.route('/save-write-mode', methods=['POST'])
@@ -238,5 +219,24 @@ def save_vpn_config():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route('/')
+def index():
+    update_imei()
+    config = load_config()
+
+    vpn_config = ""
+    try:
+        if os.path.exists(VPN_CONFIG_PATH):
+            with open(VPN_CONFIG_PATH, 'r') as f:
+                vpn_config = f.read()
+    except Exception as e:
+        print(f"Error reading VPN config: {str(e)}")
+
+    return render_template('index.html',
+                           vpn_config=vpn_config,
+                           **config
+                           )
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=8009)

@@ -1,8 +1,8 @@
 Package: mdvr
-Version: 2.0
+Version: 0.9
 Section: base
 Priority: optional
 Architecture: all
-Depends: ffmpeg, python3 (>= 3.11), python3-venv, curl, libcurl4, wireguard, tightvncserver, xorg, chromium, chromium-l10n, openbox
-Maintainer: Leavemark Dev bozhokrodion02@gmail.com
+Depends: ffmpeg, python3 (>= 3.11), python3-venv, curl, libcurl4, wireguard
+Maintainer: Leaveamark Dev bozhokrodion02@gmail.com
 Description: DVR app that record video from rtsp and upload to ftp.

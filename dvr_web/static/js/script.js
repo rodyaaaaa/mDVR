@@ -1,3 +1,21 @@
+const modal = document.getElementById('addCamModal');
+
+const addCamBtn = document.querySelector('.cam-config-header button');
+
+const closeBtn = document.querySelector('.close');
+
+function openModal() {
+    modal.style.display = 'block';
+}
+
+function closeModal() {
+    modal.style.display = 'none';
+}
+
+addCamBtn.addEventListener('click', openModal);
+
+closeBtn.addEventListener('click', closeModal);
+
 function showNotification(message, isError = false) {
     const notification = document.createElement('div');
     notification.className = `notification ${isError ? 'error' : 'success'}`;
@@ -9,10 +27,52 @@ function showNotification(message, isError = false) {
     }, 3000);
 }
 
-function showTab(tabId) {
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
+window.addEventListener('click', (event) => {
+    if (event.target === modal) {
+        closeModal();
+    }
+});
+
+function confirmAddCam() {
+    const rtspUrl = document.getElementById('rtspUrlInput').value;
+    if (rtspUrl) {
+        // Добавляем новую камеру
+        addCam();
+        // Устанавливаем значение в поле ввода
+        const camFields = document.querySelectorAll('#cam-fields .cam-field input');
+        camFields[camFields.length - 1].value = rtspUrl;
+
+        // Сохраняем изменения на сервере
+        saveVideoLinks();
+
+        // Закрываем модальное окно
+        closeModal();
+    } else {
+        showNotification('Пожалуйста, введите RTSP ссылку', true);
+    }
 }
+
+function showTab(tabId) {
+    // Видаляємо клас 'active' з усіх вкладок
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    // Додаємо клас 'active' до вибраної вкладки
+    document.getElementById(tabId).classList.add('active');
+
+    // Видаляємо клас 'active' з усіх кнопок
+    document.querySelectorAll('.sidebar button').forEach(button => button.classList.remove('active'));
+    // Додаємо клас 'active' до натиснутої кнопки
+    const activeButton = document.querySelector(`.sidebar button[onclick="showTab('${tabId}')"]`);
+    activeButton.classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const activeTab = document.querySelector('.tab.active');
+    if (activeTab) {
+        const tabId = activeTab.id;
+        const activeButton = document.querySelector(`.sidebar button[onclick="showTab('${tabId}')"]`);
+        activeButton.classList.add('active');
+    }
+});
 
 let camCounter = document.querySelectorAll('#cam-fields .cam-field').length;
 
@@ -20,6 +80,8 @@ function deleteCam(button) {
     const camField = button.closest('.cam-field');
     camField.remove();
     updateCamLabels();
+    // Сохраняем изменения на сервере
+    saveVideoLinks();
 }
 
 function updateCamLabels() {
@@ -139,15 +201,15 @@ function saveVideoOptions() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            showNotification('The settings is saved!');
-        } else {
-            showNotification(`ERROR ${result.error}`, true)
-        }
-    })
-    .catch(error => showNotification('Connection error', true));
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showNotification('The settings is saved!');
+            } else {
+                showNotification(`ERROR ${result.error}`, true)
+            }
+        })
+        .catch(error => showNotification('Connection error', true));
 }
 
 function saveVpnConfig() {

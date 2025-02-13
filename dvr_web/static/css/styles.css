@@ -9,12 +9,23 @@ body {
 header {
     background: linear-gradient(90deg, #1b263b, #0d1b2a);
     color: #ffffff;
-    padding: 20px;
+    padding: 12px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    border-bottom: 2px solid #415a77;
 }
+
+header h1 {
+    font-size: 28px;
+    margin: 4px 0;
+}
+
+header p {
+    font-size: 20px;
+    margin: 2px 0;
+}
+
 
 .radio-group input {
     display: none;
@@ -35,7 +46,9 @@ header {
 
 .container {
     display: flex;
+    background: linear-gradient(180deg, #1b263b, #0d1b2a);
     height: calc(100vh - 80px);
+    align-items: flex-start;
 }
 
 .sidebar {
@@ -45,32 +58,56 @@ header {
     display: flex;
     flex-direction: column;
     transition: all 0.3s ease;
+    height: 100%;
+    border-right: 2px solid #415a77;
 }
 
 .sidebar button {
-    background: #415a77;
+    background: transparent;
     color: white;
-    padding: 15px;
+    padding: 12px 20px;
     border: none;
-    border-radius: 5px;
-    margin-bottom: 10px;
+    border-bottom: 2px solid transparent;
     cursor: pointer;
-    transition: transform 0.3s ease;
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    position: relative;
+    border-radius: 5px;
+}
+
+/* Ефект при наведенні мишкою */
+.sidebar button:hover {
+    transform: translateX(10px); /* Зсув кнопки направо */
+}
+
+/* Стилі для активної кнопки */
+.sidebar button.active {
+    background: #3b4a5e;
+    transform: translateX(10px); /* Зсув активної кнопки направо */
+    border-bottom: 2px solid white; /* Бордер знизу для активної кнопки */
+}
+
+/* Анімація при наведенні */
+@keyframes slideRight {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(10px);
+    }
 }
 
 .sidebar button:hover {
-    transform: scale(1.05);
-    background: #778da9;
+    animation: slideRight 0.3s ease forwards; /* Анімація зсуву направо */
 }
 
 .content {
     flex-grow: 1;
     padding: 30px;
-    background: #0d1b2a;
-    border-left: 2px solid #415a77;
     overflow-y: auto;
-    border-radius: 10px;
+    margin: 0 20px;
 }
 
 .content-config {
@@ -102,11 +139,61 @@ h2 {
     align-items: center;
     gap: 15px;
     margin-bottom: 10px;
+    position: relative;
 }
 
 .cam-field label {
     font-size: 18px;
+    margin: auto 0;
     width: 80px;
+}
+
+.cam-field input {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #1b263b;
+    color: #ffffff;
+    font-size: 16px;
+    margin: auto;
+}
+
+.cam-field button {
+    padding: 12px 20px;
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 16px;
+    margin: auto;
+}
+
+.cam-config-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ffffff;
+}
+
+.cam-config-header h2 {
+    display: inline-block;
+    text-align: left;
+}
+
+.cam-config-header button {
+    padding: 10px 30px;
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 16px;
+    margin: auto 0;
 }
 
 input, textarea, select {
@@ -136,6 +223,71 @@ button:hover {
     background: #778da9;
 }
 
+/* Стили для модального окна */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #1b263b;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #415a77;
+    border-radius: 10px;
+    width: 50%;
+    max-width: 500px;
+    color: #ffffff;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #ffffff;
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #0d1b2a;
+    color: #ffffff;
+}
+
+.modal-content button {
+    padding: 10px 20px;
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.modal-content button:hover {
+    background: #778da9;
+}
+
 .delete-cam {
     background: #e63946 !important;
     padding: 5px 12px !important;
@@ -146,14 +298,6 @@ button:hover {
 .delete-cam:hover {
     background: #d62828 !important;
     transform: scale(1.1);
-}
-
-.cam-field {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 10px;
-    position: relative;
 }
 
 #video-options .input-row {
@@ -319,8 +463,8 @@ input, textarea, select {
 
 .mode-switch label {
     cursor: pointer;
-    font-size: 16px;
-    padding: 8px 15px;
+    font-size: 14px;
+    padding: 6px 12px;
     background: #415a77;
     border-radius: 5px;
     transition: background 0.3s ease;
