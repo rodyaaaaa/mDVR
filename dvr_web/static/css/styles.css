@@ -336,6 +336,12 @@ button:hover {
     margin-top: 20px;
 }
 
+#video-options h2 {
+    text-align: left;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ffffff;
+}
+
 #video-options button:hover {
     background: #778da9;
 }
@@ -370,6 +376,12 @@ textarea {
     gap: 20px;
 }
 
+#ftp-config h2 {
+    text-align: left;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ffffff;
+}
+
 #ftp-config input[type="text"],
 #ftp-config input[type="password"] {
     flex-grow: 1;
@@ -379,6 +391,12 @@ textarea {
     background: #1b263b;
     color: #ffffff;
     font-size: 16px;
+}
+
+#vpn-config h2 {
+    text-align: left;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ffffff;
 }
 
 input, textarea, select {
