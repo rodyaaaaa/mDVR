@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 from datetime import timedelta
 from flask import Flask, request, jsonify, render_template
@@ -10,6 +11,7 @@ CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, CONFIG_FILE)
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_PATH, 'default.json')
 SERVICE_PATH = "/etc/systemd/system/mdvr.service"
 VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
+REGULAR_SEARCH_IP = r"\b(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}\b"
 
 
 def update_watchdog(value):
@@ -53,8 +55,37 @@ def load_config():
         return config
 
 
+def update_imei():
+    config = load_config()
+    imei = None
+    car_name = config['ftp']['car_name']
+
+    vpn_ip = ""
+
+    try:
+        with open(VPN_CONFIG_PATH, 'r') as f:
+            for line in f:
+                if line.startswith('Address'):
+                    vpn_ip = re.search(REGULAR_SEARCH_IP, line).group(0)
+                    vpn_ip = vpn_ip.replace('.', '')
+    except Exception as e:
+        print(e)
+
+    print(vpn_ip)
+
+    if car_name and vpn_ip:
+        space = 15 - (len(car_name) + len(vpn_ip))
+        print(space)
+        imei = str(car_name) + ('0' * space) + str(vpn_ip)
+
+        config['program_options']['imei'] = imei
+        with open(CONFIG_FULL_PATH, 'w') as file:
+            json.dump(config, file, indent=4)
+
+
 @app.route('/')
 def index():
+    update_imei()
     config = load_config()
 
     vpn_config = ""
@@ -109,17 +140,15 @@ def save_ftp_config():
     try:
         config = load_config()
 
-        # Отримуємо дані з об'єкту 'ftp' з клієнта
         ftp_data = data.get('ftp', {})
         config['ftp'] = {
             "server": ftp_data.get('server', ''),
             "port": ftp_data.get('port', 21),
             "user": ftp_data.get('user', ''),
             "password": ftp_data.get('password', ''),
-            "car_name": ftp_data.get('car_name', '')  # Тепер правильно
+            "car_name": ftp_data.get('car_name', '')
         }
 
-        # Зберігаємо оновлену конфігурацію
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 

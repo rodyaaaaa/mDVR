@@ -4,7 +4,8 @@
   ],
   "program_options": {
     "photo_mode": 0,
-    "size_folder_limit_gb": 10
+    "size_folder_limit_gb": 10,
+    "imei": 0
   },
   "rtsp_options": {
     "rtsp_transport": "tcp",

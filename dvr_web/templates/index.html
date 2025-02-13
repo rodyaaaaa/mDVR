@@ -19,7 +19,10 @@
                onchange="updateWriteMode()">
         <label for="mode-photo">Photo</label>
     </div>
-    <h1>mDVR</h1>
+    <div class="dvr-label">
+        <h1>mDVR</h1>
+        <p aria-placeholder="None">IMEI: {{ program_options.imei }}</p>
+    </div>
 </header>
 <div class="container">
     <aside class="sidebar">
@@ -102,7 +105,7 @@
             </div>
             <input type="text" value="{{ ftp.user }}" placeholder="Login">
             <input type="password" value="{{ ftp.password }}" placeholder="Password">
-            <input type="text" value="{{ ftp.car_name }}" placeholder="Car name">
+            <input type="number" value="{{ ftp.car_name }}" min="1" max="6" placeholder="000">
             <button onclick="saveFtpConfig()">Save</button>
         </div>
         <div id="vpn-config" class="tab">
