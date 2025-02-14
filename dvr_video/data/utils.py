@@ -14,9 +14,7 @@ def read_config():
             data = json.load(config_file)
         return data
 
-    with open("default.json", 'r') as config_file:
-        data = json.load(config_file)
-    return data
+    return False
 
 
 async def get_date(video):

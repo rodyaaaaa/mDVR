@@ -1,0 +1,9 @@
+[Unit]
+Description=run mdvr_system_guard every 2 hours
+
+[Timer]
+Unit=mdvr_system_guard.service
+OnBootSec=2min
+
+[Install]
+WantedBy=timers.target

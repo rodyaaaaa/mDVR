@@ -1,0 +1,12 @@
+[Unit]
+Description=Monitoring the state of hardware and network
+Wants=mdvr_system_guard.timer
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/mdvr/dvr_video
+ExecStart=/opt/mdvr/venv/bin/python /opt/mdvr/dvr_video/system_guard.py
+
+[Install]
+WantedBy=multi-user.target
