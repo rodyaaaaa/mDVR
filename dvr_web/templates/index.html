@@ -101,13 +101,31 @@
         </div>
         <div id="ftp-config" class="tab">
             <h2>FTP settings</h2>
-            <div class="input-row">
-                <input type="text" value="{{ ftp.server }}" placeholder="Server URL">
-                <input type="text" value="{{ ftp.port }}" placeholder="Port (e.g., 21)">
+            <div>
+                <div class="input-row">
+                    <label for="ftp-server-ip">IP: </label>
+                    <input type="text" id="ftp-server-ip" value="{{ ftp.server }}" placeholder="Server URL">
+                </div>
+                <div class="input-row">
+                    <label for="ftp-server-port">Port: </label>
+                    <input type="number" id="ftp-server-port" value="{{ ftp.port }}" placeholder="Port (e.g., 21)">
+                </div>
             </div>
-            <input type="text" value="{{ ftp.user }}" placeholder="Login">
-            <input type="password" value="{{ ftp.password }}" placeholder="Password">
-            <input type="number" value="{{ ftp.car_name }}" min="1" max="6" placeholder="000">
+            <div>
+                <div class="input-row">
+                    <label for="ftp-server-login">Login: </label>
+                    <input type="text" id="ftp-server-login" value="{{ ftp.user }}" placeholder="Login">
+                </div>
+                <div class="input-row">
+                    <label for="ftp-server-passwd">Password: </label>
+                    <input type="password" id="ftp-server-passwd" value="{{ ftp.password }}" placeholder="Password">
+                </div>
+            </div>
+            <div class="input-row">
+                <label for="ftp-server-carname">Carname: </label>
+                <input type="number" id="ftp-server-carname" value="{{ ftp.car_name }}" min="1" max="6"
+                       placeholder="000">
+            </div>
             <button onclick="saveFtpConfig()">Save</button>
         </div>
         <div id="vpn-config" class="tab">

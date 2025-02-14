@@ -366,14 +366,29 @@ textarea {
 }
 
 #ftp-config input {
-    display: block;
-    width: calc(50% - 10px);
+    width: 80%;
+    margin: auto;
+    padding: 10px;
+    font-size: 16px;
+}
+
+#ftp-config div {
+    display: flex;
+    gap: 10px;
     margin-bottom: 15px;
 }
 
 #ftp-config .input-row {
+    flex: 1;
     display: flex;
-    gap: 20px;
+    align-items: center;
+}
+
+#ftp-config label {
+    margin: auto;
+    min-width: 60px;
+    font-size: 16px;
+    line-height: 1.5;
 }
 
 #ftp-config h2 {
