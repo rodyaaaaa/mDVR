@@ -60,7 +60,7 @@ async def main():
 
         # Очікує на завершения усіх фоновых процесів
         for process in jobs:
-            process.communicate()
+            process.wait()
         if not photo_mode:
             for count, process in enumerate(jobs):
                 if process.returncode != 0 and process.returncode != 234:
