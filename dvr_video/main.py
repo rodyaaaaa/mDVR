@@ -70,7 +70,7 @@ async def main():
 
         await move()
 
-        if photo_timeout:
+        if photo_timeout == 1:
             time.sleep(photo_timeout)
 
 
