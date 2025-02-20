@@ -4,6 +4,8 @@ const addCamBtn = document.querySelector('.cam-config-header button');
 
 const closeBtn = document.querySelector('.close');
 
+let cameraPorts = {};
+
 function openModal() {
     modal.style.display = 'block';
 }
@@ -32,6 +34,53 @@ window.addEventListener('click', (event) => {
         closeModal();
     }
 });
+
+function extractCameraIp(rtspUrl) {
+    const match = rtspUrl.match(/@([\d.]+)(:|$|\/)/);
+    return match ? match[1] : null;
+}
+
+
+function updateViewButtons() {
+    const camFields = document.querySelectorAll('#cam-fields .cam-field');
+    camFields.forEach(field => {
+        const input = field.querySelector('input');
+        const viewButton = field.querySelector('.view-cam');
+        const camIp = extractCameraIp(input.value);
+
+        if (camIp && cameraPorts[camIp]) {
+            viewButton.style.display = 'inline-block';
+        } else {
+            viewButton.style.display = 'none';
+        }
+    });
+}
+
+function updateCameraPorts() {
+    fetch('/get-camera-ports')
+        .then(response => response.json())
+        .then(data => {
+            cameraPorts = data;
+            updateViewButtons();
+        })
+        .catch(error => console.error('Error fetching camera ports:', error));
+}
+
+function viewCamera(button) {
+    const field = button.closest('.cam-field');
+    const input = field.querySelector('input');
+    const camIp = extractCameraIp(input.value);
+
+    if (camIp && cameraPorts[camIp]) {
+        const port = cameraPorts[camIp];
+        const vpnIp = window.location.hostname;
+        window.open(`http://${vpnIp}:${port}`, '_blank');
+    } else {
+        showNotification('Camera port not available', true);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', updateCameraPorts);
 
 function confirmAddCam() {
     const rtspUrl = document.getElementById('rtspUrlInput').value;
@@ -133,6 +182,7 @@ function saveVideoLinks() {
         .then(response => response.json())
         .then(result => {
             if (result.success) {
+                updateCameraPorts();
                 showNotification('Video links saved successfully!');
             } else {
                 showNotification(`ERROR: ${result.error}`, true);

@@ -116,6 +116,27 @@ server {{
         return False
 
 
+# server.py
+def get_camera_ports():
+    """Получаем список портов для камер"""
+    ports = {}
+    try:
+        for conf_file in Path(NGINX_CONF_DIR).glob('camera*'):
+            with open(conf_file, 'r') as f:
+                content = f.read()
+                port_match = re.search(r'listen\s+(\d+);', content)
+                ip_match = re.search(r'server_name\s+([\d.]+);', content)
+                if port_match and ip_match:
+                    ports[ip_match.group(1)] = port_match.group(1)
+    except Exception as e:
+        print(f"Error reading nginx configs: {str(e)}")
+    return ports
+
+@app.route('/get-camera-ports')
+def get_camera_ports_route():
+    return jsonify(get_camera_ports())
+
+
 def update_imei():
     config = load_config()
     imei = None

@@ -16,6 +16,22 @@ header {
     border-bottom: 2px solid #415a77;
 }
 
+.view-cam {
+    background: #4caf50 !important;
+    padding: 5px 12px !important;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+.view-cam:hover {
+    background: #45a049 !important;
+    transform: scale(1.1);
+}
+
+.cam-field .view-cam {
+    display: none; /* По умолчанию скрываем, пока не узнаем порт */
+}
+
 header h1 {
     font-size: 28px;
     margin: 4px 0;
