@@ -1,9 +1,12 @@
 import os
 import re
+import socket
 import shutil
+import json
+
 from datetime import timedelta
 from flask import Flask, request, jsonify, render_template
-import json
+from pathlib import Path
 
 CONFIG_FILE = 'data_config.json'
 CONFIG_PATH = '/opt/mdvr/dvr_video'
@@ -12,6 +15,8 @@ DEFAULT_CONFIG_PATH = os.path.join(CONFIG_PATH, 'default.json')
 SERVICE_PATH = "/etc/systemd/system/mdvr.service"
 VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
 REGULAR_SEARCH_IP = r"\b(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}\b"
+NGINX_CONF_DIR = "/etc/nginx/sites-enabled"
+BASE_PORT = 10511
 
 
 app = Flask(__name__)
@@ -53,6 +58,62 @@ def load_config():
                 "rtsp_resolution_y": config.get("video_options", {}).get("video_resolution_y", 480)
             }
         return config
+
+
+def generate_nginx_configs(camera_list):
+    try:
+        # Удаляем старые конфиги камер
+        for conf_file in Path(NGINX_CONF_DIR).glob('camera*'):
+            conf_file.unlink()
+
+        unique_ips = {}
+        current_port = BASE_PORT
+        config_counter = 1
+
+        for i, rtsp_url in enumerate(camera_list, 1):
+            # Извлекаем IP камеры из RTSP ссылки
+            match = re.search(r'@([\d.]+)(:|/)', rtsp_url)
+            if not match:
+                continue
+
+            cam_ip = match.group(1)
+
+            # Пропускаем дубликаты IP
+            if cam_ip in unique_ips:
+                continue
+
+            # Резервируем порт и номер конфига
+            unique_ips[cam_ip] = {
+                'port': current_port,
+                'config_num': config_counter
+            }
+
+            conf_content = f"""
+server {{
+    listen {current_port};
+    server_name {cam_ip};
+
+    location / {{
+        proxy_pass http://{cam_ip};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }}
+}}
+            """
+            # Записываем конфиг
+            conf_path = Path(NGINX_CONF_DIR) / f"camera{config_counter}"
+            with open(conf_path, 'w') as f:
+                f.write(conf_content.strip())
+
+            current_port += 1
+            config_counter += 1
+
+        # Проверка конфига и перезагрузка nginx
+        os.system("nginx -t && systemctl reload nginx")
+        return True
+    except Exception as e:
+        print(f"Nginx config error: {str(e)}")
+        return False
 
 
 def update_imei():
@@ -104,10 +165,15 @@ def save_video_links():
     data = request.get_json()
     try:
         config = load_config()
-        config['camera_list'] = data.get('camera_list', [])
+        camera_list = data.get('camera_list', [])
+        config['camera_list'] = camera_list
 
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
+
+        # Генерируем конфиги Nginx
+        if not generate_nginx_configs(camera_list):
+            raise Exception("Failed to generate Nginx configs")
 
         os.system("systemctl restart mdvr")
         return jsonify({"success": True, "message": "Video links saved successfully"})
