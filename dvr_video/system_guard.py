@@ -38,7 +38,12 @@ async def network_check():
 async def main():
     temp_cpu = await check_cpu_temp()
     cpu_persent_usage = psutil.cpu_percent()
-    download_speed, upload_speed = await network_check()
+    try:
+        download_speed, upload_speed = await network_check()
+    except speedtest.ConfigRetrievalError as e:
+        logger.error(f"No internet connection: {e}")
+        os.system("systemctl restart NetworkManager")
+        download_speed, upload_speed = 0, 0
 
     logger.info(f"CPU usage: {cpu_persent_usage}% | CPU temp: {temp_cpu} | Download speed: {download_speed}Mbit/s | Upload speed: {upload_speed}Mbit/s")
 
