@@ -42,7 +42,8 @@
                 {% for url in camera_list %}
                     <div class="cam-field">
                         <label>Cam {{ loop.index }}:</label>
-                        <input type="text" value="{{ url }}" placeholder="Select RTSP url://">
+                        <input type="text" value="{{ url }}" placeholder="Select RTSP url://" disabled>
+                        <button class="edit-cam" onclick="enableEdit(this)">Edit</button>
                         <button class="view-cam" onclick="viewCamera(this)">View</button>
                         <button class="delete-cam" onclick="deleteCam(this)">×</button>
                     </div>
@@ -140,9 +141,11 @@
 <div id="addCamModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h2>Добавить RTSP ссылку</h2>
-        <input type="text" id="rtspUrlInput" placeholder="Введите RTSP ссылку">
-        <button onclick="confirmAddCam()">Добавить</button>
+        <h2>Add rtsp-link</h2>
+        <div class="modal-body">
+            <input type="text" id="rtspUrlInput" placeholder="Input RTSP-link">
+            <button onclick="confirmAddCam()">Add</button>
+        </div>
     </div>
 </div>
 <script src="../static/js/script.js"></script>

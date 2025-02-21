@@ -85,19 +85,15 @@ document.addEventListener('DOMContentLoaded', updateCameraPorts);
 function confirmAddCam() {
     const rtspUrl = document.getElementById('rtspUrlInput').value;
     if (rtspUrl) {
-        // Добавляем новую камеру
         addCam();
-        // Устанавливаем значение в поле ввода
         const camFields = document.querySelectorAll('#cam-fields .cam-field input');
         camFields[camFields.length - 1].value = rtspUrl;
 
-        // Сохраняем изменения на сервере
         saveVideoLinks();
 
-        // Закрываем модальное окно
         closeModal();
     } else {
-        showNotification('Пожалуйста, введите RTSP ссылку', true);
+        showNotification('Input rtsp-link, please', true);
     }
 }
 
@@ -191,6 +187,26 @@ function saveVideoLinks() {
         .catch(error => {
             console.error('Error saving video links:', error);
         });
+}
+
+function enableEdit(button) {
+    const field = button.closest('.cam-field');
+    const input = field.querySelector('input');
+    input.disabled = false; // Разблокируем поле ввода
+    input.focus(); // Устанавливаем фокус на поле ввода
+    button.textContent = 'Save'; // Меняем текст кнопки на "Save"
+    button.onclick = () => saveCamEdit(field); // Меняем действие кнопки на сохранение
+}
+
+function saveCamEdit(field) {
+    const input = field.querySelector('input');
+    input.disabled = true; // Блокируем поле ввода после сохранения
+    const editButton = field.querySelector('.edit-cam');
+    editButton.textContent = 'Edit'; // Возвращаем текст кнопки на "Edit"
+    editButton.onclick = () => enableEdit(editButton); // Возвращаем действие кнопки на редактирование
+
+    // Сохраняем изменения на сервере
+    saveVideoLinks();
 }
 
 function saveFtpConfig() {

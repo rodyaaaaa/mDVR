@@ -3,6 +3,6 @@ Version: 0.9
 Section: base
 Priority: optional
 Architecture: all
-Depends: ffmpeg, python3 (>= 3.11), python3-venv, curl, libcurl4, wireguard
+Depends: ffmpeg, python3 (>= 3.11), python3-venv, curl, libcurl4, wireguard, nginx
 Maintainer: Leaveamark Dev bozhokrodion02@gmail.com
 Description: DVR app that record video from rtsp and upload to ftp.

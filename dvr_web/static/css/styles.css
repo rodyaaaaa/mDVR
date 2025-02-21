@@ -105,6 +105,18 @@ header p {
     border-bottom: 2px solid white; /* Бордер знизу для активної кнопки */
 }
 
+.edit-cam {
+    background: #778da9 !important;
+    padding: 5px 12px !important;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+.edit-cam:hover {
+    background: #6a7f9a !important;
+    transform: scale(1.1);
+}
+
 /* Анімація при наведенні */
 @keyframes slideRight {
     0% {
@@ -239,7 +251,6 @@ button:hover {
     background: #778da9;
 }
 
-/* Стили для модального окна */
 .modal {
     display: none;
     position: fixed;
@@ -281,8 +292,7 @@ button:hover {
 }
 
 .modal-content input {
-    width: 100%;
-    padding: 10px;
+    width: 95%;
     margin-bottom: 20px;
     border: 1px solid #415a77;
     border-radius: 5px;
@@ -290,8 +300,12 @@ button:hover {
     color: #ffffff;
 }
 
+modal-body {
+
+}
+
 .modal-content button {
-    padding: 10px 20px;
+    width: 100%;
     background: #415a77;
     color: white;
     border: none;
