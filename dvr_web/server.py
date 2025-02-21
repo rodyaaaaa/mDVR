@@ -1,6 +1,5 @@
 import os
 import re
-import socket
 import shutil
 import json
 
@@ -50,7 +49,6 @@ def load_config():
 
     with open(CONFIG_FULL_PATH, 'r') as file:
         config = json.load(file)
-        # Backward compatibility for old configs
         if "rtsp_options" not in config:
             config["rtsp_options"] = {
                 "rtsp_transport": config.get("video_options", {}).get("rtsp_transport", "tcp"),
@@ -62,7 +60,6 @@ def load_config():
 
 def generate_nginx_configs(camera_list):
     try:
-        # Удаляем старые конфиги камер
         for conf_file in Path(NGINX_CONF_DIR).glob('camera*'):
             conf_file.unlink()
 
@@ -71,18 +68,15 @@ def generate_nginx_configs(camera_list):
         config_counter = 1
 
         for i, rtsp_url in enumerate(camera_list, 1):
-            # Извлекаем IP камеры из RTSP ссылки
             match = re.search(r'@([\d.]+)(:|/)', rtsp_url)
             if not match:
                 continue
 
             cam_ip = match.group(1)
 
-            # Пропускаем дубликаты IP
             if cam_ip in unique_ips:
                 continue
 
-            # Резервируем порт и номер конфига
             unique_ips[cam_ip] = {
                 'port': current_port,
                 'config_num': config_counter
@@ -100,7 +94,6 @@ server {{
     }}
 }}
             """
-            # Записываем конфиг
             conf_path = Path(NGINX_CONF_DIR) / f"camera{config_counter}"
             with open(conf_path, 'w') as f:
                 f.write(conf_content.strip())
@@ -108,8 +101,9 @@ server {{
             current_port += 1
             config_counter += 1
 
-        # Проверка конфига и перезагрузка nginx
-        os.system("nginx -t && systemctl reload nginx")
+        os.system("nginx -t")
+        os.system('systemctl enable nginx')
+        os.system('systemctl reload nginx')
         return True
     except Exception as e:
         print(f"Nginx config error: {str(e)}")
@@ -118,7 +112,6 @@ server {{
 
 # server.py
 def get_camera_ports():
-    """Получаем список портов для камер"""
     ports = {}
     try:
         for conf_file in Path(NGINX_CONF_DIR).glob('camera*'):
@@ -170,7 +163,6 @@ def save_write_mode():
     data = request.get_json()
     try:
         config = load_config()
-        # Конвертируем 'video' -> 0, 'photo' -> 1
         config['program_options']['photo_mode'] = 0 if data.get('write_mode') == 'video' else 1
 
         with open(CONFIG_FULL_PATH, 'w') as file:
@@ -192,7 +184,6 @@ def save_video_links():
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
-        # Генерируем конфиги Nginx
         if not generate_nginx_configs(camera_list):
             raise Exception("Failed to generate Nginx configs")
 
@@ -233,7 +224,6 @@ def save_video_options():
 
         config['program_options']['size_folder_limit_gb'] = int(data.get('folder_size'))
 
-        # Оновлення RTSP параметрів
         config['rtsp_options'] = {
             "rtsp_transport": data.get('rtsp_transport', 'tcp'),
             "rtsp_resolution_x": data.get('rtsp_resolution_x', 640),
@@ -247,7 +237,7 @@ def save_video_options():
             if ':' in cleaned_duration:
                 parts = cleaned_duration.split(':')
                 if len(parts) != 3:
-                    raise ValueError("Невірний формат. Використовуйте HH:MM:SS або хвилини (напр. '10 хв')")
+                    raise ValueError("Incorrect format. Use HH:MM:SS or minutes (e.g., '10 min').")
                 h, m, s = map(int, parts)
             else:
                 try:
@@ -256,22 +246,20 @@ def save_video_options():
                     m = minutes % 60
                     s = 0
                 except ValueError:
-                    raise ValueError("Невірний формат хвилин. Наприклад: '10' або '10 хв'")
+                    raise ValueError("Incorrect format for minutes. For example: '10' or '10 min'.")
 
             if m > 59 or s > 59:
-                raise ValueError("Невірні значення хвилин/секунд (мають бути ≤ 59)")
+                raise ValueError("Invalid minutes/seconds values (must be ≤ 59).")
 
             formatted_duration = f"{h:02d}:{m:02d}:{s:02d}"
             config['video_options']['video_duration'] = formatted_duration
             config['video_options']['fps'] = data.get('fps', 15)
 
-            # Оновлення Watchdog
             seconds = timedelta(hours=h, minutes=m, seconds=s).total_seconds()
             update_watchdog(int(seconds * 10))
 
         photo_timeout = data['photo_timeout']
 
-        # Оновлення Photo Timeout
         if photo_timeout:
             config['photo_timeout'] = int(photo_timeout)
             update_watchdog(int(photo_timeout * 5))
@@ -280,7 +268,7 @@ def save_video_options():
             json.dump(config, file, indent=4)
 
         os.system("systemctl restart mdvr")
-        return jsonify({"success": True, "message": "Налаштування збережено!"})
+        return jsonify({"success": True, "message": "Settings saved!"})
 
     except ValueError as ve:
         return jsonify({"success": False, "error": str(ve)}), 400
@@ -310,6 +298,7 @@ def save_vpn_config():
 def index():
     update_imei()
     config = load_config()
+    camera_list = config['camera_list']
 
     vpn_config = ""
     try:
@@ -318,6 +307,9 @@ def index():
                 vpn_config = f.read()
     except Exception as e:
         print(f"Error reading VPN config: {str(e)}")
+
+    if not generate_nginx_configs(camera_list):
+        raise Exception("Failed to generate Nginx configs")
 
     return render_template('index.html',
                            vpn_config=vpn_config,

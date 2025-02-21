@@ -29,7 +29,7 @@ header {
 }
 
 .cam-field .view-cam {
-    display: none; /* По умолчанию скрываем, пока не узнаем порт */
+    display: none;
 }
 
 header h1 {
@@ -93,16 +93,14 @@ header p {
     border-radius: 5px;
 }
 
-/* Ефект при наведенні мишкою */
 .sidebar button:hover {
-    transform: translateX(10px); /* Зсув кнопки направо */
+    transform: translateX(10px);
 }
 
-/* Стилі для активної кнопки */
 .sidebar button.active {
     background: #3b4a5e;
-    transform: translateX(10px); /* Зсув активної кнопки направо */
-    border-bottom: 2px solid white; /* Бордер знизу для активної кнопки */
+    transform: translateX(10px);
+    border-bottom: 2px solid white;
 }
 
 .edit-cam {
@@ -117,7 +115,6 @@ header p {
     transform: scale(1.1);
 }
 
-/* Анімація при наведенні */
 @keyframes slideRight {
     0% {
         transform: translateX(0);
@@ -128,7 +125,7 @@ header p {
 }
 
 .sidebar button:hover {
-    animation: slideRight 0.3s ease forwards; /* Анімація зсуву направо */
+    animation: slideRight 0.3s ease forwards;
 }
 
 .content {

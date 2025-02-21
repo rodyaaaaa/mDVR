@@ -98,14 +98,10 @@ function confirmAddCam() {
 }
 
 function showTab(tabId) {
-    // Видаляємо клас 'active' з усіх вкладок
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    // Додаємо клас 'active' до вибраної вкладки
     document.getElementById(tabId).classList.add('active');
 
-    // Видаляємо клас 'active' з усіх кнопок
     document.querySelectorAll('.sidebar button').forEach(button => button.classList.remove('active'));
-    // Додаємо клас 'active' до натиснутої кнопки
     const activeButton = document.querySelector(`.sidebar button[onclick="showTab('${tabId}')"]`);
     activeButton.classList.add('active');
 }
@@ -125,7 +121,6 @@ function deleteCam(button) {
     const camField = button.closest('.cam-field');
     camField.remove();
     updateCamLabels();
-    // Сохраняем изменения на сервере
     saveVideoLinks();
 }
 
@@ -192,20 +187,19 @@ function saveVideoLinks() {
 function enableEdit(button) {
     const field = button.closest('.cam-field');
     const input = field.querySelector('input');
-    input.disabled = false; // Разблокируем поле ввода
-    input.focus(); // Устанавливаем фокус на поле ввода
-    button.textContent = 'Save'; // Меняем текст кнопки на "Save"
-    button.onclick = () => saveCamEdit(field); // Меняем действие кнопки на сохранение
+    input.disabled = false;
+    input.focus();
+    button.textContent = 'Save';
+    button.onclick = () => saveCamEdit(field);
 }
 
 function saveCamEdit(field) {
     const input = field.querySelector('input');
-    input.disabled = true; // Блокируем поле ввода после сохранения
+    input.disabled = true;
     const editButton = field.querySelector('.edit-cam');
-    editButton.textContent = 'Edit'; // Возвращаем текст кнопки на "Edit"
-    editButton.onclick = () => enableEdit(editButton); // Возвращаем действие кнопки на редактирование
+    editButton.textContent = 'Edit';
+    editButton.onclick = () => enableEdit(editButton);
 
-    // Сохраняем изменения на сервере
     saveVideoLinks();
 }
 
@@ -236,7 +230,7 @@ function saveFtpConfig() {
                 ? showNotification('The ftp settings is saved!')
                 : showNotification(`ERROR: ${result.error}`, true);
         })
-        .catch(error => console.error('Помилка:', error));
+        .catch(error => console.error('ERROR:', error));
 }
 
 function saveVideoOptions() {
@@ -244,7 +238,7 @@ function saveVideoOptions() {
     const rtspResolution = document.getElementById('rtsp-resolution').value;
 
     if (!rtspResolution.includes('x')) {
-        showNotification('Невірний формат роздільної здатності! Використовуйте "ШИРИНАxВИСОТА"', true);
+        showNotification('Invalid resolution format! Use "WIDTHxHEIGHT".', true);
         return;
     }
 
@@ -313,18 +307,18 @@ function updateWriteMode() {
         .then(result => {
             if (result.success) {
                 toggleModeSettings(selectedMode);
-                showNotification('Режим запису оновлено!');
+                showNotification('Recording mode updated!');
             } else {
-                showNotification(`Помилка: ${result.error}`, true);
+                showNotification(`ERROR: ${result.error}`, true);
             }
         })
         .catch(error => {
-            showNotification(`Помилка: ${error.message}`, true);
+            showNotification(`ERROR: ${error.message}`, true);
         });
 }
 
 function toggleModeSettings(mode) {
-    const isPhotoMode = mode === 'photo'; // теперь значение приходит как '0' или '1'
+    const isPhotoMode = mode === 'photo';
     const videoModeElements = document.querySelectorAll('.video-mode');
     const photoModeElements = document.querySelectorAll('.photo-mode');
 
