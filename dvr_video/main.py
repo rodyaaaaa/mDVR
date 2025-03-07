@@ -40,7 +40,6 @@ async def main():
     await move()
 
     while True:
-        notifier.notify("WATCHDOG=1")
         jobs = []
         links_names = []
 
@@ -66,6 +65,11 @@ async def main():
             for count, process in enumerate(jobs):
                 if process.returncode != 0 and process.returncode != 234:
                     logger.error(f"Returncode: {process.returncode}. Camera {count + 1} failed to record file: {links_names[count]}")
+                else:
+                    notifier.notify("WATCHDOG=1")
+        else:
+            notifier.notify("WATCHDOG=1")
+
         jobs.clear()
 
         await move()
