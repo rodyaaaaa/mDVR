@@ -26,8 +26,8 @@ async def main():
             logger.error(f"Directory {car_name} does not exist. It will be created.")
             await client.make_directory(car_name)
 
-        await upload_to_ftp(client, logger, car_name)
         await upload_logs_to_ftp(client, logger, car_name)
+        await upload_to_ftp(client, logger, car_name)
 
 
 if __name__ == "__main__":
