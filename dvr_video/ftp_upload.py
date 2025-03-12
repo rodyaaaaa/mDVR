@@ -2,7 +2,7 @@ import asyncio
 import pathlib
 import aioftp
 
-from data.ftp_utils import upload_to_ftp, upload_logs_to_ftp
+from data.ftp import FTPCon
 from data.utils import read_config
 from data.logger import Logger
 
@@ -21,13 +21,10 @@ async def main():
     port = config['ftp']['port']
     car_name = str(config['program_options']['imei'])
 
-    async with aioftp.Client.context(server, port, user, password) as client:
-        if await client.exists(car_name) is False:
-            logger.error(f"Directory {car_name} does not exist. It will be created.")
-            await client.make_directory(car_name)
+    ftp = FTPCon(server, port, user, password, car_name)
 
-        await upload_logs_to_ftp(client, logger, car_name)
-        await upload_to_ftp(client, logger, car_name)
+    await ftp.upload_to_ftp(logger)
+    await ftp.upload_logs_to_ftp(logger)
 
 
 if __name__ == "__main__":
