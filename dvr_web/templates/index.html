@@ -94,6 +94,15 @@
                 <label for="video-fps">Frames Per Second (FPS):</label>
                 <input type="number" id="video-fps" value="{{ video_options.fps }}" placeholder="15">
             </div>
+            <div class="input-row">
+                <label>Reed Switch:</label>
+                <div class="reed-switch-options">
+                    <input type="radio" id="reed-switch-on" name="reed_switch" value="on" onchange="toggleReedSwitch()">
+                    <label for="reed-switch-on">ON</label>
+                    <input type="radio" id="reed-switch-off" name="reed_switch" value="off" onchange="toggleReedSwitch()" checked>
+                    <label for="reed-switch-off">OFF</label>
+                </div>
+            </div>
             <h2 class="photo-mode">Photo Settings</h2>
             <div class="input-row photo-mode" style="display: none;">
                 <label for="photo-timeout">Photo Timeout (seconds):</label>

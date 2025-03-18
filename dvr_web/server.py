@@ -294,6 +294,26 @@ def save_vpn_config():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route('/toggle-reed-switch', methods=['POST'])
+def toggle_reed_switch():
+    data = request.get_json()
+    state = data.get("reed_switch", "off")
+    try:
+        if state == "on":
+            os.system("systemctl stop mdvr.service")
+            os.system("systemctl disable mdvr.service")
+            os.system("systemctl enable mdvr_rs.service")
+            os.system("systemctl start mdvr_rs.service")
+        else:
+            os.system("systemctl stop mdvr_rs.service")
+            os.system("systemctl disable mdvr_rs.service")
+            os.system("systemctl enable mdvr.service")
+            os.system("systemctl start mdvr.service")
+        return jsonify({"success": True, "message": "Reed Switch toggled successfully"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.route('/')
 def index():
     update_imei()

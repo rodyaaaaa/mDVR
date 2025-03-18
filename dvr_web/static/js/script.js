@@ -326,6 +326,25 @@ function toggleModeSettings(mode) {
     photoModeElements.forEach(el => el.style.display = isPhotoMode ? 'flex' : 'none');
 }
 
+function toggleReedSwitch() {
+    const state = document.querySelector('input[name="reed_switch"]:checked').value;
+    fetch('/toggle-reed-switch', {
+         method: 'POST',
+         headers: {'Content-Type': 'application/json'},
+         body: JSON.stringify({reed_switch: state})
+    })
+    .then(response => response.json())
+    .then(result => {
+         if(result.success) {
+              showNotification('Reed Switch updated successfully!');
+         } else {
+              showNotification('ERROR: ' + result.error, true);
+         }
+    })
+    .catch(error => showNotification('ERROR: ' + error.message, true));
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
     toggleModeSettings(initialMode);
