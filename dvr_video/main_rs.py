@@ -21,13 +21,31 @@ DOOR_SENSOR_PIN = 16
 GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 async def async_write_video(current_link, file_name):
-    stream = ffmpeg.input(config['camera_list'][current_link], t=str(config['video_options']['video_duration']), rtsp_transport='tcp')
-    stream = ffmpeg.filter(stream, 'scale', width=config['rtsp_options']['rtsp_resolution_x'], height=config['rtsp_options']['rtsp_resolution_y'])
-    stream = ffmpeg.filter(stream, 'fps', fps=config['video_options']['fps'])
-    stream = ffmpeg.output(stream, f"temp/{current_link+1}24{file_name}.mp4", vcodec="libx264")
-    process = ffmpeg.run_async(stream, quiet=True)
+    stream = ffmpeg.input(
+        config['camera_list'][current_link],
+        rtsp_transport='tcp',
+    )
+    stream = ffmpeg.filter(
+        stream,
+        'scale',
+        width=config['rtsp_options']['rtsp_resolution_x'],
+        height=config['rtsp_options']['rtsp_resolution_y']
+    )
+    stream = ffmpeg.filter(
+        stream,
+        'fps',
+        fps=config['video_options']['fps']
+    )
+    stream = ffmpeg.output(
+        stream,
+        f"temp/{current_link+1}24{file_name}.mp4",
+        vcodec="libx264",
+        movflags="+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov"
+    )
 
+    process = ffmpeg.run_async(stream, quiet=True)
     return process
+
 
 
 async def async_write_photo(current_link, file_name):
@@ -38,18 +56,20 @@ async def async_write_photo(current_link, file_name):
 
 
 async def main():
+    jobs = []
+    links_names = []
     pathlib.Path("temp").mkdir(exist_ok=True)
     pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
     photo_mode = bool(config['program_options']['photo_mode'])
+    video_status = False
 
     await move()
 
     while True:
-        jobs = []
-        links_names = []
+        notifier.notify("WATCHDOG=1")
         door_state = GPIO.input(DOOR_SENSOR_PIN)
 
-        if door_state == GPIO.HIGH:
+        if door_state == GPIO.HIGH and video_status == False:
             for current_link in range(len(config['camera_list'])):
                 now = datetime.now()
                 file_name = now.strftime("%y%m%d%H%M%S")
@@ -64,21 +84,18 @@ async def main():
 
                 jobs.append(process)
                 links_names.append(str(current_link + 1) + "24" + file_name)
-
+                video_status = True
+        elif door_state != GPIO.HIGH and video_status == True:
             for process in jobs:
-                process.wait()
-            if not photo_mode:
-                for count, process in enumerate(jobs):
-                    if process.returncode != 0 and process.returncode != 234:
-                        logger.error(f"Returncode: {process.returncode}. Camera {count + 1} failed to record file: {links_names[count]}")
-                    else:
-                        notifier.notify("WATCHDOG=1")
-            else:
-                notifier.notify("WATCHDOG=1")
+                process.terminate()
+                process.kill()
+            notifier.notify("WATCHDOG=1")
 
             jobs.clear()
 
-        await move()
+            video_status = False
+
+            await move()
 
         time.sleep(0.1)
 
