@@ -24,6 +24,8 @@ async def async_write_video(current_link, file_name):
     stream = ffmpeg.input(
         config['camera_list'][current_link],
         rtsp_transport='tcp',
+        fflags='+genpts',
+        **{'timeout': '30000000'}
     )
     stream = ffmpeg.filter(
         stream,
@@ -42,10 +44,8 @@ async def async_write_video(current_link, file_name):
         vcodec="libx264",
         movflags="+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov"
     )
-
     process = ffmpeg.run_async(stream, quiet=True)
     return process
-
 
 
 async def async_write_photo(current_link, file_name):
@@ -70,31 +70,37 @@ async def main():
         door_state = GPIO.input(DOOR_SENSOR_PIN)
 
         if door_state == GPIO.HIGH and video_status == False:
-            for current_link in range(len(config['camera_list'])):
-                now = datetime.now()
-                file_name = now.strftime("%y%m%d%H%M%S")
+            time.sleep(0.5)
+            door_state = GPIO.input(DOOR_SENSOR_PIN)
+            if door_state == GPIO.HIGH:
+                for current_link in range(len(config['camera_list'])):
+                    now = datetime.now()
+                    file_name = now.strftime("%y%m%d%H%M%S")
 
-                try:
-                    # 0 - video, 1 - photo
-                    process = await async_write_photo(current_link, file_name) if photo_mode\
-                        else await async_write_video(current_link, file_name)
-                except Exception as e:
-                    logger.error(f"Failed to initialize camera {e}")
-                    continue
+                    try:
+                        # 0 - video, 1 - photo
+                        process = await async_write_photo(current_link, file_name) if photo_mode\
+                            else await async_write_video(current_link, file_name)
+                    except Exception as e:
+                        logger.error(f"Failed to initialize camera {e}")
+                        continue
 
-                jobs.append(process)
-                links_names.append(str(current_link + 1) + "24" + file_name)
-                video_status = True
+                    jobs.append(process)
+                    links_names.append(str(current_link + 1) + "24" + file_name)
+                    video_status = True
         elif door_state != GPIO.HIGH and video_status == True:
             time.sleep(60)
-            for process in jobs:
-                process.terminate()
-                process.kill()
+            door_state = GPIO.input(DOOR_SENSOR_PIN)
+            if door_state != GPIO.HIGH:
+                for process in jobs:
+                    process.terminate()
+                    process.kill()
+
+                video_status = False
+
             notifier.notify("WATCHDOG=1")
 
             jobs.clear()
-
-            video_status = False
 
             await move()
 

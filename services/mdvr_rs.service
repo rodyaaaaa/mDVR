@@ -9,7 +9,7 @@ WorkingDirectory=/opt/mdvr/dvr_video
 ExecStart=/opt/mdvr/venv/bin/python /opt/mdvr/dvr_video/main_rs.py
 Restart=always
 RestartSec=10
-WatchdogSec=1200
+WatchdogSec=120
 
 [Install]
 WantedBy=multi-user.target
