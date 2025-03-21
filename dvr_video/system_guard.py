@@ -9,7 +9,7 @@ import math
 from data.logger import Logger
 
 pathlib.Path("logs/mdvr_system_guard").mkdir(parents=True, exist_ok=True)
-logger = Logger('mdvr_system_guard', "logs/mdvr_system_guard/system_guard.log", 10, "H", 2)
+logger = Logger('mdvr_system_guard', "logs/mdvr_system_guard/system_guard.log", 20, "H", 2)
 
 
 async def check_cpu_temp():

@@ -102,8 +102,7 @@ server {{
             config_counter += 1
 
         os.system("nginx -t")
-        os.system('systemctl enable nginx')
-        os.system('systemctl reload nginx')
+        os.system('systemctl restart nginx')
         return True
     except Exception as e:
         print(f"Nginx config error: {str(e)}")

@@ -5,7 +5,6 @@ Description=Run check modem scripts every 1 hour
 Unit=mdvr_modem.service
 OnBootSec=10min
 OnUnitActiveSec=60min
-Persistent=true
 
 [Install]
 WantedBy=timers.target

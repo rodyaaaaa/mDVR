@@ -5,7 +5,6 @@ Description=run mdvr_system_guard every 3 hours
 Unit=mdvr_system_guard.service
 OnBootSec=2min
 OnUnitActiveSec=3h
-Persistent=true
 
 [Install]
 WantedBy=timers.target
