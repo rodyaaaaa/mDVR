@@ -5,7 +5,6 @@ Description=Upload video to ftp
 Unit=mdvr_upload.service
 OnBootSec=3min
 OnUnitActiveSec=3min
-Persistent=true
 
 [Install]
 WantedBy=timers.target

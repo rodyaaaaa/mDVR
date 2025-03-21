@@ -10,10 +10,10 @@ systemctl enable mdvr.service
 systemctl enable mdvr_web.service
 systemctl enable mdvr_upload.timer
 systemctl enable mdvr_system_guard.timer
+systemctl enable mdvr_vpn_check.timer
 
 rm /etc/nginx/sites-enabled/default
-systemctl disable nginx
-systemctl stop nginx
+systemctl restart nginx
 
 # Apply new venv
 systemctl daemon-reload
@@ -22,3 +22,4 @@ systemctl restart mdvr_upload.timer
 systemctl restart mdvr_web.service
 systemctl restart mdvr_space_check.timer
 systemctl restart mdvr_system_guard.timer
+systemctl restart mdvr_vpn_check.timer

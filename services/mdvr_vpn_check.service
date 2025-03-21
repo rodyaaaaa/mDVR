@@ -1,0 +1,12 @@
+[Unit]
+Description=Daemon for check vpn
+Wants=mdvr_vpn_check.timer
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/mdvr/dvr_video
+ExecStart=/opt/mdvr/venv/bin/python /opt/mdvr/dvr_video/vpn_check.py
+
+[Install]
+WantedBy=multi-user.target

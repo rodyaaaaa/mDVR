@@ -1,0 +1,10 @@
+[Unit]
+Description=Timer for daemon that check vpn connection
+
+[Timer]
+Unit=mdvr_vpn_check.service
+OnBootSec=3min
+OnUnitActiveSec=10min
+
+[Install]
+WantedBy=timers.target

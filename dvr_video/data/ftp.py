@@ -14,7 +14,7 @@ class FTPCon:
         self.car_name = car_name
 
     async def upload_to_ftp(self, logger):
-        async with aioftp.Client.context(self.host, self.port, self.username, self.password, socket_timeout=60) as client:
+        async with aioftp.Client.context(self.host, self.port, self.username, self.password, socket_timeout=180) as client:
             if await client.exists(self.car_name) is False:
                 logger.error(f"Directory {self.car_name} does not exist. It will be created.")
                 await client.make_directory(self.car_name)
@@ -50,7 +50,7 @@ class FTPCon:
                 await client.change_directory()
 
     async def upload_logs_to_ftp(self, logger):
-        async with aioftp.Client.context(self.host, self.port, self.username, self.password, socket_timeout=60) as client:
+        async with aioftp.Client.context(self.host, self.port, self.username, self.password, socket_timeout=180) as client:
             if await client.exists(self.car_name) is False:
                 logger.error(f"Directory {self.car_name} does not exist. It will be create.")
                 await client.make_directory(self.car_name)
