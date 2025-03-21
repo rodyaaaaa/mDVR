@@ -313,6 +313,17 @@ def toggle_reed_switch():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route('/get-reed-switch-status')
+def get_reed_switch_status():
+    try:
+        # Використовуємо os.popen для отримання статусу сервісу
+        output = os.popen("systemctl is-active mdvr_rs.service").read().strip()
+        state = "on" if output == "active" else "off"
+        return jsonify({"state": state})
+    except Exception as e:
+        return jsonify({"state": "off", "error": str(e)})
+
+
 @app.route('/')
 def index():
     update_imei()

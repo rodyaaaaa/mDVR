@@ -578,3 +578,32 @@ input, textarea, select {
 .notification.error {
     background-color: #e63946;
 }
+
+.reed-switch-options {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reed-switch-options input[type="radio"] {
+    display: none;
+}
+
+.reed-switch-options label {
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    background-color: #415a77;
+    color: #ffffff;
+}
+
+.reed-switch-options input[type="radio"]:checked + label {
+    background-color: #778da9;
+    color: #fff;
+}
+
+.reed-switch-options label:hover {
+    background: #778da9;
+}

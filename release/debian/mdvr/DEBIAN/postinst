@@ -5,6 +5,9 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
+systemctl stop mdvr_rs.service
+systemctl disable mdvr_rs.service
+
 systemctl enable mdvr_space_check.timer
 systemctl enable mdvr.service
 systemctl enable mdvr_web.service

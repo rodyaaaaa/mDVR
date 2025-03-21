@@ -86,6 +86,7 @@ async def main():
                 links_names.append(str(current_link + 1) + "24" + file_name)
                 video_status = True
         elif door_state != GPIO.HIGH and video_status == True:
+            time.sleep(60)
             for process in jobs:
                 process.terminate()
                 process.kill()

@@ -349,3 +349,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
     toggleModeSettings(initialMode);
 });
+
+
+function updateReedSwitchState() {
+    fetch('/get-reed-switch-status')
+        .then(response => response.json())
+        .then(data => {
+            const reedOnRadio = document.getElementById('reed-switch-on');
+            const reedOffRadio = document.getElementById('reed-switch-off');
+            if (data.state === "on") {
+                reedOnRadio.checked = true;
+            } else {
+                reedOffRadio.checked = true;
+            }
+        })
+        .catch(error => console.error('Error fetching reed switch status:', error));
+}
+
+// Викликати оновлення статусу при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', () => {
+    updateReedSwitchState();
+    const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
+    toggleModeSettings(initialMode);
+});
