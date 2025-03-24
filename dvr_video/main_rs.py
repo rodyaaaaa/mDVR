@@ -25,7 +25,7 @@ async def async_write_video(current_link, file_name):
         config['camera_list'][current_link],
         rtsp_transport='tcp',
         fflags='+genpts',
-        **{'timeout': '30000000'}
+        **{'timeout': '15'}
     )
     stream = ffmpeg.filter(
         stream,
