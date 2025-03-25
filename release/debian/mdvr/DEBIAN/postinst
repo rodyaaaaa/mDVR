@@ -28,3 +28,5 @@ systemctl restart mdvr_system_guard.timer
 systemctl restart mdvr_vpn_check.timer
 
 timedatectl set-timezone "Europe/Kyiv"
+
+systemctl daemon-reload
