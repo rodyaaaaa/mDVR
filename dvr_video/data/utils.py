@@ -7,10 +7,12 @@ import shutil
 from datetime import datetime
 from typing import List
 
+from dvr_video.constants import CONFIG_FILENAME
+
 
 def read_config():
-    if "data_config.json" in os.listdir():
-        with open("data_config.json", 'r') as config_file:
+    if CONFIG_FILENAME in os.listdir():
+        with open(CONFIG_FILENAME, 'r') as config_file:
             data = json.load(config_file)
         return data
 
@@ -18,7 +20,7 @@ def read_config():
 
 
 async def get_date(video):
-    #224250109081232.mp4
+    # 224250109081232.mp4
     raw_date = video[:9]
     date = raw_date[3:]
     date = datetime.strptime(date, '%y%m%d')
@@ -38,6 +40,7 @@ async def move():
 
 def file_date_sort(file_list: List[str]) -> List[str]:
     return sorted(file_list, key=lambda x: x[3:-4])
+
 
 def _find_files_with_extra_after_log(directory):
     result = []
@@ -68,4 +71,6 @@ async def find_files_with_extra_after_log(directory):
 async def extract_date_from_filename_async(filename: str) -> str | None:
     return await asyncio.to_thread(extract_date_from_filename, filename)
 
-#test
+
+def generate_file_output_name(current_link: int, filename: str, file_extension: str) -> str:
+    return f"temp/{current_link + 1}24{filename}{file_extension}"

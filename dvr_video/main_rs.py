@@ -6,13 +6,17 @@ import time
 import RPi.GPIO as GPIO
 
 from datetime import datetime
-from data.logger import Logger
-from data.utils import read_config, move
+from data.utils import read_config, move, generate_file_output_name
 from sdnotify import SystemdNotifier
 
+from dvr_video.constants import CAMERA_LIST_KEY, RTSP_OPTIONS_KEY, RTSP_X, RTSP_Y, VIDEO_OPTIONS_KEY, FPS, \
+    DIR_NAME, DATE_FORMAT, PROGRAM_OPTIONS_KEY, VIDEO_FILE_EXTENSION, WATCH_DOG_NOTIFICATION
+from dvr_video.data.LoggerFactory import LoggerFactory
+from dvr_video.main_common import async_write_photo
+
 config = read_config()
-pathlib.Path("logs/mdvr_engine").mkdir(parents=True, exist_ok=True)
-logger = Logger('mdvr_engine', "logs/mdvr_engine/engine.log", 10, "H", 2)
+CustomFactory = LoggerFactory(level=10)
+logger = CustomFactory.create_logger('mdvr_engine', "engine.log")
 notifier = SystemdNotifier()
 notifier.notify('READY=1')
 
@@ -20,9 +24,10 @@ GPIO.setmode(GPIO.BCM)
 DOOR_SENSOR_PIN = 16
 GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
+
 async def async_write_video(current_link, file_name):
     stream = ffmpeg.input(
-        config['camera_list'][current_link],
+        config[CAMERA_LIST_KEY][current_link],
         rtsp_transport='tcp',
         fflags='+genpts',
         **{'timeout': '15'}
@@ -30,17 +35,17 @@ async def async_write_video(current_link, file_name):
     stream = ffmpeg.filter(
         stream,
         'scale',
-        width=config['rtsp_options']['rtsp_resolution_x'],
-        height=config['rtsp_options']['rtsp_resolution_y']
+        width=config[RTSP_OPTIONS_KEY][RTSP_X],
+        height=config[RTSP_OPTIONS_KEY][RTSP_Y]
     )
     stream = ffmpeg.filter(
         stream,
         'fps',
-        fps=config['video_options']['fps']
+        fps=config[VIDEO_OPTIONS_KEY][FPS]
     )
     stream = ffmpeg.output(
         stream,
-        f"temp/{current_link+1}24{file_name}.mp4",
+        generate_file_output_name(current_link, file_name, VIDEO_FILE_EXTENSION),
         vcodec="libx264",
         movflags="+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov"
     )
@@ -48,39 +53,34 @@ async def async_write_video(current_link, file_name):
     return process
 
 
-async def async_write_photo(current_link, file_name):
-    stream = ffmpeg.input(config['camera_list'][current_link], rtsp_transport=config['rtsp_options']['rtsp_transport'])
-    stream = ffmpeg.output(stream, f"temp/{current_link+1}24{file_name}.jpg", format='image2')
-    process = ffmpeg.run_async(stream, quiet=True)
-    return process
-
-
 async def main():
-    jobs = []
-    links_names = []
+    jobs, links_names = [], []
     pathlib.Path("temp").mkdir(exist_ok=True)
-    pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
-    photo_mode = bool(config['program_options']['photo_mode'])
+    pathlib.Path(DIR_NAME).mkdir(parents=True, exist_ok=True)
+    photo_mode = bool(config[PROGRAM_OPTIONS_KEY]['photo_mode'])
     video_status = False
 
     await move()
 
     while True:
-        notifier.notify("WATCHDOG=1")
+        notifier.notify(WATCH_DOG_NOTIFICATION)
         door_state = GPIO.input(DOOR_SENSOR_PIN)
 
-        if door_state == GPIO.HIGH and video_status == False:
+        if door_state == GPIO.HIGH and video_status is False:
             time.sleep(0.5)
             door_state = GPIO.input(DOOR_SENSOR_PIN)
             if door_state == GPIO.HIGH:
-                for current_link in range(len(config['camera_list'])):
+                for current_link in range(len(config[CAMERA_LIST_KEY])):
                     now = datetime.now()
-                    file_name = now.strftime("%y%m%d%H%M%S")
+                    file_name = now.strftime(DATE_FORMAT)
 
                     try:
                         # 0 - video, 1 - photo
-                        process = await async_write_photo(current_link, file_name) if photo_mode\
-                            else await async_write_video(current_link, file_name)
+                        process = await async_write_photo(current_link,
+                                                          file_name,
+                                                          VIDEO_FILE_EXTENSION) if photo_mode \
+                            else await async_write_video(current_link,
+                                                         file_name)
                     except Exception as e:
                         logger.error(f"Failed to initialize camera {e}")
                         continue
@@ -88,7 +88,7 @@ async def main():
                     jobs.append(process)
                     links_names.append(str(current_link + 1) + "24" + file_name)
                     video_status = True
-        elif door_state != GPIO.HIGH and video_status == True:
+        elif door_state != GPIO.HIGH and video_status is True:
             time.sleep(60)
             door_state = GPIO.input(DOOR_SENSOR_PIN)
             if door_state != GPIO.HIGH:
@@ -98,10 +98,9 @@ async def main():
 
                 video_status = False
 
-            notifier.notify("WATCHDOG=1")
+            notifier.notify(WATCH_DOG_NOTIFICATION)
 
             jobs.clear()
-
             await move()
 
         time.sleep(0.1)
@@ -110,4 +109,4 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 
-#video_name: 024%y%m%d%H%M%S
+# video_name: 024%y%m%d%H%M%S

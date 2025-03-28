@@ -1,0 +1,14 @@
+DATE_FORMAT = "%y%m%d%H%M%S"
+VIDEO_FILE_EXTENSION = ".mp4"
+PHOTO_FILE_EXTENSION = ".jpg"
+DIR_NAME = "materials"
+VPN_DNS = '10.99.97.1'
+VIDEO_OPTIONS_KEY = 'video_options'
+RTSP_OPTIONS_KEY = 'rtsp_options'
+WATCH_DOG_NOTIFICATION = "WATCHDOG=1"
+PROGRAM_OPTIONS_KEY = 'program_options'
+CAMERA_LIST_KEY = 'camera_list'
+RTSP_X = 'rtsp_resolution_x'
+RTSP_Y = 'rtsp_resolution_y'
+FPS = 'fps'
+CONFIG_FILENAME = 'data_config.json'
