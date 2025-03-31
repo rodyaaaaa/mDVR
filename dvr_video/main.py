@@ -4,53 +4,68 @@ import ffmpeg
 import time
 
 from datetime import datetime
-from data.logger import Logger
-from data.utils import read_config, move
+from data.utils import read_config, move, generate_file_output_name
 from sdnotify import SystemdNotifier
 
+from dvr_video.constants import VIDEO_OPTIONS_KEY, RTSP_OPTIONS_KEY, WATCH_DOG_NOTIFICATION, PROGRAM_OPTIONS_KEY, \
+    DATE_FORMAT, DIR_NAME, CAMERA_LIST_KEY, VIDEO_FILE_EXTENSION, RTSP_X, RTSP_Y, FPS
+from dvr_video.data.LoggerFactory import DefaultLoggerFactory
+from dvr_video.main_common import async_write_photo
+
 config = read_config()
-pathlib.Path("logs/mdvr_engine").mkdir(parents=True, exist_ok=True)
-logger = Logger('mdvr_engine', "logs/mdvr_engine/engine.log", 20, "H", 2)
+logger = DefaultLoggerFactory.create_logger('mdvr_engine', "engine.log")
 notifier = SystemdNotifier()
 notifier.notify('READY=1')
 
-async def async_write_video(current_link, file_name):
-    stream = ffmpeg.input(config['camera_list'][current_link], t=str(config['video_options']['video_duration']), rtsp_transport='tcp')
-    stream = ffmpeg.filter(stream, 'scale', width=config['rtsp_options']['rtsp_resolution_x'], height=config['rtsp_options']['rtsp_resolution_y'])
-    stream = ffmpeg.filter(stream, 'fps', fps=config['video_options']['fps'])
-    stream = ffmpeg.output(stream, f"temp/{current_link+1}24{file_name}.mp4", vcodec="libx264")
+
+async def write_media(current_link: int, file_name: str, mode, config: dict):
+    return await async_write_photo(current_link,
+                                   file_name,
+                                   config) if mode \
+        else await async_write_video(current_link,
+                                     file_name)
+
+
+async def async_write_video(current_link: int, file_name: str):
+    stream = ffmpeg.input(config[CAMERA_LIST_KEY][current_link],
+                          t=str(config[VIDEO_OPTIONS_KEY]['video_duration']),
+                          rtsp_transport='tcp')
+    stream = ffmpeg.filter(stream,
+                           'scale',
+                           width=config[RTSP_OPTIONS_KEY][RTSP_X],
+                           height=config[RTSP_OPTIONS_KEY][RTSP_Y])
+    stream = ffmpeg.filter(stream,
+                           'fps',
+                           fps=config[VIDEO_OPTIONS_KEY][FPS])
+    stream = ffmpeg.output(stream,
+                           generate_file_output_name(current_link,
+                                                     file_name,
+                                                     VIDEO_FILE_EXTENSION),
+                           vcodec="libx264")
     process = ffmpeg.run_async(stream, quiet=True)
 
-    return process
-
-
-async def async_write_photo(current_link, file_name):
-    stream = ffmpeg.input(config['camera_list'][current_link], rtsp_transport=config['rtsp_options']['rtsp_transport'])
-    stream = ffmpeg.output(stream, f"temp/{current_link+1}24{file_name}.jpg", format='image2')
-    process = ffmpeg.run_async(stream, quiet=True)
     return process
 
 
 async def main():
     pathlib.Path("temp").mkdir(exist_ok=True)
-    pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
-    photo_mode = bool(config['program_options']['photo_mode'])
+    pathlib.Path(DIR_NAME).mkdir(parents=True, exist_ok=True)
+    photo_mode = bool(config[PROGRAM_OPTIONS_KEY]['photo_mode'])
     photo_timeout = int(config['photo_timeout'])
 
     await move()
 
     while True:
-        jobs = []
-        links_names = []
+        jobs, links_names = [], []
 
-        for current_link in range(len(config['camera_list'])):
-            now = datetime.now()
-            file_name = now.strftime("%y%m%d%H%M%S")
-
+        for current_link in range(len(config[CAMERA_LIST_KEY])):
+            file_name = datetime.now().strftime(DATE_FORMAT)
             try:
                 # 0 - video, 1 - photo
-                process = await async_write_photo(current_link, file_name) if photo_mode\
-                    else await async_write_video(current_link, file_name)
+                process = await write_media(current_link,
+                                            file_name,
+                                            photo_mode,
+                                            config)
             except Exception as e:
                 logger.error(f"Failed to initialize camera {e}")
                 continue
@@ -64,14 +79,15 @@ async def main():
         if not photo_mode:
             for count, process in enumerate(jobs):
                 if process.returncode != 0 and process.returncode != 234:
-                    logger.error(f"Returncode: {process.returncode}. Camera {count + 1} failed to record file: {links_names[count]}")
+                    logger.error(
+                        f"Returncode: {process.returncode}. "
+                        f"Camera {count + 1} failed to record file: {links_names[count]}")
                 else:
-                    notifier.notify("WATCHDOG=1")
+                    notifier.notify(WATCH_DOG_NOTIFICATION)
         else:
-            notifier.notify("WATCHDOG=1")
+            notifier.notify(WATCH_DOG_NOTIFICATION)
 
         jobs.clear()
-
         await move()
 
         if photo_timeout == 1:
@@ -81,4 +97,4 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 
-#video_name: 024%y%m%d%H%M%S
+# video_name: 024%y%m%d%H%M%S

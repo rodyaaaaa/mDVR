@@ -1,15 +1,13 @@
 import os
-import pathlib
 
 import psutil
 import asyncio
 import speedtest
 import math
 
-from data.logger import Logger
+from dvr_video.data.LoggerFactory import DefaultLoggerFactory
 
-pathlib.Path("logs/mdvr_system_guard").mkdir(parents=True, exist_ok=True)
-logger = Logger('mdvr_system_guard', "logs/mdvr_system_guard/system_guard.log", 20, "H", 2)
+logger = DefaultLoggerFactory.create_logger('mdvr_system_guard', "system_guard.log")
 
 
 async def check_cpu_temp():
@@ -17,21 +15,18 @@ async def check_cpu_temp():
     file_path = f'/sys/class/thermal/{thermal_zone}/temp'
 
     with open(file_path, 'r') as file:
-        temperature = int(file.read()) / 1000
+        temperature = int(file.read()) / 1_000
 
     return temperature
 
 
+def update_speed(speed: float, update_value: int | float = 1_000_000) -> int:
+    return math.floor(speed / update_value)
+
+
 async def network_check():
     s = speedtest.Speedtest()
-
-    download_speed = s.download()
-    upload_speed = s.upload()
-
-    download_speed = math.floor(download_speed / 1000000)
-    upload_speed = math.floor(upload_speed / 1000000)
-
-    return download_speed, upload_speed
+    return update_speed(s.download()), update_speed(s.upload())
 
 
 async def main():
@@ -44,7 +39,11 @@ async def main():
         os.system("systemctl restart NetworkManager")
         download_speed, upload_speed = 0, 0
 
-    logger.info(f"CPU usage: {cpu_persent_usage}% | CPU temp: {temp_cpu} | Download speed: {download_speed}Mbit/s | Upload speed: {upload_speed}Mbit/s")
+    logger.info(
+        f"CPU usage: {cpu_persent_usage}% | "
+        f"CPU temp: {temp_cpu} | "
+        f"Download speed: {download_speed}Mbit/s | "
+        f"Upload speed: {upload_speed}Mbit/s")
 
 
 if __name__ == "__main__":

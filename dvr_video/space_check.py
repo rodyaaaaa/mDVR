@@ -1,31 +1,31 @@
 import asyncio
 import os
-import pathlib
 
 from datetime import datetime
 
 from data.utils import read_config
-from data.logger import Logger
+from dvr_video.constants import DATE_FORMAT, VIDEO_FILE_EXTENSION, DIR_NAME, PROGRAM_OPTIONS_KEY
+from dvr_video.data.LoggerFactory import DefaultLoggerFactory
+
 
 config = read_config()
-pathlib.Path("logs/mdvr_space_check").mkdir(parents=True, exist_ok=True)
-logger = Logger('mdvr_space_check', "logs/mdvr_space_check/space_check.log", 20, "H", 2)
+logger = DefaultLoggerFactory.create_logger('mdvr_space_check', "space_check.log")
 
 
-async def extract_date_from_filename(filename):
+async def extract_date_from_filename(filename: str) -> None | datetime:
     try:
         date_str = filename[3:15]
-        date_obj = datetime.strptime(date_str, "%y%m%d%H%M%S")
+        date_obj = datetime.strptime(date_str, DATE_FORMAT)
         return date_obj
     except ValueError:
         return None
 
-async def find_oldest_video(directory):
-    oldest_date = None
-    oldest_file = None
+
+async def find_oldest_video(directory: str) -> tuple[str | None, datetime | None]:
+    oldest_date, oldest_file = None, None
 
     for filename in os.listdir(directory):
-        if filename.endswith(".mp4"):
+        if filename.endswith(VIDEO_FILE_EXTENSION):
             date_obj = await extract_date_from_filename(filename)
             if date_obj:
                 if oldest_date is None or date_obj < oldest_date:
@@ -35,7 +35,7 @@ async def find_oldest_video(directory):
     return oldest_file, oldest_date
 
 
-async def get_dir_size(path='.'):
+async def get_dir_size(path: str = '.') -> int | float:
     total = 0
     with os.scandir(path) as it:
         for entry in it:
@@ -47,35 +47,35 @@ async def get_dir_size(path='.'):
 
 
 async def from_gb_to_bytes(gb: int) -> int:
-    return gb * 1000000000
+    return gb * 1_000_000_000
 
 
 async def main():
     logger.info("Space Check start.")
-    bt = await get_dir_size("materials")
+    bt = await get_dir_size(DIR_NAME)
 
-    folder_size_limit = config['program_options']['size_folder_limit_gb']
+    folder_size_limit = config[PROGRAM_OPTIONS_KEY]['size_folder_limit_gb']
 
-    folder_size_limit= await from_gb_to_bytes(folder_size_limit)
+    folder_size_limit = await from_gb_to_bytes(folder_size_limit)
 
     print(folder_size_limit)
     logger.info(f"{folder_size_limit}")
 
     if bt > folder_size_limit:
         while bt > folder_size_limit:
-            print(os.listdir("materials"))
-            logger.info(f"{os.listdir('materials')}")
+            print(os.listdir(DIR_NAME))
+            logger.info(f"{os.listdir(DIR_NAME)}")
 
-            oldest_file, oldest_date = await find_oldest_video("materials")
+            oldest_file, oldest_date = await find_oldest_video(DIR_NAME)
 
             print(oldest_file, oldest_date)
             logger.info(f"{oldest_file}, {oldest_date}")
 
-            filepath = os.path.join("materials", oldest_file)
+            filepath = os.path.join(DIR_NAME, oldest_file)
 
             os.remove(filepath)
 
-            bt = await get_dir_size("materials")
+            bt = await get_dir_size(DIR_NAME)
             logger.info(bt)
 
 

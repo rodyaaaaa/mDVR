@@ -7,9 +7,10 @@ from datetime import timedelta
 from flask import Flask, request, jsonify, render_template
 from pathlib import Path
 
-CONFIG_FILE = 'data_config.json'
+from dvr_video.constants import CONFIG_FILENAME
+
 CONFIG_PATH = '/opt/mdvr/dvr_video'
-CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, CONFIG_FILE)
+CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, CONFIG_FILENAME)
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_PATH, 'default.json')
 SERVICE_PATH = "/etc/systemd/system/mdvr.service"
 VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
