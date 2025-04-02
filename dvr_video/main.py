@@ -7,10 +7,10 @@ from datetime import datetime
 from data.utils import read_config, move, generate_file_output_name
 from sdnotify import SystemdNotifier
 
-from dvr_video.constants import VIDEO_OPTIONS_KEY, RTSP_OPTIONS_KEY, WATCH_DOG_NOTIFICATION, PROGRAM_OPTIONS_KEY, \
+from data.constants import VIDEO_OPTIONS_KEY, RTSP_OPTIONS_KEY, WATCH_DOG_NOTIFICATION, PROGRAM_OPTIONS_KEY, \
     DATE_FORMAT, DIR_NAME, CAMERA_LIST_KEY, VIDEO_FILE_EXTENSION, RTSP_X, RTSP_Y, FPS
-from dvr_video.data.LoggerFactory import DefaultLoggerFactory
-from dvr_video.main_common import async_write_photo
+from data.LoggerFactory import DefaultLoggerFactory
+from main_common import async_write_photo
 
 config = read_config()
 logger = DefaultLoggerFactory.create_logger('mdvr_engine', "engine.log")
@@ -42,7 +42,7 @@ async def async_write_video(current_link: int, file_name: str):
                                                      file_name,
                                                      VIDEO_FILE_EXTENSION),
                            vcodec="libx264")
-    process = ffmpeg.run_async(stream, quiet=True)
+    process = ffmpeg.run_async(stream)
 
     return process
 

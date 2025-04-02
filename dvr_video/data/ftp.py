@@ -2,7 +2,7 @@ import os
 import pathlib
 import aioftp
 
-from data.utils import get_date, find_files_with_extra_after_log, extract_date_from_filename_async, file_date_sort
+from .utils import get_date, find_files_with_extra_after_log, extract_date_from_filename_async, file_date_sort
 
 
 class FTPCon:

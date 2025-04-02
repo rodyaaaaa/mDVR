@@ -7,7 +7,7 @@ import shutil
 from datetime import datetime
 from typing import List
 
-from dvr_video.constants import CONFIG_FILENAME
+from .constants import CONFIG_FILENAME
 
 
 def read_config():

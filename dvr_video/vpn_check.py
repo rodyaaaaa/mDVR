@@ -4,8 +4,8 @@ from functools import partial
 
 from pythonping import ping
 
-from dvr_video.constants import VPN_DNS
-from dvr_video.data.LoggerFactory import DefaultLoggerFactory
+from data.constants import VPN_DNS
+from data.LoggerFactory import DefaultLoggerFactory
 
 COUNT_PROBE = 3
 

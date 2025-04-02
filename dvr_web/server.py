@@ -7,10 +7,8 @@ from datetime import timedelta
 from flask import Flask, request, jsonify, render_template
 from pathlib import Path
 
-from dvr_video.constants import CONFIG_FILENAME
-
 CONFIG_PATH = '/opt/mdvr/dvr_video'
-CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, CONFIG_FILENAME)
+CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, 'data_config.json')
 DEFAULT_CONFIG_PATH = os.path.join(CONFIG_PATH, 'default.json')
 SERVICE_PATH = "/etc/systemd/system/mdvr.service"
 VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
@@ -20,6 +18,18 @@ BASE_PORT = 10511
 
 
 app = Flask(__name__)
+
+
+def check_reed_switch_status() -> bool:
+    output = os.popen("systemctl is-enabled mdvr_rs.service").read().strip()
+    return True if output == "enabled" else False
+
+
+def restart_mdvr_engine() -> None:
+    if check_reed_switch_status():
+        os.system("systemctl restart mdvr_rs")
+    else:
+        os.system("systemctl restart mdvr")
 
 
 def update_watchdog(value):
@@ -38,7 +48,9 @@ def update_watchdog(value):
             file.writelines(updated_lines)
 
         os.system("systemctl daemon-reload")
-        os.system("systemctl restart mdvr")
+
+        restart_mdvr_engine()
+
         return {"success": True, "message": "WatchdogSec updated successfully"}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -168,7 +180,8 @@ def save_write_mode():
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
-        os.system("systemctl restart mdvr")
+        restart_mdvr_engine()
+
         return jsonify({"success": True, "message": "Write mode updated"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -187,7 +200,8 @@ def save_video_links():
         if not generate_nginx_configs(camera_list):
             raise Exception("Failed to generate Nginx configs")
 
-        os.system("systemctl restart mdvr")
+        restart_mdvr_engine()
+
         return jsonify({"success": True, "message": "Video links saved successfully"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -267,7 +281,8 @@ def save_video_options():
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
 
-        os.system("systemctl restart mdvr")
+        restart_mdvr_engine()
+
         return jsonify({"success": True, "message": "Settings saved!"})
 
     except ValueError as ve:
@@ -317,9 +332,8 @@ def toggle_reed_switch():
 @app.route('/get-reed-switch-status')
 def get_reed_switch_status():
     try:
-        # Використовуємо os.popen для отримання статусу сервісу
-        output = os.popen("systemctl is-active mdvr_rs.service").read().strip()
-        state = "on" if output == "active" else "off"
+        output = os.popen("systemctl is-enabled mdvr_rs.service").read().strip()
+        state = "on" if output == "enabled" else "off"
         return jsonify({"state": state})
     except Exception as e:
         return jsonify({"state": "off", "error": str(e)})

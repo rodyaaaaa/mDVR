@@ -1,7 +1,7 @@
 import ffmpeg
 
-from dvr_video.constants import VIDEO_FILE_EXTENSION, CAMERA_LIST_KEY, RTSP_OPTIONS_KEY
-from dvr_video.data.utils import generate_file_output_name
+from data.constants import VIDEO_FILE_EXTENSION, CAMERA_LIST_KEY, RTSP_OPTIONS_KEY
+from data.utils import generate_file_output_name
 
 
 async def async_write_photo(current_link: int, file_name: str, config: dict):

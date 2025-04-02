@@ -3,7 +3,7 @@ import pathlib
 
 from data.ftp import FTPCon
 from data.utils import read_config
-from dvr_video.data.LoggerFactory import DefaultLoggerFactory
+from data.LoggerFactory import DefaultLoggerFactory
 
 config = read_config()
 logger = DefaultLoggerFactory.create_logger('mdvr_ftp', "ftp.log")

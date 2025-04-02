@@ -9,10 +9,10 @@ from datetime import datetime
 from data.utils import read_config, move, generate_file_output_name
 from sdnotify import SystemdNotifier
 
-from dvr_video.constants import CAMERA_LIST_KEY, RTSP_OPTIONS_KEY, RTSP_X, RTSP_Y, VIDEO_OPTIONS_KEY, FPS, \
+from data.constants import CAMERA_LIST_KEY, RTSP_OPTIONS_KEY, RTSP_X, RTSP_Y, VIDEO_OPTIONS_KEY, FPS, \
     DIR_NAME, DATE_FORMAT, PROGRAM_OPTIONS_KEY, VIDEO_FILE_EXTENSION, WATCH_DOG_NOTIFICATION
-from dvr_video.data.LoggerFactory import LoggerFactory
-from dvr_video.main_common import async_write_photo
+from data.LoggerFactory import LoggerFactory
+from main_common import async_write_photo
 
 config = read_config()
 CustomFactory = LoggerFactory(level=10)
@@ -49,7 +49,7 @@ async def async_write_video(current_link, file_name):
         vcodec="libx264",
         movflags="+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov"
     )
-    process = ffmpeg.run_async(stream, quiet=True)
+    process = ffmpeg.run_async(stream)
     return process
 
 
@@ -101,6 +101,7 @@ async def main():
             notifier.notify(WATCH_DOG_NOTIFICATION)
 
             jobs.clear()
+            links_names.clear()
             await move()
 
         time.sleep(0.1)

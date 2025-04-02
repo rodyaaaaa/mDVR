@@ -4,8 +4,8 @@ import os
 from datetime import datetime
 
 from data.utils import read_config
-from dvr_video.constants import DATE_FORMAT, VIDEO_FILE_EXTENSION, DIR_NAME, PROGRAM_OPTIONS_KEY
-from dvr_video.data.LoggerFactory import DefaultLoggerFactory
+from data.constants import DATE_FORMAT, VIDEO_FILE_EXTENSION, DIR_NAME, PROGRAM_OPTIONS_KEY
+from data.LoggerFactory import DefaultLoggerFactory
 
 
 config = read_config()

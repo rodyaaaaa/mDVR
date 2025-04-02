@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from dvr_video.data.logger import Logger
+from .logger import Logger
 
 
 class LoggerFactory:  # TODO: add validations

@@ -3,9 +3,8 @@ import os
 import psutil
 import asyncio
 import speedtest
-import math
 
-from dvr_video.data.LoggerFactory import DefaultLoggerFactory
+from data.LoggerFactory import DefaultLoggerFactory
 
 logger = DefaultLoggerFactory.create_logger('mdvr_system_guard', "system_guard.log")
 
@@ -20,14 +19,9 @@ async def check_cpu_temp():
     return temperature
 
 
-def update_speed(speed: float, update_value: int | float = 1_000_000) -> int:
-    return math.floor(speed / update_value)
-
-
 async def network_check():
     s = speedtest.Speedtest()
-    return update_speed(s.download()), update_speed(s.upload())
-
+    return list(map(lambda x: x / 1_000_000, [s.download(), s.upload()]))
 
 async def main():
     temp_cpu = await check_cpu_temp()
