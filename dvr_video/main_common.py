@@ -12,6 +12,5 @@ async def async_write_photo(current_link: int, file_name: str, config: dict):
                                                      file_name,
                                                      VIDEO_FILE_EXTENSION),
                            format='image2')
-    process = ffmpeg.run_async(stream,
-                               quiet=True)
+    process = ffmpeg.run_async(stream)
     return process
