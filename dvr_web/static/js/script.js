@@ -5,6 +5,15 @@ const addCamBtn = document.querySelector('.cam-config-header button');
 const closeBtn = document.querySelector('.close');
 
 let cameraPorts = {};
+const preloader = document.getElementById('preloader');
+
+function showPreloader() {
+    preloader.classList.add('active');
+}
+
+function hidePreloader() {
+    preloader.classList.remove('active');
+}
 
 function openModal() {
     modal.style.display = 'block';
@@ -156,6 +165,7 @@ function changeLog(select) {
 }
 
 function saveVideoLinks() {
+    showPreloader();
     const camFields = document.querySelectorAll('#cam-fields .cam-field input');
     const videoLinks = Array.from(camFields).map(input => input.value);
 
@@ -172,6 +182,7 @@ function saveVideoLinks() {
     })
         .then(response => response.json())
         .then(result => {
+            hidePreloader();
             if (result.success) {
                 updateCameraPorts();
                 showNotification('Video links saved successfully!');
@@ -180,6 +191,7 @@ function saveVideoLinks() {
             }
         })
         .catch(error => {
+            hidePreloader();
             console.error('Error saving video links:', error);
         });
 }
@@ -204,6 +216,7 @@ function saveCamEdit(field) {
 }
 
 function saveFtpConfig() {
+    showPreloader();
     const activeTab = document.getElementById('ftp-config');
     const inputs = activeTab.querySelectorAll('input');
 
@@ -226,18 +239,27 @@ function saveFtpConfig() {
     })
         .then(response => response.json())
         .then(result => {
-            result.success
-                ? showNotification('The ftp settings is saved!')
-                : showNotification(`ERROR: ${result.error}`, true);
+            hidePreloader();
+            if (result.success) {
+                showNotification('The ftp settings is saved!');
+                setTimeout(updateImei, 1000);
+            } else {
+                showNotification(`ERROR: ${result.error}`, true);
+            }
         })
-        .catch(error => console.error('ERROR:', error));
+        .catch(error => {
+            hidePreloader();
+            console.error('ERROR:', error);
+        });
 }
 
 function saveVideoOptions() {
+    showPreloader();
     const rtspTransport = document.getElementById('rtsp-transport').value;
     const rtspResolution = document.getElementById('rtsp-resolution').value;
 
     if (!rtspResolution.includes('x')) {
+        hidePreloader();
         showNotification('Invalid resolution format! Use "WIDTHxHEIGHT".', true);
         return;
     }
@@ -263,16 +285,21 @@ function saveVideoOptions() {
     })
         .then(response => response.json())
         .then(result => {
+            hidePreloader();
             if (result.success) {
                 showNotification('The settings is saved!');
             } else {
                 showNotification(`ERROR ${result.error}`, true)
             }
         })
-        .catch(error => showNotification('Connection error', true));
+        .catch(error => {
+            hidePreloader();
+            showNotification('Connection error', true)
+        });
 }
 
 function saveVpnConfig() {
+    showPreloader();
     const vpnConfig = document.querySelector('#vpn-config textarea').value;
 
     fetch('/save-vpn-config', {
@@ -284,18 +311,22 @@ function saveVpnConfig() {
     })
         .then(response => response.json())
         .then(result => {
+            hidePreloader();
             if (result.success) {
                 showNotification('VPN config saved successfully!');
+                setTimeout(updateImei, 1000);
             } else {
                 showNotification(`ERROR: ${result.error}`, true);
             }
         })
         .catch(error => {
+            hidePreloader();
             console.error('Error saving VPN config:', error);
         });
 }
 
 function updateWriteMode() {
+    showPreloader();
     const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
 
     fetch('/save-write-mode', {
@@ -305,6 +336,7 @@ function updateWriteMode() {
     })
         .then(response => response.json())
         .then(result => {
+            hidePreloader();
             if (result.success) {
                 toggleModeSettings(selectedMode);
                 showNotification('Recording mode updated!');
@@ -313,6 +345,7 @@ function updateWriteMode() {
             }
         })
         .catch(error => {
+            hidePreloader();
             showNotification(`ERROR: ${error.message}`, true);
         });
 }
@@ -327,6 +360,7 @@ function toggleModeSettings(mode) {
 }
 
 function toggleReedSwitch() {
+    showPreloader();
     const state = document.querySelector('input[name="reed_switch"]:checked').value;
     fetch('/toggle-reed-switch', {
          method: 'POST',
@@ -335,13 +369,17 @@ function toggleReedSwitch() {
     })
     .then(response => response.json())
     .then(result => {
+         hidePreloader();
          if(result.success) {
               showNotification('Reed Switch updated successfully!');
          } else {
               showNotification('ERROR: ' + result.error, true);
          }
     })
-    .catch(error => showNotification('ERROR: ' + error.message, true));
+    .catch(error => {
+         hidePreloader();
+         showNotification('ERROR: ' + error.message, true);
+    });
 }
 
 
@@ -366,9 +404,25 @@ function updateReedSwitchState() {
         .catch(error => console.error('Error fetching reed switch status:', error));
 }
 
+function updateImei() {
+    fetch('/get-imei')
+        .then(response => response.json())
+        .then(data => {
+            if (data.imei) {
+                const imeiElement = document.querySelector('header p');
+                imeiElement.textContent = `IMEI: ${data.imei}`;
+            }
+        })
+        .catch(error => console.error('Error fetching IMEI:', error));
+}
+
+// Оновлювати IMEI кожні 10 секунд
+setInterval(updateImei, 10000);
+
 // Викликати оновлення статусу при завантаженні сторінки
 document.addEventListener('DOMContentLoaded', () => {
     updateReedSwitchState();
+    updateImei();
     const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
     toggleModeSettings(initialMode);
 });

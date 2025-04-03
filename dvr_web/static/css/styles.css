@@ -607,3 +607,39 @@ input, textarea, select {
 .reed-switch-options label:hover {
     background: #778da9;
 }
+
+/* Preloader styles */
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(13, 27, 42, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.preloader.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #415a77;
+    border-top: 5px solid #778da9;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

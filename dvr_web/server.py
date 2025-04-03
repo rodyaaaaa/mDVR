@@ -224,6 +224,9 @@ def save_ftp_config():
 
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
+        
+        # Оновлення IMEI після збереження FTP конфігурації
+        update_imei()
 
         return jsonify({"success": True, "message": "FTP settings saved!"})
     except Exception as e:
@@ -303,6 +306,10 @@ def save_vpn_config():
 
         os.system("systemctl enable wg-quick@wg0")
         os.system("systemctl restart wg-quick@wg0")
+        
+        # Оновлення IMEI після зміни VPN конфігурації
+        update_imei()
+        
         return jsonify({"success": True, "message": "VPN config saved successfully"})
     except Exception as e:
         os.system("systemctl restart wg-quick@wg0")
@@ -337,6 +344,15 @@ def get_reed_switch_status():
         return jsonify({"state": state})
     except Exception as e:
         return jsonify({"state": "off", "error": str(e)})
+
+
+@app.route('/get-imei')
+def get_imei():
+    try:
+        config = load_config()
+        return jsonify({"imei": config['program_options']['imei']})
+    except Exception as e:
+        return jsonify({"imei": "", "error": str(e)})
 
 
 @app.route('/')
