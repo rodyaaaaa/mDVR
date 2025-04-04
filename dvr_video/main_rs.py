@@ -21,7 +21,7 @@ notifier = SystemdNotifier()
 notifier.notify('READY=1')
 
 GPIO.setmode(GPIO.BCM)
-DOOR_SENSOR_PIN = 16
+DOOR_SENSOR_PIN = 17
 GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 

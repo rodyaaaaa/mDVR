@@ -426,3 +426,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
     toggleModeSettings(initialMode);
 });
+
+function validateCarname(input) {
+    // Дозволяє тільки цифри
+    input.value = input.value.replace(/[^\d]/g, '');
+    
+    // Обмеження на максимум 6 цифр
+    if (input.value.length > 6) {
+        input.value = input.value.slice(0, 6);
+    }
+}
