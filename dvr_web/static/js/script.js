@@ -113,6 +113,12 @@ function showTab(tabId) {
     document.querySelectorAll('.sidebar button').forEach(button => button.classList.remove('active'));
     const activeButton = document.querySelector(`.sidebar button[onclick="showTab('${tabId}')"]`);
     activeButton.classList.add('active');
+
+    if (tabId === 'services') {
+        startServiceStatusUpdates();
+    } else {
+        stopServiceStatusUpdates();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -428,11 +434,57 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function validateCarname(input) {
-    // Дозволяє тільки цифри
-    input.value = input.value.replace(/[^\d]/g, '');
+    input.value = input.value.replace(/[^a-zA-Z0-9]/g, '');
+}
+
+function updateServiceStatus() {
+    const serviceSelector = document.getElementById('service-selector');
+    const serviceActive = document.getElementById('service-active');
+    const serviceEnabled = document.getElementById('service-enabled');
     
-    // Обмеження на максимум 6 цифр
-    if (input.value.length > 6) {
-        input.value = input.value.slice(0, 6);
+    if (!serviceSelector.value) {
+        serviceActive.textContent = '-';
+        serviceEnabled.textContent = '-';
+        return;
+    }
+
+    showPreloader();
+    
+    fetch(`/get-service-status/${serviceSelector.value}`)
+        .then(response => response.json())
+        .then(data => {
+            hidePreloader();
+            if (data.error) {
+                showNotification(data.error, true);
+                return;
+            }
+            
+            serviceActive.textContent = data.status;
+            serviceActive.className = data.status === 'active' ? '' : 'error';
+            
+            serviceEnabled.textContent = data.enabled ? 'Yes' : 'No';
+            serviceEnabled.className = data.enabled ? '' : 'error';
+        })
+        .catch(error => {
+            hidePreloader();
+            showNotification('Error fetching service status', true);
+            console.error('Error:', error);
+        });
+}
+
+// Оновлюємо стан сервісу кожні 5 секунд, якщо вкладка Services активна
+let serviceStatusInterval;
+
+function startServiceStatusUpdates() {
+    if (serviceStatusInterval) {
+        clearInterval(serviceStatusInterval);
+    }
+    serviceStatusInterval = setInterval(updateServiceStatus, 5000);
+}
+
+function stopServiceStatusUpdates() {
+    if (serviceStatusInterval) {
+        clearInterval(serviceStatusInterval);
+        serviceStatusInterval = null;
     }
 }

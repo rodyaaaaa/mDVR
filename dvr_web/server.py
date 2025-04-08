@@ -355,6 +355,19 @@ def get_imei():
         return jsonify({"imei": "", "error": str(e)})
 
 
+@app.route('/get-service-status/<service_name>')
+def get_service_status(service_name):
+    try:
+        status = os.popen(f"systemctl is-active {service_name}").read().strip()
+        enabled = os.popen(f"systemctl is-enabled {service_name}").read().strip()
+        return jsonify({
+            "status": status,
+            "enabled": enabled == "enabled"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/')
 def index():
     update_imei()
