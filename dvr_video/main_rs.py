@@ -24,7 +24,6 @@ GPIO.setmode(GPIO.BCM)
 DOOR_SENSOR_PIN = 17
 GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-
 async def async_write_video(current_link, file_name):
     stream = ffmpeg.input(
         config[CAMERA_LIST_KEY][current_link],

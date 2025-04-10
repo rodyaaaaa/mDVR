@@ -2,9 +2,15 @@ import os
 import re
 import shutil
 import json
+import time
+import threading
+import RPi.GPIO as GPIO
+import signal
+import sys
 
 from datetime import timedelta
 from flask import Flask, request, jsonify, render_template
+from flask_socketio import SocketIO, emit
 from pathlib import Path
 
 CONFIG_PATH = '/opt/mdvr/dvr_video'
@@ -15,22 +21,88 @@ VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
 REGULAR_SEARCH_IP = r"\b(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}\b"
 NGINX_CONF_DIR = "/etc/nginx/sites-enabled"
 BASE_PORT = 10511
-
+REED_SWITCH_PIN = 17  # Змініть на відповідний GPIO пін, до якого підключений геркон
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'mdvr_secret_key'
+socketio = SocketIO(app, cors_allowed_origins="*")
 
+# Налаштування GPIO
+GPIO.setmode(GPIO.BCM)  # Використовуємо нумерацію BCM
+GPIO.setup(REED_SWITCH_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Налаштовуємо пін як вхід з підтяжкою вгору
+
+# Змінна для зберігання стану геркона
+reed_switch_state = {
+    "status": "unknown",
+    "timestamp": int(time.time())
+}
+
+# Для контролю потоку моніторингу
+reed_switch_monitor_active = False
+reed_switch_monitor_thread = None
+
+# Функція для читання стану геркона з GPIO
+def read_reed_switch_state():
+    try:
+        # Використовуємо RPi.GPIO для читання стану геркона
+        # За допомогою pull-up резистора:
+        # - Коли геркон замкнутий (closed) -> GPIO.HIGH (1)
+        # - Коли геркон розімкнутий (open) -> GPIO.LOW (0)
+        
+        pin_state = GPIO.input(REED_SWITCH_PIN)
+        
+        if pin_state == GPIO.HIGH:
+            return "closed"
+        else:
+            return "open"
+    except Exception as e:
+        print(f"Помилка читання стану геркона: {str(e)}")
+        return "unknown"
+
+# Ініціалізуємо початковий стан геркона
+try:
+    initial_status = read_reed_switch_state()
+    reed_switch_state = {
+        "status": initial_status,
+        "timestamp": int(time.time())
+    }
+    print(f"Початковий стан геркона: {initial_status}")
+except Exception as e:
+    print(f"Помилка при ініціалізації початкового стану геркона: {str(e)}")
+
+# Функція, яка буде викликатись при зміні стану піна
+def reed_switch_callback(channel):
+    global reed_switch_state
+    try:
+        # Використовуємо функцію read_reed_switch_state() для визначення стану
+        new_status = read_reed_switch_state()
+        current_time = int(time.time())
+        
+        reed_switch_state = {
+            "status": new_status,
+            "timestamp": current_time
+        }
+        
+        # Відправляємо оновлення через WebSocket
+        socketio.emit('reed_switch_update', reed_switch_state, namespace='/ws')
+        print(f"Зміна стану геркона: {new_status} в {current_time}")
+    except Exception as e:
+        print(f"Помилка в обробнику події GPIO: {str(e)}")
+
+# Додаємо обробник подій для геркона (обидва фронти: коли замикається і розмикається)
+GPIO.add_event_detect(REED_SWITCH_PIN, GPIO.BOTH, callback=reed_switch_callback, bouncetime=300)
+
+print(f"GPIO налаштовано для геркона на піні {REED_SWITCH_PIN}")
 
 def check_reed_switch_status() -> bool:
     output = os.popen("systemctl is-enabled mdvr_rs.service").read().strip()
     return True if output == "enabled" else False
-
 
 def restart_mdvr_engine() -> None:
     if check_reed_switch_status():
         os.system("systemctl restart mdvr_rs")
     else:
         os.system("systemctl restart mdvr")
-
 
 def update_watchdog(value):
     try:
@@ -55,7 +127,6 @@ def update_watchdog(value):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-
 def load_config():
     if not os.path.exists(CONFIG_FULL_PATH):
         shutil.copyfile(DEFAULT_CONFIG_PATH, CONFIG_FULL_PATH)
@@ -69,7 +140,6 @@ def load_config():
                 "rtsp_resolution_y": config.get("video_options", {}).get("video_resolution_y", 480)
             }
         return config
-
 
 def generate_nginx_configs(camera_list):
     try:
@@ -121,7 +191,6 @@ server {{
         print(f"Nginx config error: {str(e)}")
         return False
 
-
 # server.py
 def get_camera_ports():
     ports = {}
@@ -140,7 +209,6 @@ def get_camera_ports():
 @app.route('/get-camera-ports')
 def get_camera_ports_route():
     return jsonify(get_camera_ports())
-
 
 def update_imei():
     config = load_config()
@@ -168,7 +236,6 @@ def update_imei():
         config['program_options']['imei'] = imei
         with open(CONFIG_FULL_PATH, 'w') as file:
             json.dump(config, file, indent=4)
-
 
 @app.route('/save-write-mode', methods=['POST'])
 def save_write_mode():
@@ -206,7 +273,6 @@ def save_video_links():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @app.route('/save-ftp-config', methods=['POST'])
 def save_ftp_config():
     data = request.get_json()
@@ -231,7 +297,6 @@ def save_ftp_config():
         return jsonify({"success": True, "message": "FTP settings saved!"})
     except Exception as e:
         return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
-
 
 @app.route('/save-video-options', methods=['POST'])
 def save_video_options():
@@ -293,7 +358,6 @@ def save_video_options():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @app.route('/save-vpn-config', methods=['POST'])
 def save_vpn_config():
     data = request.get_json()
@@ -315,7 +379,6 @@ def save_vpn_config():
         os.system("systemctl restart wg-quick@wg0")
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @app.route('/toggle-reed-switch', methods=['POST'])
 def toggle_reed_switch():
     data = request.get_json()
@@ -335,7 +398,6 @@ def toggle_reed_switch():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @app.route('/get-reed-switch-status')
 def get_reed_switch_status():
     try:
@@ -345,7 +407,6 @@ def get_reed_switch_status():
     except Exception as e:
         return jsonify({"state": "off", "error": str(e)})
 
-
 @app.route('/get-imei')
 def get_imei():
     try:
@@ -353,7 +414,6 @@ def get_imei():
         return jsonify({"imei": config['program_options']['imei']})
     except Exception as e:
         return jsonify({"imei": "", "error": str(e)})
-
 
 @app.route('/get-service-status/<service_name>')
 def get_service_status(service_name):
@@ -366,7 +426,6 @@ def get_service_status(service_name):
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/')
 def index():
@@ -390,6 +449,108 @@ def index():
                            **config
                            )
 
+# Функція для опитування стану геркона з певною періодичністю
+def monitor_reed_switch():
+    global reed_switch_state, reed_switch_monitor_active
+    
+    while reed_switch_monitor_active:
+        try:
+            # Оскільки ми тепер використовуємо обробку подій для миттєвих оновлень,
+            # цей цикл буде використовуватися тільки для періодичного оновлення клієнтів
+            # щоб переконатися, що вони мають актуальний стан
+            current_time = int(time.time())
+            
+            # Оновлюємо клієнтів кожні 10 секунд
+            if current_time - reed_switch_state["timestamp"] >= 10:
+                # Оновлюємо стан геркона
+                current_status = read_reed_switch_state()
+                
+                reed_switch_state = {
+                    "status": current_status,
+                    "timestamp": current_time
+                }
+                
+                # Відправляємо дані через WebSocket всім підключеним клієнтам
+                socketio.emit('reed_switch_update', reed_switch_state, namespace='/ws')
+            
+            time.sleep(1)
+        except Exception as e:
+            print(f"Помилка в моніторингу геркона: {str(e)}")
+            time.sleep(5)
+
+# WebSocket події
+@socketio.on('connect', namespace='/ws')
+def ws_connect(auth):
+    global reed_switch_monitor_active, reed_switch_monitor_thread
+    
+    print(f"WebSocket клієнт підключився: {request.sid}")
+    
+    # Запускаємо моніторинг геркона, якщо він ще не запущений
+    if not reed_switch_monitor_active:
+        reed_switch_monitor_active = True
+        reed_switch_monitor_thread = threading.Thread(target=monitor_reed_switch)
+        reed_switch_monitor_thread.daemon = True
+        reed_switch_monitor_thread.start()
+
+@socketio.on('disconnect', namespace='/ws')
+def ws_disconnect():
+    print(f"WebSocket клієнт відключився: {request.sid}")
+    
+    # Перевіряємо, чи ще є підключені клієнти
+    if not socketio.server.manager.rooms.get('/ws', {}):
+        global reed_switch_monitor_active
+        reed_switch_monitor_active = False
+
+@socketio.on('get_status', namespace='/ws')
+def ws_get_status():
+    # Оновлюємо поточний стан перед відправкою
+    try:
+        current_status = read_reed_switch_state()
+        current_time = int(time.time())
+        
+        global reed_switch_state
+        reed_switch_state = {
+            "status": current_status,
+            "timestamp": current_time
+        }
+    except Exception as e:
+        print(f"Помилка при оновленні стану геркона: {str(e)}")
+    
+    # Відправляємо поточний стан геркона клієнту, який запитав
+    emit('reed_switch_update', reed_switch_state)
+
+# REST API для отримання поточного стану геркона
+@app.route('/api/reed-switch-status')
+def api_reed_switch_status():
+    # Оновлюємо поточний стан перед відправкою через API
+    try:
+        current_status = read_reed_switch_state()
+        current_time = int(time.time())
+        
+        global reed_switch_state
+        reed_switch_state = {
+            "status": current_status,
+            "timestamp": current_time
+        }
+    except Exception as e:
+        print(f"Помилка при оновленні стану геркона через API: {str(e)}")
+    
+    return jsonify(reed_switch_state)
+
+# Функція для очищення ресурсів GPIO
+def cleanup_gpio(signal=None, frame=None):
+    print("Очищення ресурсів GPIO...")
+    GPIO.cleanup()
+    sys.exit(0)
+
+# Реєстрація обробників сигналів
+signal.signal(signal.SIGINT, cleanup_gpio)
+signal.signal(signal.SIGTERM, cleanup_gpio)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    try:
+        socketio.run(app, host='192.168.1.1', port=5000)
+    finally:
+        # Очищення ресурсів GPIO при завершенні програми
+        GPIO.cleanup()
+        print("GPIO ресурси звільнено")

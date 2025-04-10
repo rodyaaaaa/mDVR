@@ -681,5 +681,83 @@ input, textarea, select {
 }
 
 .service-status span.error {
-    color: #f44336;
+    color: #e63946;
+}
+
+/* Reed Switch Tab Styles */
+.reed-switch-container {
+    background: rgba(27, 38, 59, 0.7);
+    border-radius: 10px;
+    padding: 30px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.reed-switch-status {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(13, 27, 42, 0.5);
+    border-radius: 8px;
+}
+
+.status-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #777;
+    transition: all 0.5s ease;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.status-circle.open {
+    background-color: #e63946;
+    box-shadow: 0 0 20px rgba(230, 57, 70, 0.6);
+}
+
+.status-circle.closed {
+    background-color: #4caf50;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+}
+
+.reed-switch-status p {
+    font-size: 24px;
+    margin: 0;
+}
+
+.reed-switch-info {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: rgba(13, 27, 42, 0.3);
+    border-radius: 8px;
+}
+
+.reed-switch-info p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+#reed-status-text {
+    font-weight: bold;
+    font-size: 26px;
+}
+
+#reed-status-text.open {
+    color: #e63946;
+}
+
+#reed-status-text.closed {
+    color: #4caf50;
+}
+
+#reed-connection-status.connected {
+    color: #4caf50;
+}
+
+#reed-connection-status.disconnected {
+    color: #e63946;
 }

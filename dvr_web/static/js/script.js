@@ -119,6 +119,13 @@ function showTab(tabId) {
     } else {
         stopServiceStatusUpdates();
     }
+    
+    // Ініціалізація WebSocket з'єднання при переході на вкладку Reed Switch
+    if (tabId === 'reed-switch') {
+        initReedSwitchWebSocket();
+    } else {
+        closeReedSwitchWebSocket();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -488,3 +495,107 @@ function stopServiceStatusUpdates() {
         serviceStatusInterval = null;
     }
 }
+
+// Глобальна змінна для WebSocket з'єднання
+let reedSwitchSocket = null;
+let reedSwitchReconnectTimer = null;
+
+// Функція ініціалізації WebSocket для геркона
+function initReedSwitchWebSocket() {
+    if (reedSwitchSocket && reedSwitchSocket.connected) {
+        return; // З'єднання вже активне
+    }
+    
+    closeReedSwitchWebSocket(); // Закриваємо попереднє з'єднання, якщо існує
+    
+    // Використовуємо socket.io для з'єднання
+    reedSwitchSocket = io('/ws', {
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+    });
+    
+    reedSwitchSocket.on('connect', function() {
+        console.log("Reed Switch WebSocket з'єднання встановлено");
+        const connectionStatus = document.getElementById('reed-connection-status');
+        connectionStatus.textContent = 'Connected';
+        connectionStatus.classList.add('connected');
+        connectionStatus.classList.remove('disconnected');
+        
+        // Відправляємо запит на отримання початкового стану
+        reedSwitchSocket.emit('get_status');
+    });
+    
+    reedSwitchSocket.on('reed_switch_update', function(data) {
+        updateReedSwitchUI(data);
+    });
+    
+    reedSwitchSocket.on('disconnect', function() {
+        console.log('Reed Switch WebSocket з\'єднання закрито');
+        const connectionStatus = document.getElementById('reed-connection-status');
+        connectionStatus.textContent = 'Disconnected';
+        connectionStatus.classList.add('disconnected');
+        connectionStatus.classList.remove('connected');
+    });
+    
+    reedSwitchSocket.on('connect_error', function(error) {
+        console.error(`Reed Switch WebSocket помилка підключення: ${error.message}`);
+        const connectionStatus = document.getElementById('reed-connection-status');
+        connectionStatus.textContent = 'Error';
+        connectionStatus.classList.add('disconnected');
+        connectionStatus.classList.remove('connected');
+    });
+}
+
+// Функція для закриття WebSocket з'єднання
+function closeReedSwitchWebSocket() {
+    if (reedSwitchReconnectTimer) {
+        clearTimeout(reedSwitchReconnectTimer);
+        reedSwitchReconnectTimer = null;
+    }
+    
+    if (reedSwitchSocket) {
+        reedSwitchSocket.disconnect();
+        reedSwitchSocket = null;
+    }
+}
+
+// Функція для оновлення UI стану геркона
+function updateReedSwitchUI(data) {
+    const statusIndicator = document.getElementById('reed-status-indicator');
+    const statusText = document.getElementById('reed-status-text');
+    const lastUpdated = document.getElementById('reed-last-updated');
+    
+    console.log(data.status)
+
+    // Встановлення статусу (відкритий/закритий)
+    if (data.status === 'open') {
+        statusIndicator.classList.add('open');
+        statusIndicator.classList.remove('closed');
+        statusText.textContent = 'Відкритий';
+        statusText.classList.add('open');
+        statusText.classList.remove('closed');
+    } else if (data.status === 'closed') {
+        statusIndicator.classList.add('closed');
+        statusIndicator.classList.remove('open');
+        statusText.textContent = 'Закритий';
+        statusText.classList.add('closed');
+        statusText.classList.remove('open');
+    } else {
+        statusIndicator.classList.remove('open', 'closed');
+        statusText.textContent = 'Невідомо';
+        statusText.classList.remove('open', 'closed');
+    }
+    
+    // Оновлення часу останнього оновлення
+    if (data.timestamp) {
+        const date = new Date(data.timestamp * 1000);
+        lastUpdated.textContent = date.toLocaleString('uk-UA');
+    } else {
+        lastUpdated.textContent = new Date().toLocaleString('uk-UA');
+    }
+}
+
+// Додаємо обробник закриття з'єднання при закритті вікна
+window.addEventListener('beforeunload', closeReedSwitchWebSocket);
