@@ -7,6 +7,7 @@ import threading
 import RPi.GPIO as GPIO
 import signal
 import sys
+import datetime  # Додаємо для обчислення часу таймера
 
 from datetime import timedelta
 from flask import Flask, request, jsonify, render_template
@@ -37,10 +38,12 @@ reed_switch_state = {
 reed_switch_monitor_active = False
 reed_switch_monitor_thread = None
 reed_switch_initialized = False
+reed_switch_autostop_time = None  # Час автоматичної зупинки моніторингу
+REED_SWITCH_AUTOSTOP_SECONDS = 180  # 3 хвилини (180 секунд)
 
 # Функція для ініціалізації геркона
 def initialize_reed_switch():
-    global reed_switch_state, reed_switch_initialized
+    global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time, reed_switch_monitor_active
     
     try:
         # Налаштування GPIO
@@ -58,8 +61,20 @@ def initialize_reed_switch():
         GPIO.add_event_detect(REED_SWITCH_PIN, GPIO.BOTH, callback=reed_switch_callback, bouncetime=300)
         
         reed_switch_initialized = True
+        
+        # Встановлюємо час автоматичної зупинки через 3 хвилини
+        reed_switch_autostop_time = time.time() + REED_SWITCH_AUTOSTOP_SECONDS
+        
+        # Запускаємо потік моніторингу, якщо він ще не запущений
+        if not reed_switch_monitor_active:
+            reed_switch_monitor_active = True
+            reed_switch_monitor_thread = threading.Thread(target=monitor_reed_switch)
+            reed_switch_monitor_thread.daemon = True
+            reed_switch_monitor_thread.start()
+        
         print(f"GPIO налаштовано для геркона на піні {REED_SWITCH_PIN}")
         print(f"Початковий стан геркона: {initial_status}")
+        print(f"Встановлено автоматичну зупинку через {REED_SWITCH_AUTOSTOP_SECONDS} секунд")
         
         return {"success": True, "status": initial_status}
     except Exception as e:
@@ -87,7 +102,7 @@ def read_reed_switch_state():
 
 # Функція, яка буде викликатись при зміні стану піна
 def reed_switch_callback(channel):
-    global reed_switch_state, reed_switch_initialized
+    global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time
     try:
         # Використовуємо функцію read_reed_switch_state() для визначення стану
         new_status = read_reed_switch_state()
@@ -98,9 +113,18 @@ def reed_switch_callback(channel):
             "timestamp": current_time
         }
         
-        # Додаємо інформацію про ініціалізацію
+        # Додаємо інформацію про ініціалізацію та час до зупинки
         status_with_init = reed_switch_state.copy()
         status_with_init["initialized"] = reed_switch_initialized
+        
+        # Додаємо інформацію про автоматичну зупинку
+        if reed_switch_autostop_time:
+            seconds_left = max(0, int(reed_switch_autostop_time - time.time()))
+            status_with_init["autostop"] = True
+            status_with_init["seconds_left"] = seconds_left
+        else:
+            status_with_init["autostop"] = False
+            status_with_init["seconds_left"] = 0
         
         # Відправляємо оновлення через WebSocket
         socketio.emit('reed_switch_update', status_with_init, namespace='/ws')
@@ -465,17 +489,40 @@ def index():
 
 # Функція для опитування стану геркона з певною періодичністю
 def monitor_reed_switch():
-    global reed_switch_state, reed_switch_monitor_active, reed_switch_initialized
+    global reed_switch_state, reed_switch_monitor_active, reed_switch_initialized, reed_switch_autostop_time
     
     while reed_switch_monitor_active:
         try:
+            current_time = time.time()
+            
+            # Перевіряємо, чи настав час автоматичної зупинки
+            if reed_switch_initialized and reed_switch_autostop_time and current_time >= reed_switch_autostop_time:
+                print("Автоматична зупинка моніторингу після 3 хвилин")
+                # Очищаємо ресурси GPIO
+                GPIO.cleanup(REED_SWITCH_PIN)
+                reed_switch_initialized = False
+                reed_switch_autostop_time = None
+                
+                # Відправляємо повідомлення про зупинку всім клієнтам
+                socketio.emit('reed_switch_update', {
+                    "status": "unknown",
+                    "timestamp": int(current_time),
+                    "initialized": False,
+                    "autostop": True,
+                    "seconds_left": 0
+                }, namespace='/ws')
+                
+                continue
+            
             # Перевіряємо, чи геркон ініціалізовано
             if not reed_switch_initialized:
                 # Відправляємо статус "не ініціалізовано"
                 socketio.emit('reed_switch_update', {
                     "status": "unknown",
-                    "timestamp": int(time.time()),
-                    "initialized": False
+                    "timestamp": int(current_time),
+                    "initialized": False,
+                    "autostop": False,
+                    "seconds_left": 0
                 }, namespace='/ws')
                 time.sleep(1)
                 continue
@@ -483,21 +530,25 @@ def monitor_reed_switch():
             # Оскільки ми тепер використовуємо обробку подій для миттєвих оновлень,
             # цей цикл буде використовуватися тільки для періодичного оновлення клієнтів
             # щоб переконатися, що вони мають актуальний стан
-            current_time = int(time.time())
             
-            # Оновлюємо клієнтів кожні 10 секунд
-            if current_time - reed_switch_state["timestamp"] >= 10:
+            # Оновлюємо клієнтів кожні 10 секунд або коли залишилось мало часу до зупинки
+            seconds_left = int(reed_switch_autostop_time - current_time) if reed_switch_autostop_time else 0
+            update_interval = 1 if seconds_left <= 10 else 10  # Частіше оновлюємо в останні 10 секунд
+            
+            if current_time - reed_switch_state["timestamp"] >= update_interval:
                 # Оновлюємо стан геркона
                 current_status = read_reed_switch_state()
                 
                 reed_switch_state = {
                     "status": current_status,
-                    "timestamp": current_time
+                    "timestamp": int(current_time)
                 }
                 
-                # Додаємо статус ініціалізації
+                # Додаємо статус ініціалізації та час до зупинки
                 status_with_init = reed_switch_state.copy()
                 status_with_init["initialized"] = reed_switch_initialized
+                status_with_init["autostop"] = reed_switch_autostop_time is not None
+                status_with_init["seconds_left"] = max(0, seconds_left)
                 
                 # Відправляємо дані через WebSocket всім підключеним клієнтам
                 socketio.emit('reed_switch_update', status_with_init, namespace='/ws')
@@ -532,14 +583,16 @@ def ws_disconnect():
 
 @socketio.on('get_status', namespace='/ws')
 def ws_get_status():
-    global reed_switch_state, reed_switch_initialized
+    global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time
     
     # Перевіряємо, чи геркон ініціалізовано
     if not reed_switch_initialized:
         emit('reed_switch_update', {
             "status": "unknown",
             "timestamp": int(time.time()),
-            "initialized": False
+            "initialized": False,
+            "autostop": False,
+            "seconds_left": 0
         })
         return
     
@@ -559,20 +612,31 @@ def ws_get_status():
     response = reed_switch_state.copy()
     response["initialized"] = reed_switch_initialized
     
+    # Додаємо інформацію про автоматичну зупинку
+    if reed_switch_autostop_time:
+        seconds_left = max(0, int(reed_switch_autostop_time - time.time()))
+        response["autostop"] = True
+        response["seconds_left"] = seconds_left
+    else:
+        response["autostop"] = False
+        response["seconds_left"] = 0
+    
     # Відправляємо поточний стан геркона клієнту, який запитав
     emit('reed_switch_update', response)
 
 # REST API для отримання поточного стану геркона
 @app.route('/api/reed-switch-status')
 def api_reed_switch_status():
-    global reed_switch_state, reed_switch_initialized
+    global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time
     
     # Перевіряємо, чи геркон ініціалізовано
     if not reed_switch_initialized:
         return jsonify({
             "status": "unknown",
             "timestamp": int(time.time()),
-            "initialized": False
+            "initialized": False,
+            "autostop": False,
+            "seconds_left": 0
         })
     
     # Оновлюємо поточний стан перед відправкою через API
@@ -591,12 +655,21 @@ def api_reed_switch_status():
     response = reed_switch_state.copy()
     response["initialized"] = reed_switch_initialized
     
+    # Додаємо інформацію про автоматичну зупинку
+    if reed_switch_autostop_time:
+        seconds_left = max(0, int(reed_switch_autostop_time - time.time()))
+        response["autostop"] = True
+        response["seconds_left"] = seconds_left
+    else:
+        response["autostop"] = False
+        response["seconds_left"] = 0
+    
     return jsonify(response)
 
 # Новий API маршрут для ініціалізації геркона
 @app.route('/api/initialize-reed-switch', methods=['POST'])
 def api_initialize_reed_switch():
-    global reed_switch_initialized
+    global reed_switch_initialized, reed_switch_autostop_time
     
     # Якщо геркон вже ініціалізовано, спочатку звільняємо ресурси
     if reed_switch_initialized:
@@ -605,19 +678,33 @@ def api_initialize_reed_switch():
         except Exception as e:
             print(f"Помилка при очищенні GPIO: {str(e)}")
     
+    # Скидаємо час автоматичної зупинки
+    reed_switch_autostop_time = None
+    
     # Ініціалізуємо геркон
     result = initialize_reed_switch()
+    
+    # Додаємо інформацію про автоматичну зупинку
+    if result["success"] and reed_switch_autostop_time:
+        result["autostop"] = True
+        result["seconds_left"] = REED_SWITCH_AUTOSTOP_SECONDS
+    else:
+        result["autostop"] = False
+        result["seconds_left"] = 0
     
     return jsonify(result)
 
 # Новий API маршрут для зупинки моніторингу геркона
 @app.route('/api/stop-reed-switch', methods=['POST'])
 def api_stop_reed_switch():
-    global reed_switch_initialized, reed_switch_monitor_active
+    global reed_switch_initialized, reed_switch_monitor_active, reed_switch_autostop_time
     
     try:
         # Зупиняємо моніторинг геркона
         reed_switch_monitor_active = False
+        
+        # Скидаємо час автоматичної зупинки
+        reed_switch_autostop_time = None
         
         # Очищаємо ресурси GPIO
         if reed_switch_initialized:
