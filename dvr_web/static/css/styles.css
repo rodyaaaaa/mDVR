@@ -835,6 +835,7 @@ input, textarea, select {
 
 /* Стилі для таймера автоматичної зупинки */
 #auto-stop-timer {
+    display: none !important;
     margin-top: 5px;
     font-weight: bold;
     color: #e67e22;
