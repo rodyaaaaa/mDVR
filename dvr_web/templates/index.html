@@ -179,6 +179,13 @@
                     <p>Last updated: <span id="reed-last-updated">-</span></p>
                     <p>Connection: <span id="reed-connection-status">Disconnected</span></p>
                 </div>
+                <div class="reed-switch-init">
+                    <p>Status: <span id="reed-init-status">Not initialized</span></p>
+                    <div class="reed-switch-buttons">
+                        <button id="init-reed-switch-btn" onclick="initializeReedSwitch()">Initialize Reed Switch</button>
+                        <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button">Stop Monitoring</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>

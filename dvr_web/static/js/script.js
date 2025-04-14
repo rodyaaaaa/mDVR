@@ -500,15 +500,151 @@ function stopServiceStatusUpdates() {
 let reedSwitchSocket = null;
 let reedSwitchReconnectTimer = null;
 
-// Функція ініціалізації WebSocket для геркона
-function initReedSwitchWebSocket() {
-    if (reedSwitchSocket && reedSwitchSocket.connected) {
-        return; // З'єднання вже активне
+// Функція для оновлення UI стану геркона
+function updateReedSwitchUI(data) {
+    const statusIndicator = document.getElementById('reed-status-indicator');
+    const statusText = document.getElementById('reed-status-text');
+    const lastUpdated = document.getElementById('reed-last-updated');
+    const initStatus = document.getElementById('reed-init-status');
+    
+    console.log(data);
+
+    // Перевіряємо, чи геркон ініціалізовано
+    if (data.hasOwnProperty('initialized')) {
+        if (data.initialized) {
+            initStatus.textContent = 'Initialized';
+            initStatus.classList.add('initialized');
+            initStatus.classList.remove('not-initialized');
+            document.getElementById('init-reed-switch-btn').textContent = 'Re-initialize Reed Switch';
+        } else {
+            initStatus.textContent = 'Not initialized';
+            initStatus.classList.add('not-initialized');
+            initStatus.classList.remove('initialized');
+            document.getElementById('init-reed-switch-btn').textContent = 'Initialize Reed Switch';
+            
+            // Якщо геркон не ініціалізовано, не відображаємо його стан
+            statusIndicator.classList.remove('open', 'closed');
+            statusText.textContent = 'Unavailable (not initialized)';
+            statusText.classList.remove('open', 'closed');
+            return;
+        }
+    }
+
+    // Встановлення статусу (відкритий/закритий)
+    if (data.status === 'open') {
+        statusIndicator.classList.add('open');
+        statusIndicator.classList.remove('closed');
+        statusText.textContent = 'Відкритий';
+        statusText.classList.add('open');
+        statusText.classList.remove('closed');
+    } else if (data.status === 'closed') {
+        statusIndicator.classList.add('closed');
+        statusIndicator.classList.remove('open');
+        statusText.textContent = 'Закритий';
+        statusText.classList.add('closed');
+        statusText.classList.remove('open');
+    } else {
+        statusIndicator.classList.remove('open', 'closed');
+        statusText.textContent = 'Невідомо';
+        statusText.classList.remove('open', 'closed');
     }
     
-    closeReedSwitchWebSocket(); // Закриваємо попереднє з'єднання, якщо існує
+    // Оновлення часу останнього оновлення
+    if (data.timestamp) {
+        const date = new Date(data.timestamp * 1000);
+        lastUpdated.textContent = date.toLocaleString('uk-UA');
+    } else {
+        lastUpdated.textContent = new Date().toLocaleString('uk-UA');
+    }
+}
+
+// Функція для ініціалізації геркона через API
+function initializeReedSwitch() {
+    const initButton = document.getElementById('init-reed-switch-btn');
+    const stopButton = document.getElementById('stop-reed-switch-btn');
+    const initStatus = document.getElementById('reed-init-status');
+    const connectionStatus = document.getElementById('reed-connection-status');
     
-    // Використовуємо socket.io для з'єднання
+    // Змінюємо текст кнопки та блокуємо її на час ініціалізації
+    initButton.textContent = 'Initializing...';
+    initButton.disabled = true;
+    stopButton.disabled = true;
+    
+    // Закриваємо існуюче з'єднання, якщо воно є
+    closeReedSwitchWebSocket();
+    
+    // Показуємо статус "Connecting..."
+    connectionStatus.textContent = 'Connecting...';
+    connectionStatus.classList.remove('connected', 'disconnected');
+    
+    // Виконуємо POST-запит на сервер для ініціалізації геркона
+    fetch('/api/initialize-reed-switch', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        initButton.disabled = false;
+        stopButton.disabled = false;
+        
+        if (data.success) {
+            initStatus.textContent = 'Initialized';
+            initStatus.classList.add('initialized');
+            initStatus.classList.remove('not-initialized');
+            initButton.textContent = 'Re-initialize Reed Switch';
+            
+            // Оновлюємо відображення стану геркона
+            if (data.status) {
+                updateReedSwitchUI({
+                    status: data.status,
+                    timestamp: Math.floor(Date.now() / 1000),
+                    initialized: true
+                });
+            }
+            
+            // Створюємо нове WebSocket з'єднання безпосередньо без перевірки статусу ініціалізації
+            // Оскільки ми вже знаємо, що ініціалізація успішна
+            createReedSwitchWebSocket();
+            
+            showNotification('Reed switch initialized successfully!');
+        } else {
+            initStatus.textContent = 'Initialization failed';
+            initStatus.classList.add('not-initialized');
+            initStatus.classList.remove('initialized');
+            initButton.textContent = 'Try Again';
+            
+            // Оновлюємо статус з'єднання
+            connectionStatus.textContent = 'Disconnected';
+            connectionStatus.classList.add('disconnected');
+            connectionStatus.classList.remove('connected');
+            
+            showNotification('Failed to initialize reed switch: ' + (data.error || 'Unknown error'), true);
+        }
+    })
+    .catch(error => {
+        console.error('Error initializing reed switch:', error);
+        initButton.disabled = false;
+        stopButton.disabled = false;
+        initButton.textContent = 'Try Again';
+        initStatus.textContent = 'Initialization failed';
+        
+        // Оновлюємо статус з'єднання
+        connectionStatus.textContent = 'Error';
+        connectionStatus.classList.add('disconnected');
+        connectionStatus.classList.remove('connected');
+        
+        showNotification('Error initializing reed switch: ' + error.message, true);
+    });
+}
+
+// Нова функція для створення WebSocket з'єднання без додаткової перевірки статусу
+function createReedSwitchWebSocket() {
+    // Закриваємо попереднє з'єднання, якщо воно існує
+    closeReedSwitchWebSocket();
+    
+    // Створюємо нове з'єднання
     reedSwitchSocket = io('/ws', {
         transports: ['websocket'],
         reconnection: true,
@@ -548,6 +684,116 @@ function initReedSwitchWebSocket() {
     });
 }
 
+// Функція для зупинки моніторингу геркона
+function stopReedSwitchMonitoring() {
+    const initButton = document.getElementById('init-reed-switch-btn');
+    const stopButton = document.getElementById('stop-reed-switch-btn');
+    const initStatus = document.getElementById('reed-init-status');
+    const statusIndicator = document.getElementById('reed-status-indicator');
+    const statusText = document.getElementById('reed-status-text');
+    const connectionStatus = document.getElementById('reed-connection-status');
+    
+    // Змінюємо текст кнопки та блокуємо її на час зупинки
+    stopButton.textContent = 'Stopping...';
+    stopButton.disabled = true;
+    initButton.disabled = true;
+    
+    // Закриваємо WebSocket з'єднання до відправки запиту
+    closeReedSwitchWebSocket();
+    
+    // Оновлюємо статус підключення на Disconnected
+    connectionStatus.textContent = 'Disconnected';
+    connectionStatus.classList.add('disconnected');
+    connectionStatus.classList.remove('connected');
+    
+    // Виконуємо POST-запит на сервер для зупинки моніторингу геркона
+    fetch('/api/stop-reed-switch', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        stopButton.disabled = false;
+        initButton.disabled = false;
+        
+        if (data.success) {
+            initStatus.textContent = 'Not initialized';
+            initStatus.classList.add('not-initialized');
+            initStatus.classList.remove('initialized');
+            initButton.textContent = 'Initialize Reed Switch';
+            stopButton.textContent = 'Stop Monitoring';
+            
+            // Оновлюємо відображення стану геркона
+            statusIndicator.classList.remove('open', 'closed');
+            statusText.textContent = 'Unavailable (monitoring stopped)';
+            statusText.classList.remove('open', 'closed');
+            
+            showNotification('Reed switch monitoring stopped successfully!');
+        } else {
+            stopButton.textContent = 'Stop Monitoring';
+            showNotification('Failed to stop reed switch monitoring: ' + (data.error || 'Unknown error'), true);
+        }
+    })
+    .catch(error => {
+        console.error('Error stopping reed switch monitoring:', error);
+        stopButton.disabled = false;
+        initButton.disabled = false;
+        stopButton.textContent = 'Stop Monitoring';
+        
+        showNotification('Error stopping reed switch monitoring: ' + error.message, true);
+    });
+}
+
+// Перевірка статусу ініціалізації при завантаженні вкладки
+function checkReedSwitchInitialized() {
+    fetch('/api/reed-switch-status')
+        .then(response => response.json())
+        .then(data => {
+            updateReedSwitchUI(data);
+        })
+        .catch(error => {
+            console.error('Error checking reed switch status:', error);
+            showNotification('Error checking reed switch status', true);
+        });
+}
+
+// Функція ініціалізації WebSocket для геркона
+function initReedSwitchWebSocket() {
+    if (reedSwitchSocket && reedSwitchSocket.connected) {
+        return; // З'єднання вже активне
+    }
+    
+    closeReedSwitchWebSocket(); // Закриваємо попереднє з'єднання, якщо існує
+    
+    // Спочатку перевіряємо статус ініціалізації геркона
+    fetch('/api/reed-switch-status')
+        .then(response => response.json())
+        .then(data => {
+            updateReedSwitchUI(data);
+            
+            // Підключаємось через WebSocket тільки якщо геркон ініціалізовано
+            if (data.initialized) {
+                createReedSwitchWebSocket();
+            } else {
+                // Якщо геркон не ініціалізовано, встановлюємо статус підключення як відключено
+                const connectionStatus = document.getElementById('reed-connection-status');
+                connectionStatus.textContent = 'Disconnected';
+                connectionStatus.classList.add('disconnected');
+                connectionStatus.classList.remove('connected');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking reed switch status:', error);
+            // При помилці також показуємо статус відключено
+            const connectionStatus = document.getElementById('reed-connection-status');
+            connectionStatus.textContent = 'Error';
+            connectionStatus.classList.add('disconnected');
+            connectionStatus.classList.remove('connected');
+        });
+}
+
 // Функція для закриття WebSocket з'єднання
 function closeReedSwitchWebSocket() {
     if (reedSwitchReconnectTimer) {
@@ -558,42 +804,6 @@ function closeReedSwitchWebSocket() {
     if (reedSwitchSocket) {
         reedSwitchSocket.disconnect();
         reedSwitchSocket = null;
-    }
-}
-
-// Функція для оновлення UI стану геркона
-function updateReedSwitchUI(data) {
-    const statusIndicator = document.getElementById('reed-status-indicator');
-    const statusText = document.getElementById('reed-status-text');
-    const lastUpdated = document.getElementById('reed-last-updated');
-    
-    console.log(data.status)
-
-    // Встановлення статусу (відкритий/закритий)
-    if (data.status === 'open') {
-        statusIndicator.classList.add('open');
-        statusIndicator.classList.remove('closed');
-        statusText.textContent = 'Відкритий';
-        statusText.classList.add('open');
-        statusText.classList.remove('closed');
-    } else if (data.status === 'closed') {
-        statusIndicator.classList.add('closed');
-        statusIndicator.classList.remove('open');
-        statusText.textContent = 'Закритий';
-        statusText.classList.add('closed');
-        statusText.classList.remove('open');
-    } else {
-        statusIndicator.classList.remove('open', 'closed');
-        statusText.textContent = 'Невідомо';
-        statusText.classList.remove('open', 'closed');
-    }
-    
-    // Оновлення часу останнього оновлення
-    if (data.timestamp) {
-        const date = new Date(data.timestamp * 1000);
-        lastUpdated.textContent = date.toLocaleString('uk-UA');
-    } else {
-        lastUpdated.textContent = new Date().toLocaleString('uk-UA');
     }
 }
 

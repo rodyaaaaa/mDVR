@@ -761,3 +761,74 @@ input, textarea, select {
 #reed-connection-status.disconnected {
     color: #e63946;
 }
+
+/* Стилі для ініціалізації геркона */
+.reed-switch-init {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(13, 27, 42, 0.3);
+    border-radius: 8px;
+}
+
+#reed-init-status.initialized {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+#reed-init-status.not-initialized {
+    color: #e63946;
+    font-weight: bold;
+}
+
+.reed-switch-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#init-reed-switch-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    flex: 1;
+}
+
+#init-reed-switch-btn:hover {
+    background-color: #2980b9;
+}
+
+#init-reed-switch-btn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+#stop-reed-switch-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    flex: 1;
+}
+
+#stop-reed-switch-btn:hover {
+    background-color: #c0392b;
+}
+
+#stop-reed-switch-btn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
