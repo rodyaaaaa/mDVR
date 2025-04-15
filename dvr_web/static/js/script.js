@@ -487,7 +487,7 @@ function startServiceStatusUpdates() {
     if (serviceStatusInterval) {
         clearInterval(serviceStatusInterval);
     }
-    serviceStatusInterval = setInterval(updateServiceStatus, 5000);
+    serviceStatusInterval = setInterval(updateServiceStatus, 80);
 }
 
 function stopServiceStatusUpdates() {
