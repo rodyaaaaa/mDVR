@@ -859,3 +859,11 @@ input, textarea, select {
         background-color: #fff;
     }
 }
+
+/* Сірий ефект для неактивних radio-кнопок Reed Switch */
+.reed-switch-options input[disabled] + label {
+    background: #b0b0b0 !important;
+    color: #eee !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}

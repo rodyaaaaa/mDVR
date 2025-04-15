@@ -740,7 +740,7 @@ signal.signal(signal.SIGTERM, cleanup_gpio)
 
 if __name__ == '__main__':
     try:
-        socketio.run(app, host='192.168.1.1', port=5000)
+        socketio.run(app, host='192.168.1.1', port=80)
     finally:
         # Очищення ресурсів GPIO при завершенні програми
         GPIO.cleanup()
