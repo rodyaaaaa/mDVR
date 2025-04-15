@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mDVR</title>
     <link rel="stylesheet" href="../static/css/styles.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
 <header>
@@ -28,6 +29,8 @@
         <button onclick="showTab('video-options')">Settings</button>
         <button onclick="showTab('ftp-config')">FTP</button>
         <button onclick="showTab('vpn-config')">VPN</button>
+        <button onclick="showTab('reed-switch')">Reed Switch</button>
+        <button onclick="showTab('services')">Services</button>
     </aside>
     <main class="content">
         <div id="cam-config" class="tab active">
@@ -143,6 +146,48 @@
             <h2>VPN config</h2>
             <textarea placeholder="wgo.conf WireGuard">{{ vpn_config }}</textarea>
             <button onclick="saveVpnConfig()">Save</button>
+        </div>
+        <div id="services" class="tab">
+            <h2>Services Status</h2>
+            <div class="services-container">
+                <select id="service-selector" onchange="updateServiceStatus()">
+                    <option value="">Select a service...</option>
+                    <option value="mdvr.service">mDVR Service</option>
+                    <option value="mdvr_rs.service">mDVR Reed Switch Service</option>
+                    <option value="mdvr_web.service">mDVR Web Service</option>
+                    <option value="mdvr_upload.timer">mDVR Upload Timer</option>
+                    <option value="mdvr_space_check.timer">mDVR Space Check Timer</option>
+                    <option value="mdvr_system_guard.timer">mDVR System Guard Timer</option>
+                    <option value="mdvr_vpn_check.timer">mDVR VPN Check Timer</option>
+                    <option value="wg-quick@wg0.service">WireGuard VPN Service</option>
+                    <option value="nginx.service">Nginx Service</option>
+                </select>
+                <div id="service-status" class="service-status">
+                    <p>Status: <span id="service-active">-</span></p>
+                    <p>Enabled: <span id="service-enabled">-</span></p>
+                </div>
+            </div>
+        </div>
+        <div id="reed-switch" class="tab">
+            <h2>Reed Switch Status</h2>
+            <div class="reed-switch-container">
+                <div class="reed-switch-status">
+                    <div class="status-circle" id="reed-status-indicator"></div>
+                    <p>Status: <span id="reed-status-text">Connecting...</span></p>
+                </div>
+                <div class="reed-switch-info">
+                    <p>Last updated: <span id="reed-last-updated">-</span></p>
+                    <p>Connection: <span id="reed-connection-status">Disconnected</span></p>
+                </div>
+                <div class="reed-switch-init">
+                    <p>Status: <span id="reed-init-status">Not initialized</span></p>
+                    <p id="auto-stop-timer" class="hidden">Auto-stop in: <span id="auto-stop-time">03:00</span></p>
+                    <div class="reed-switch-buttons">
+                        <button id="init-reed-switch-btn" onclick="initializeReedSwitch()">Initialize Reed Switch</button>
+                        <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button">Stop Monitoring</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </div>

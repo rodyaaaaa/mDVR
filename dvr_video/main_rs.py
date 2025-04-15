@@ -2,6 +2,7 @@ import asyncio
 import pathlib
 import ffmpeg
 import time
+import signal
 
 import RPi.GPIO as GPIO
 
@@ -24,7 +25,6 @@ GPIO.setmode(GPIO.BCM)
 DOOR_SENSOR_PIN = 17
 GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-
 async def async_write_video(current_link, file_name):
     stream = ffmpeg.input(
         config[CAMERA_LIST_KEY][current_link],
@@ -46,8 +46,7 @@ async def async_write_video(current_link, file_name):
     stream = ffmpeg.output(
         stream,
         generate_file_output_name(current_link, file_name, VIDEO_FILE_EXTENSION),
-        vcodec="libx264",
-        movflags="+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov"
+        vcodec="libx264"
     )
     process = ffmpeg.run_async(stream)
     return process
@@ -92,9 +91,13 @@ async def main():
             time.sleep(60)
             door_state = GPIO.input(DOOR_SENSOR_PIN)
             if door_state != GPIO.HIGH:
+                loop = asyncio.get_running_loop()
                 for process in jobs:
-                    process.terminate()
-                    process.kill()
+                    try:
+                        process.send_signal(signal.SIGINT)
+                        await loop.run_in_executor(None, process.wait)
+                    except Exception as e:
+                        logger.error(f"Error while stopping ffmpeg process: {e}")
 
                 video_status = False
 

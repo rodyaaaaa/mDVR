@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/mdvr/dvr_web
-ExecStart=/opt/mdvr/venv/bin/python /opt/mdvr/dvr_web/server.py 0.0.0.0:80
+ExecStart=/opt/mdvr/venv/bin/python /opt/mdvr/dvr_web/server.py
 Restart=always
 
 [Install]
