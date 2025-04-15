@@ -2,6 +2,7 @@ import asyncio
 import pathlib
 import ffmpeg
 import time
+import signal
 
 import RPi.GPIO as GPIO
 
@@ -90,9 +91,13 @@ async def main():
             time.sleep(60)
             door_state = GPIO.input(DOOR_SENSOR_PIN)
             if door_state != GPIO.HIGH:
+                loop = asyncio.get_running_loop()
                 for process in jobs:
-                    process.terminate()
-                    process.kill()
+                    try:
+                        process.send_signal(signal.SIGINT)
+                        await loop.run_in_executor(None, process.wait)
+                    except Exception as e:
+                        logger.error(f"Error while stopping ffmpeg process: {e}")
 
                 video_status = False
 
