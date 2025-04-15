@@ -455,13 +455,10 @@ function updateServiceStatus() {
         serviceEnabled.textContent = '-';
         return;
     }
-
-    showPreloader();
     
     fetch(`/get-service-status/${serviceSelector.value}`)
         .then(response => response.json())
         .then(data => {
-            hidePreloader();
             if (data.error) {
                 showNotification(data.error, true);
                 return;
@@ -474,7 +471,6 @@ function updateServiceStatus() {
             serviceEnabled.className = data.enabled ? '' : 'error';
         })
         .catch(error => {
-            hidePreloader();
             showNotification('Error fetching service status', true);
             console.error('Error:', error);
         });
