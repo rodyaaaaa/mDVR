@@ -714,13 +714,13 @@ input, textarea, select {
 }
 
 .status-circle.open {
-    background-color: #e63946;
-    box-shadow: 0 0 20px rgba(230, 57, 70, 0.6);
+    background-color: #4caf50;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
 }
 
 .status-circle.closed {
-    background-color: #4caf50;
-    box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+    background-color: #e63946;
+    box-shadow: 0 0 20px rgba(230, 57, 70, 0.6);
 }
 
 .reed-switch-status p {
@@ -747,11 +747,11 @@ input, textarea, select {
 }
 
 #reed-status-text.open {
-    color: #e63946;
+    color: #4caf50;
 }
 
 #reed-status-text.closed {
-    color: #4caf50;
+    color: #e63946;
 }
 
 #reed-connection-status.connected {
