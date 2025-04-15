@@ -655,7 +655,22 @@ function initializeReedSwitch() {
             connectionStatus.classList.add('disconnected');
             connectionStatus.classList.remove('connected');
             
-            showNotification('Failed to initialize reed switch: ' + (data.error || 'Unknown error'), true);
+            // Перевіряємо, чи помилка пов'язана з перемикачем Reed Switch
+            if (data.reed_switch_enabled) {
+                // Показуємо спеціальне повідомлення з інструкцією
+                showNotification('Error: Please set Reed Switch to OFF in Settings tab before initializing!', true);
+                
+                // Додаємо підказку для користувача, щоб він знав, що робити
+                const switchTabBtn = document.querySelector('.sidebar button[onclick="showTab(\'video-options\')"]');
+                if (switchTabBtn) {
+                    switchTabBtn.classList.add('highlight');
+                    setTimeout(() => {
+                        switchTabBtn.classList.remove('highlight');
+                    }, 3000);
+                }
+            } else {
+                showNotification('Failed to initialize reed switch: ' + (data.error || 'Unknown error'), true);
+            }
         }
     })
     .catch(error => {

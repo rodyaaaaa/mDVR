@@ -671,6 +671,17 @@ def api_reed_switch_status():
 def api_initialize_reed_switch():
     global reed_switch_initialized, reed_switch_autostop_time
     
+    # Перевіряємо, чи перемикач Reed Switch у положенні OFF
+    rs_status = check_reed_switch_status()
+    if rs_status:
+        error_msg = "Помилка: Перемикач Reed Switch в налаштуваннях повинен бути у положенні OFF перед ініціалізацією геркона"
+        print(error_msg)
+        return jsonify({
+            "success": False, 
+            "error": error_msg,
+            "reed_switch_enabled": True
+        })
+    
     # Якщо геркон вже ініціалізовано, спочатку звільняємо ресурси
     if reed_switch_initialized:
         try:

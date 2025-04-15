@@ -835,16 +835,27 @@ input, textarea, select {
 
 /* Стилі для таймера автоматичної зупинки */
 #auto-stop-timer {
-    display: none !important;
-    margin-top: 5px;
+    margin-top: 10px;
     font-weight: bold;
-    color: #e67e22;
+    color: #d9534f;
+    display: none !important;
 }
 
-#auto-stop-timer.hidden {
-    display: none;
+/* Підсвічування кнопки для переходу на сторінку налаштувань */
+.highlight {
+    animation: pulse 1s infinite;
+    box-shadow: 0 0 10px #f8d7da;
+    border-color: #f5c6cb !important;
 }
 
-#auto-stop-time {
-    color: #e74c3c;
+@keyframes pulse {
+    0% {
+        background-color: #fff;
+    }
+    50% {
+        background-color: #f8d7da;
+    }
+    100% {
+        background-color: #fff;
+    }
 }
