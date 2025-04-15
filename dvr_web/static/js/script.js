@@ -519,7 +519,20 @@ function updateReedSwitchUI(data) {
     const initStatus = document.getElementById('reed-init-status');
     const autoStopTimer = document.getElementById('auto-stop-timer');
     const autoStopTime = document.getElementById('auto-stop-time');
+    const reedOnRadio = document.getElementById('reed-switch-on');
+    const reedOffRadio = document.getElementById('reed-switch-off');
     
+    // Блокуємо або розблоковуємо перемикач Reed Switch у Settings
+    if (data.hasOwnProperty('initialized')) {
+        if (data.initialized) {
+            reedOnRadio.disabled = true;
+            reedOffRadio.disabled = true;
+        } else {
+            reedOnRadio.disabled = false;
+            reedOffRadio.disabled = false;
+        }
+    }
+
     console.log(data);
 
     // Перевіряємо, чи геркон ініціалізовано
