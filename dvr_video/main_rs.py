@@ -45,8 +45,7 @@ async def async_write_video(current_link, file_name):
     stream = ffmpeg.output(
         stream,
         generate_file_output_name(current_link, file_name, VIDEO_FILE_EXTENSION),
-        vcodec="libx264",
-        movflags="+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov"
+        vcodec="libx264"
     )
     process = ffmpeg.run_async(stream)
     return process

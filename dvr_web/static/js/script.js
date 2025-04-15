@@ -573,18 +573,18 @@ function updateReedSwitchUI(data) {
     if (data.status === 'open') {
         statusIndicator.classList.add('open');
         statusIndicator.classList.remove('closed');
-        statusText.textContent = 'Відкритий';
+        statusText.textContent = 'Open';
         statusText.classList.add('open');
         statusText.classList.remove('closed');
     } else if (data.status === 'closed') {
         statusIndicator.classList.add('closed');
         statusIndicator.classList.remove('open');
-        statusText.textContent = 'Закритий';
+        statusText.textContent = 'Closed';
         statusText.classList.add('closed');
         statusText.classList.remove('open');
     } else {
         statusIndicator.classList.remove('open', 'closed');
-        statusText.textContent = 'Невідомо';
+        statusText.textContent = 'Unknown';
         statusText.classList.remove('open', 'closed');
     }
     
