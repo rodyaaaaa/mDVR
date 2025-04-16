@@ -1,4 +1,6 @@
+import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import re
 import shutil
 import json
@@ -6,17 +8,17 @@ import time
 import threading
 import RPi.GPIO as GPIO
 import signal
-import sys
 import datetime  # Додаємо для обчислення часу таймера
 
 from datetime import timedelta
 from flask import Flask, request, jsonify, render_template
 from flask_socketio import SocketIO, emit
 from pathlib import Path
+from dvr_video.data.utils import get_config_path
 
 CONFIG_PATH = '/opt/mdvr/dvr_video'
 CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, 'data_config.json')
-DEFAULT_CONFIG_PATH = os.path.join(CONFIG_PATH, 'default.json')
+DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), '../dvr_video/default.json')
 SERVICE_PATH = "/etc/systemd/system/mdvr.service"
 VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
 REGULAR_SEARCH_IP = r"\b(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}\b"
@@ -93,9 +95,9 @@ def read_reed_switch_state():
         pin_state = GPIO.input(REED_SWITCH_PIN)
         
         if pin_state == GPIO.HIGH:
-            return "closed"
-        else:
             return "open"
+        else:
+            return "closed"
     except Exception as e:
         print(f"Помилка читання стану геркона: {str(e)}")
         return "unknown"
@@ -166,10 +168,10 @@ def update_watchdog(value):
         return {"success": False, "error": str(e)}
 
 def load_config():
-    if not os.path.exists(CONFIG_FULL_PATH):
-        shutil.copyfile(DEFAULT_CONFIG_PATH, CONFIG_FULL_PATH)
-
-    with open(CONFIG_FULL_PATH, 'r') as file:
+    config_path = get_config_path()
+    if not os.path.exists(config_path):
+        shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
+    with open(config_path, 'r') as file:
         config = json.load(file)
         if "rtsp_options" not in config:
             config["rtsp_options"] = {
@@ -272,7 +274,7 @@ def update_imei():
         imei = str(car_name) + ('0' * space) + str(vpn_ip)
 
         config['program_options']['imei'] = imei
-        with open(CONFIG_FULL_PATH, 'w') as file:
+        with open(get_config_path(), 'w') as file:
             json.dump(config, file, indent=4)
 
 @app.route('/save-write-mode', methods=['POST'])
@@ -282,7 +284,7 @@ def save_write_mode():
         config = load_config()
         config['program_options']['photo_mode'] = 0 if data.get('write_mode') == 'video' else 1
 
-        with open(CONFIG_FULL_PATH, 'w') as file:
+        with open(get_config_path(), 'w') as file:
             json.dump(config, file, indent=4)
 
         restart_mdvr_engine()
@@ -299,7 +301,7 @@ def save_video_links():
         camera_list = data.get('camera_list', [])
         config['camera_list'] = camera_list
 
-        with open(CONFIG_FULL_PATH, 'w') as file:
+        with open(get_config_path(), 'w') as file:
             json.dump(config, file, indent=4)
 
         if not generate_nginx_configs(camera_list):
@@ -326,7 +328,7 @@ def save_ftp_config():
             "car_name": ftp_data.get('car_name', '')
         }
 
-        with open(CONFIG_FULL_PATH, 'w') as file:
+        with open(get_config_path(), 'w') as file:
             json.dump(config, file, indent=4)
         
         # Оновлення IMEI після збереження FTP конфігурації
@@ -384,7 +386,7 @@ def save_video_options():
             config['photo_timeout'] = int(photo_timeout)
             update_watchdog(int(photo_timeout * 5))
 
-        with open(CONFIG_FULL_PATH, 'w') as file:
+        with open(get_config_path(), 'w') as file:
             json.dump(config, file, indent=4)
 
         restart_mdvr_engine()

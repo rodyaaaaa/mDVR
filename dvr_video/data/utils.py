@@ -10,13 +10,21 @@ from typing import List
 from .constants import CONFIG_FILENAME
 
 
-def read_config():
-    if CONFIG_FILENAME in os.listdir():
-        with open(CONFIG_FILENAME, 'r') as config_file:
-            data = json.load(config_file)
-        return data
+def get_config_path():
+    config_dir = '/etc/mdvr'
+    os.makedirs(config_dir, exist_ok=True)
+    return os.path.join(config_dir, CONFIG_FILENAME)
 
-    return False
+
+def read_config():
+    config_path = get_config_path()
+    if not os.path.exists(config_path):
+        # Копіюємо дефолтний конфіг, якщо його ще немає
+        default_path = os.path.join(os.path.dirname(__file__), '../default.json')
+        shutil.copyfile(default_path, config_path)
+    with open(config_path, 'r') as config_file:
+        data = json.load(config_file)
+    return data
 
 
 async def get_date(video):

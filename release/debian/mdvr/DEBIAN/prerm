@@ -1,0 +1,16 @@
+#!/bin/bash
+
+systemctl stop mdvr.service
+systemctl stop mdvr_web.service
+systemctl stop mdvr_upload.timer
+systemctl stop mdvr_space_check.timer
+systemctl stop mdvr_system_guard.timer
+systemctl stop mdvr_vpn_check.timer
+
+systemctl disable mdvr.service
+systemctl disable mdvr_web.service
+systemctl disable mdvr_upload.timer
+systemctl disable mdvr_space_check.timer
+systemctl disable mdvr_system_guard.timer
+systemctl disable mdvr_vpn_check.timer
+

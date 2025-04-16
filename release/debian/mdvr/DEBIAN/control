@@ -1,7 +1,7 @@
 Package: mdvr
 Version: 0.9
 Section: base
-Priority: optional
+Priority: standard
 Architecture: all
 Depends: ffmpeg, python3 (>= 3.11), python3-venv, python3-dev, curl, libcurl4, wireguard, nginx, resolvconf
 Maintainer: Leaveamark Dev bozhokrodion02@gmail.com
