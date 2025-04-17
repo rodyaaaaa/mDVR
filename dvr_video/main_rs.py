@@ -99,13 +99,12 @@ async def main():
                     except Exception as e:
                         logger.error(f"Error while stopping ffmpeg process: {e}")
 
+                jobs.clear()
+                links_names.clear()
+                await move()
                 video_status = False
 
             notifier.notify(WATCH_DOG_NOTIFICATION)
-
-            jobs.clear()
-            links_names.clear()
-            await move()
 
         time.sleep(0.1)
 
