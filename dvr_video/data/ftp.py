@@ -21,10 +21,10 @@ class FTPCon:
             await client.change_directory(self.car_name)
 
             try:
-                videos = os.listdir("materials")
+                videos = os.listdir("/etc/mdvr/materials")
             except FileNotFoundError as e:
                 logger.error(f"Error {e}")
-                pathlib.Path("materials").mkdir(exist_ok=True)
+                pathlib.Path("/etc/mdvr/materials").mkdir(parents=True, exist_ok=True)
 
             print(videos)
             videos = file_date_sort(videos)
@@ -42,7 +42,7 @@ class FTPCon:
                     logger.error(f"This file: {video} alredy exists. Remove and upload file.")
                     await client.remove(video)
 
-                vd = pathlib.Path("materials", video)
+                vd = pathlib.Path("/etc/mdvr/materials", video)
                 await client.upload(vd)
                 logger.info(f"The file {video} has been successful upload. Remove from local storage.")
                 os.remove(vd)
@@ -57,13 +57,13 @@ class FTPCon:
             await client.change_directory(self.car_name)
 
             try:
-                folders = os.listdir("logs")
+                folders = os.listdir("/etc/mdvr/logs")
             except FileNotFoundError as e:
                 logger.error(f"Error {e}")
-                pathlib.Path("logs").mkdir(exist_ok=True)
+                pathlib.Path("/etc/mdvr/logs").mkdir(parents=True, exist_ok=True)
 
             for folder in folders:
-                logs_array = await find_files_with_extra_after_log(os.path.join("logs", folder))
+                logs_array = await find_files_with_extra_after_log(os.path.join("/etc/mdvr/logs", folder))
 
                 for log in logs_array:
                     date_folder = await extract_date_from_filename_async(log)
@@ -87,11 +87,11 @@ class FTPCon:
                         logger.error(f"This file: {log} alredy exists. Remove and upload file.")
                         await client.remove(log)
 
-                    lg = pathlib.Path("logs", folder, log)
+                    lg = pathlib.Path("/etc/mdvr/logs", folder, log)
                     print(log)
 
                     await client.upload(lg)
-                    os.remove(os.path.join("logs", folder, log))
+                    os.remove(os.path.join("/etc/mdvr/logs", folder, log))
 
                     pt = pathlib.Path("/", self.car_name)
 

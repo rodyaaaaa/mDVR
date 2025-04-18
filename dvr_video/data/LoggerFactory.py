@@ -8,7 +8,7 @@ class LoggerFactory:  # TODO: add validations
     def __init__(self, level: int = 20,
                  when: str = 'H',
                  interval: int = 2,
-                 parent_dir_name: str = 'logs'):
+                 parent_dir_name: str = '/etc/mdvr/logs'):
         self._level = level
         self._when = when
         self._interval = interval

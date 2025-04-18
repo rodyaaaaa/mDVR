@@ -1,5 +1,6 @@
 import asyncio
 import os
+import pathlib
 
 from datetime import datetime
 
@@ -51,6 +52,8 @@ async def from_gb_to_bytes(gb: int) -> int:
 
 
 async def main():
+    pathlib.Path(DIR_NAME).mkdir(parents=True, exist_ok=True)
+    pathlib.Path("/etc/mdvr/logs").mkdir(parents=True, exist_ok=True)
     logger.info("Space Check start.")
     bt = await get_dir_size(DIR_NAME)
 

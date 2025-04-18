@@ -1,7 +1,7 @@
 DATE_FORMAT = "%y%m%d%H%M%S"
 VIDEO_FILE_EXTENSION = ".mp4"
 PHOTO_FILE_EXTENSION = ".jpg"
-DIR_NAME = "materials"
+DIR_NAME = "/etc/mdvr/materials"
 VPN_DNS = '10.99.97.1'
 VIDEO_OPTIONS_KEY = 'video_options'
 RTSP_OPTIONS_KEY = 'rtsp_options'

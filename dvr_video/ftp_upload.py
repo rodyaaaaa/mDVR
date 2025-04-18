@@ -11,7 +11,7 @@ logger = DefaultLoggerFactory.create_logger('mdvr_ftp', "ftp.log")
 
 async def main():
     pathlib.Path("temp").mkdir(exist_ok=True)
-    pathlib.Path("materials").mkdir(parents=True, exist_ok=True)
+    pathlib.Path("/etc/mdvr/materials").mkdir(parents=True, exist_ok=True)
 
     ftp_config_key = 'ftp'
 

@@ -2,8 +2,6 @@
 
 rm -rf /opt/mdvr/dvr_video/__pycache__
 rm -rf /opt/mdvr/dvr_video/data
-rm -rf /opt/mdvr/dvr_video/logs
-rm -rf /opt/mdvr/dvr_video/materials
 rm -rf /opt/mdvr/dvr_video/temp
 rm -rf /opt/mdvr/venv
 rm -rf /opt/mdvr/dvr_web

@@ -42,7 +42,7 @@ async def move():
     for i in content:
         shutil.move(
             f"temp/{i}",
-            f"materials/{i}"
+            f"/etc/mdvr/materials/{i}"
         )
 
 
