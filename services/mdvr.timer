@@ -1,0 +1,9 @@
+[Unit]
+Description=Run mdvr engine
+
+[Timer]
+Unit=mdvr.service
+OnBootSec=1min
+
+[Install]
+WantedBy=timers.target

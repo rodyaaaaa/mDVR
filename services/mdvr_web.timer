@@ -1,0 +1,9 @@
+[Unit]
+Description=Run mdvr web
+
+[Timer]
+Unit=mdvr_web.service
+OnBootSec=1min
+
+[Install]
+WantedBy=timers.target

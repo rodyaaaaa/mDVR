@@ -98,3 +98,48 @@ class FTPCon:
                     await client.change_directory()
                     await client.change_directory()
                     await client.change_directory()
+
+
+    async def upload_start_system_log(self):
+        system_start_log_dir = "mdvr_start"
+        async with aioftp.Client.context(self.host, self.port, self.username, self.password, socket_timeout=180) as client:
+            if await client.exists(self.car_name) is False:
+                await client.make_directory(self.car_name)
+            await client.change_directory(self.car_name)
+
+            try:
+                logs = os.listdir(f"/etc/mdvr/logs/{system_start_log_dir}")
+            except FileNotFoundError as e:
+                pathlib.Path(f"/etc/mdvr/logs/{system_start_log_dir}").mkdir(parents=True, exist_ok=True)
+
+            logs_array = await find_files_with_extra_after_log(os.path.join(f"/etc/mdvr/logs/{system_start_log_dir}"))
+
+            for log in logs_array:
+                date_folder = await extract_date_from_filename_async(log)
+
+                if await client.exists(date_folder) is False:
+                    await client.make_directory(date_folder)
+                await client.change_directory(date_folder)
+
+                if await client.exists("logs") is False:
+                    await client.make_directory("logs")
+                await client.change_directory("logs")
+
+                if await client.exists(system_start_log_dir) is False:
+                    await client.make_directory(system_start_log_dir)
+                await client.change_directory(system_start_log_dir)
+
+                if await client.exists(log):
+                    await client.remove(log)
+
+                lg = pathlib.Path(f"/etc/mdvr/logs/{system_start_log_dir}", log)
+                print(log)
+
+                await client.upload(lg)
+                os.remove(os.path.join(f"/etc/mdvr/logs/{system_start_log_dir}", log))
+
+                pt = pathlib.Path("/", self.car_name)
+
+                await client.change_directory()
+                await client.change_directory()
+                await client.change_directory()

@@ -32,6 +32,7 @@ cp -r "../../services/." "$SERVICES_PATH"
 cp -r "../../dvr_video/" "$PROJECT_PATH"
 cp -r "../../dvr_web/" "$PROJECT_PATH"
 cp "../../requirements.txt" "$PROJECT_PATH"
+cp "../../init_project.py" "$PROJECT_PATH"
 
 echo "clear for some trash"
 

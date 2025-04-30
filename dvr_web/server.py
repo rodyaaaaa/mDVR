@@ -135,7 +135,7 @@ def reed_switch_callback(channel):
         print(f"Помилка в обробнику події GPIO: {str(e)}")
 
 def check_reed_switch_status() -> bool:
-    output = os.popen("systemctl is-enabled mdvr_rs.service").read().strip()
+    output = os.popen("systemctl is-enabled mdvr_rs.timer").read().strip()
     return True if output == "enabled" else False
 
 def restart_mdvr_engine() -> None:
@@ -426,14 +426,16 @@ def toggle_reed_switch():
     try:
         if state == "on":
             os.system("systemctl stop mdvr.service")
-            os.system("systemctl disable mdvr.service")
-            os.system("systemctl enable mdvr_rs.service")
-            os.system("systemctl start mdvr_rs.service")
+            os.system("systemctl disable mdvr.timer")
+            os.system("systemctl stop mdvr.timer")
+            os.system("systemctl enable mdvr_rs.timer")
+            os.system("systemctl start mdvr_rs.timer")
         else:
             os.system("systemctl stop mdvr_rs.service")
-            os.system("systemctl disable mdvr_rs.service")
-            os.system("systemctl enable mdvr.service")
-            os.system("systemctl start mdvr.service")
+            os.system("systemctl disable mdvr_rs.timer")
+            os.system("systemctl stop mdvr_rs.timer")
+            os.system("systemctl enable mdvr.timer")
+            os.system("systemctl start mdvr.timer")
         return jsonify({"success": True, "message": "Reed Switch toggled successfully"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -441,7 +443,7 @@ def toggle_reed_switch():
 @app.route('/get-reed-switch-status')
 def get_reed_switch_status():
     try:
-        output = os.popen("systemctl is-enabled mdvr_rs.service").read().strip()
+        output = os.popen("systemctl is-enabled mdvr_rs.timer").read().strip()
         state = "on" if output == "enabled" else "off"
         return jsonify({"state": state})
     except Exception as e:

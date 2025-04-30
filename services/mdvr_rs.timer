@@ -1,8 +1,8 @@
 [Unit]
-Description=Run check modem scripts every 1 hour
+Description=Run mdvr rs engine
 
 [Timer]
-Unit=mdvr_modem.service
+Unit=mdvr_rs.service
 OnBootSec=1min
 OnUnitActiveSec=30min
 
