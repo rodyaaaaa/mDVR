@@ -12,3 +12,4 @@ RTSP_X = 'rtsp_resolution_x'
 RTSP_Y = 'rtsp_resolution_y'
 FPS = 'fps'
 CONFIG_FILENAME = 'data_config.json'
+LOG_DIR = "/etc/mdvr/logs"
