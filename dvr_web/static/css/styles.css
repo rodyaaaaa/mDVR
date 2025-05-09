@@ -327,6 +327,28 @@ modal-body {
     transform: scale(1.1);
 }
 
+.home-flex-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 40px;
+    min-height: 400px;
+}
+
+.home-main-content {
+    flex: 1;
+}
+
+.reed-switch-card {
+    margin: 0 0 0 auto;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    background: #fff;
+    color: #222;
+}
+
 #video-options .input-row {
     display: flex;
     align-items: center;
@@ -476,6 +498,14 @@ input, textarea, select {
 
     #videoPlayer {
         height: 250px;
+    }
+
+    .home-flex-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .reed-switch-card {
+        margin: 30px auto 0 auto;
     }
 }
 
