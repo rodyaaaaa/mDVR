@@ -131,10 +131,8 @@ function showTab(tabId) {
         closeReedSwitchWebSocket();
     }
 
-    // EXT5V_V live tab logic
-    if (tabId === 'ext5v-v') {
-        startExt5vVUpdates();
-    } else {
+    // EXT5V_V live logic: зупиняємо оновлення тільки якщо не на головній сторінці
+    if (tabId !== 'home') {
         stopExt5vVUpdates();
     }
 }
@@ -176,6 +174,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeButton = document.querySelector(`.sidebar button[onclick="showTab('${tabId}')"]`);
         if (activeButton) activeButton.classList.add('active');
     }
+});
+
+// Запускаємо live-оновлення EXT5V_V при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', () => {
+    startExt5vVUpdates();
 });
 
 let camCounter = document.querySelectorAll('#cam-fields .cam-field').length;
