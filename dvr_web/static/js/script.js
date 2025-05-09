@@ -106,6 +106,9 @@ function confirmAddCam() {
     }
 }
 
+let ext5vVSocket = null;
+let ext5vVInterval = null;
+
 function showTab(tabId) {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
@@ -127,7 +130,40 @@ function showTab(tabId) {
         // Закриваємо WebSocket з'єднання при переході на іншу вкладку
         closeReedSwitchWebSocket();
     }
+
+    // EXT5V_V live tab logic
+    if (tabId === 'ext5v-v') {
+        startExt5vVUpdates();
+    } else {
+        stopExt5vVUpdates();
+    }
 }
+
+function startExt5vVUpdates() {
+    stopExt5vVUpdates();
+    // Можна зробити через WebSocket, але для простоти - через fetch кожну секунду
+    ext5vVInterval = setInterval(() => {
+        fetch('/api/ext5v-v')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('ext5v-v-output').textContent = data.value || 'No data';
+            })
+            .catch(() => {
+                document.getElementById('ext5v-v-output').textContent = 'Error';
+            });
+    }, 1000);
+}
+
+function stopExt5vVUpdates() {
+    if (ext5vVInterval) {
+        clearInterval(ext5vVInterval);
+        ext5vVInterval = null;
+    }
+}
+
+window.addEventListener('beforeunload', () => {
+    stopExt5vVUpdates();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     const activeTab = document.querySelector('.tab.active');

@@ -3,6 +3,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 
 from datetime import datetime
 from typing import List
@@ -82,3 +83,14 @@ async def extract_date_from_filename_async(filename: str) -> str | None:
 
 def generate_file_output_name(current_link: int, filename: str, file_extension: str) -> str:
     return f"temp/{current_link + 1}24{filename}{file_extension}"
+
+
+def get_ext5v_v():
+    try:
+        result = subprocess.run(['vcgencmd', 'pmic_read_adc'], capture_output=True, text=True, check=True)
+        for line in result.stdout.splitlines():
+            if 'EXT5V_V' in line:
+                return line.strip()
+    except Exception as e:
+        return f"Error: {e}"
+    return None

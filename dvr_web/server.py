@@ -9,6 +9,7 @@ import threading
 import RPi.GPIO as GPIO
 import signal
 import datetime  # Додаємо для обчислення часу таймера
+import subprocess
 
 from datetime import timedelta
 from flask import Flask, request, jsonify, render_template
@@ -731,6 +732,17 @@ def api_stop_reed_switch():
         error_msg = f"Помилка при зупинці моніторингу геркона: {str(e)}"
         print(error_msg)
         return jsonify({"success": False, "error": error_msg})
+
+@app.route('/api/ext5v-v')
+def api_ext5v_v():
+    try:
+        result = subprocess.run(['vcgencmd', 'pmic_read_adc'], capture_output=True, text=True, check=True)
+        for line in result.stdout.splitlines():
+            if 'EXT5V_V' in line:
+                return jsonify({'value': line.strip()})
+        return jsonify({'value': None})
+    except Exception as e:
+        return jsonify({'value': f'Error: {e}'})
 
 # Функція для очищення ресурсів GPIO
 def cleanup_gpio(signal=None, frame=None):

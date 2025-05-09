@@ -12,7 +12,7 @@ systemctl disable mdvr_rs.timer
 systemctl enable mdvr_space_check.timer
 systemctl enable mdvr.timer
 systemctl enable init_start.service
-systemctl enable mdvr_web.service
+systemctl enable mdvr_web.timer
 systemctl enable mdvr_upload.timer
 systemctl enable mdvr_system_guard.timer
 systemctl enable mdvr_vpn_check.timer
@@ -25,7 +25,7 @@ systemctl daemon-reload
 systemctl restart mdvr.timer
 systemctl restart mdvr_upload.timer
 systemctl restart init_start.service
-systemctl restart mdvr_web.service
+systemctl restart mdvr_web.timer
 systemctl restart mdvr_space_check.timer
 systemctl restart mdvr_system_guard.timer
 systemctl restart mdvr_vpn_check.timer
