@@ -25,7 +25,8 @@
 </header>
 <div class="container">
     <aside class="sidebar">
-        <button class="active" onclick="showTab('cam-config')">RTSP</button>
+        <button class="active" onclick="showTab('home')">Home</button>
+        <button onclick="showTab('cam-config')">RTSP</button>
         <button onclick="showTab('video-options')">Settings</button>
         <button onclick="showTab('ftp-config')">FTP</button>
         <button onclick="showTab('vpn-config')">VPN</button>
@@ -34,7 +35,30 @@
         <button onclick="showTab('ext5v-v')">EXT5V_V</button>
     </aside>
     <main class="content">
-        <div id="cam-config" class="tab active">
+        <div id="home" class="tab active">
+            <div class="reed-switch-card" style="max-width: 350px; margin: 30px auto 0 auto; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: #fff;">
+                <h3 style="margin-top: 0;">Reed Switch Status</h3>
+                <div class="reed-switch-container">
+                    <div class="reed-switch-status">
+                        <div class="status-circle" id="reed-status-indicator"></div>
+                        <p>Status: <span id="reed-status-text">Connecting...</span></p>
+                    </div>
+                    <div class="reed-switch-info">
+                        <p>Last updated: <span id="reed-last-updated">-</span></p>
+                        <p>Connection: <span id="reed-connection-status">Disconnected</span></p>
+                    </div>
+                    <div class="reed-switch-init">
+                        <p>Status: <span id="reed-init-status">Not initialized</span></p>
+                        <p id="auto-stop-timer" class="hidden">Auto-stop in: <span id="auto-stop-time">03:00</span></p>
+                        <div class="reed-switch-buttons">
+                            <button id="init-reed-switch-btn" onclick="initializeReedSwitch()">Initialize Reed Switch</button>
+                            <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button">Stop Monitoring</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="cam-config" class="tab">
             <div>
                 <div class="cam-config-header">
                     <h2>List of RTSP links</h2>

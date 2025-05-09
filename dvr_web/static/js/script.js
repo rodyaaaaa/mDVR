@@ -166,11 +166,15 @@ window.addEventListener('beforeunload', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    const activeTab = document.querySelector('.tab.active');
+    let activeTab = document.querySelector('.tab.active');
+    if (!activeTab) {
+        activeTab = document.getElementById('home');
+        if (activeTab) activeTab.classList.add('active');
+    }
     if (activeTab) {
         const tabId = activeTab.id;
         const activeButton = document.querySelector(`.sidebar button[onclick="showTab('${tabId}')"]`);
-        activeButton.classList.add('active');
+        if (activeButton) activeButton.classList.add('active');
     }
 });
 
