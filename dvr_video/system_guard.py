@@ -5,6 +5,7 @@ import asyncio
 import speedtest
 
 from data.LoggerFactory import DefaultLoggerFactory
+from data.utils import get_ext5v_v
 
 logger = DefaultLoggerFactory.create_logger('mdvr_system_guard', "system_guard.log")
 
@@ -37,7 +38,8 @@ async def main():
         f"CPU usage: {cpu_persent_usage}% | "
         f"CPU temp: {temp_cpu} | "
         f"Download speed: {download_speed}Mbit/s | "
-        f"Upload speed: {upload_speed}Mbit/s")
+        f"Upload speed: {upload_speed}Mbit/s | "
+        f"EXT5V_V: {get_ext5v_v}Mbit/s")
 
 
 if __name__ == "__main__":
