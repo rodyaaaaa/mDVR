@@ -915,3 +915,153 @@ function closeReedSwitchWebSocket() {
 
 // Додаємо обробник закриття з'єднання при закритті вікна
 window.addEventListener('beforeunload', closeReedSwitchWebSocket);
+
+// CPU Load Chart
+let cpuChartInterval = null;
+function drawCpuChart(history) {
+    const canvas = document.getElementById('cpu-load-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Темний фон
+    ctx.fillStyle = '#1b263b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Осі
+    ctx.strokeStyle = '#415a77';
+    ctx.beginPath();
+    ctx.moveTo(30, 10);
+    ctx.lineTo(30, canvas.height - 20);
+    ctx.lineTo(canvas.width - 10, canvas.height - 20);
+    ctx.stroke();
+    // Y labels
+    ctx.fillStyle = '#bfc9da';
+    ctx.font = '12px Arial';
+    ctx.fillText('100%', 2, 18);
+    ctx.fillText('0%', 10, canvas.height - 22);
+    // Draw line
+    if (!history || !history.length) return;
+    const maxY = 100;
+    const minY = 0;
+    const points = history.slice(-60);
+    const stepX = (canvas.width - 40) / 59;
+    ctx.strokeStyle = '#3498db';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach((val, i) => {
+        const x = 30 + i * stepX;
+        const y = 10 + (maxY - val) * (canvas.height - 30) / (maxY - minY);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    // Current value
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 14px Arial';
+    ctx.fillText(points[points.length - 1].toFixed(1) + '%', canvas.width - 60, 30);
+}
+
+function startCpuChartUpdates() {
+    if (cpuChartInterval) clearInterval(cpuChartInterval);
+    function updateCpuChart() {
+        fetch('/api/cpu-load')
+            .then(r => r.json())
+            .then(data => {
+                if (data.history) drawCpuChart(data.history);
+            });
+    }
+    updateCpuChart();
+    cpuChartInterval = setInterval(updateCpuChart, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', startCpuChartUpdates);
+
+// Memory Usage Chart
+let memChartInterval = null;
+function drawMemChart(percentHistory) {
+    const canvas = document.getElementById('mem-usage-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Темний фон
+    ctx.fillStyle = '#1b263b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Осі
+    ctx.strokeStyle = '#415a77';
+    ctx.beginPath();
+    ctx.moveTo(30, 10);
+    ctx.lineTo(30, canvas.height - 20);
+    ctx.lineTo(canvas.width - 10, canvas.height - 20);
+    ctx.stroke();
+    // Y labels
+    ctx.fillStyle = '#bfc9da';
+    ctx.font = '12px Arial';
+    ctx.fillText('100%', 2, 18);
+    ctx.fillText('0%', 10, canvas.height - 22);
+    // Draw line
+    if (!percentHistory || !percentHistory.length) return;
+    const maxY = 100;
+    const minY = 0;
+    const points = percentHistory.slice(-60);
+    const stepX = (canvas.width - 40) / 59;
+    ctx.strokeStyle = '#e67e22';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach((val, i) => {
+        const x = 30 + i * stepX;
+        const y = 10 + (maxY - val) * (canvas.height - 30) / (maxY - minY);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    // Current value
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 14px Arial';
+    ctx.fillText(points[points.length - 1].toFixed(1) + '%', canvas.width - 60, 30);
+}
+
+let memPercentHistory = [];
+function startMemChartUpdates() {
+    if (memChartInterval) clearInterval(memChartInterval);
+    function updateMemChart() {
+        fetch('/api/mem-usage')
+            .then(r => r.json())
+            .then(data => {
+                if (typeof data.percent === 'number') {
+                    memPercentHistory.push(data.percent);
+                    if (memPercentHistory.length > 60) memPercentHistory = memPercentHistory.slice(-60);
+                    drawMemChart(memPercentHistory);
+                }
+            });
+    }
+    updateMemChart();
+    memChartInterval = setInterval(updateMemChart, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', startMemChartUpdates);
+
+// Disk Usage Text (not chart)
+function formatGB(bytes) {
+    return (bytes / (1024 ** 3)).toFixed(2) + ' GB';
+}
+
+let diskTextInterval = null;
+function updateDiskUsageText() {
+    fetch('/api/disk-usage')
+        .then(r => r.json())
+        .then(data => {
+            if (typeof data.total === 'number' && typeof data.used === 'number') {
+                document.getElementById('disk-usage-text').textContent =
+                    `Used: ${formatGB(data.used)} / Total: ${formatGB(data.total)}`;
+            } else {
+                document.getElementById('disk-usage-text').textContent = 'No data';
+            }
+        })
+        .catch(() => {
+            document.getElementById('disk-usage-text').textContent = 'Error';
+        });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateDiskUsageText();
+    diskTextInterval = setInterval(updateDiskUsageText, 1000);
+});

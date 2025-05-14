@@ -330,23 +330,32 @@ modal-body {
 .home-flex-row {
     display: flex;
     flex-direction: row;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: flex-start;
     gap: 40px;
     min-height: 400px;
 }
 
 .home-main-content {
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+    flex: none;
 }
 
 .reed-switch-card {
-    margin: 0 0 0 auto;
+    margin: 0 0 0 0;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    background: #fff;
-    color: #222;
+    background: #1b263b;
+    color: #fff;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
 }
 
 #video-options .input-row {
@@ -898,9 +907,28 @@ input, textarea, select {
     opacity: 0.7;
 }
 
-.ext5v-v-card {
-    background: #fff;
-    color: #222;
+.ext5v-v-card,
+.cpu-load-card,
+.reed-switch-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin-bottom: 30px;
+    max-width: 600px;
+    align-self: flex-start;
+}
+
+@media (max-width: 1024px) {
+    .ext5v-v-card {
+        margin: 0 auto 30px auto;
+    }
+}
+
+.mem-usage-card {
+    background: #1b263b;
+    color: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     padding: 20px;
@@ -908,8 +936,36 @@ input, textarea, select {
     max-width: 350px;
 }
 
-@media (max-width: 1024px) {
-    .ext5v-v-card {
-        margin: 0 auto 30px auto;
-    }
+.disk-usage-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin-bottom: 30px;
+    max-width: 350px;
+}
+
+.cpu-mem-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px 45px 20px 30px;
+    margin-bottom: 30px;
+    max-width: 350px;
+}
+
+.cpu-mem-charts-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.cpu-chart-container, .mem-chart-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }

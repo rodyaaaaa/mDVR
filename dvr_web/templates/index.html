@@ -30,9 +30,7 @@
         <button onclick="showTab('video-options')">Settings</button>
         <button onclick="showTab('ftp-config')">FTP</button>
         <button onclick="showTab('vpn-config')">VPN</button>
-        <button onclick="showTab('reed-switch')">Reed Switch</button>
         <button onclick="showTab('services')">Services</button>
-        <button onclick="showTab('ext5v-v')">EXT5V_V</button>
     </aside>
     <main class="content">
         <div id="home" class="tab active">
@@ -42,6 +40,20 @@
                     <div class="ext5v-v-card">
                         <h3>EXT5V_V (Live)</h3>
                         <div id="ext5v-v-output" style="font-size: 1.5em; text-align: center; margin-top: 30px;">Loading...</div>
+                    </div>
+                    <div class="cpu-mem-card">
+                        <h3>CPU & Memory Usage</h3>
+                        <div class="cpu-mem-charts-row">
+                            <div class="cpu-chart-container">
+                                <canvas id="cpu-load-chart" width="150" height="100" style="display:block; margin:0 auto;"></canvas>
+                                <div style="text-align:center; margin-top:5px; font-size:0.95em; color:#bfc9da;">CPU</div>
+                            </div>
+                            <div class="mem-chart-container">
+                                <canvas id="mem-usage-chart" width="150" height="100" style="display:block; margin:0 auto;"></canvas>
+                                <div style="text-align:center; margin-top:5px; font-size:0.95em; color:#bfc9da;">Memory</div>
+                            </div>
+                        </div>
+                        <div id="disk-usage-text" style="font-size: 1.1em; text-align: center; margin-top: 18px;">Loading...</div>
                     </div>
                 </div>
                 <div class="reed-switch-card">

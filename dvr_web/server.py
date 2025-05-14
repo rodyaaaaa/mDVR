@@ -17,6 +17,11 @@ from flask_socketio import SocketIO, emit
 from pathlib import Path
 from dvr_video.data.utils import get_config_path
 
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
 CONFIG_PATH = '/opt/mdvr/dvr_video'
 CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, 'data_config.json')
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), '../dvr_video/default.json')
@@ -43,6 +48,19 @@ reed_switch_monitor_thread = None
 reed_switch_initialized = False
 reed_switch_autostop_time = None  # Час автоматичної зупинки моніторингу
 REED_SWITCH_AUTOSTOP_SECONDS = 180  # 3 хвилини (180 секунд)
+
+cpu_load_history = []
+
+# Фоновий потік для збору CPU load
+if psutil:
+    def cpu_load_collector():
+        global cpu_load_history
+        while True:
+            cpu = psutil.cpu_percent(interval=1)
+            cpu_load_history.append(cpu)
+            if len(cpu_load_history) > 60:
+                cpu_load_history = cpu_load_history[-60:]
+    threading.Thread(target=cpu_load_collector, daemon=True).start()
 
 # Функція для ініціалізації геркона
 def initialize_reed_switch():
@@ -743,6 +761,37 @@ def api_ext5v_v():
         return jsonify({'value': None})
     except Exception as e:
         return jsonify({'value': f'Error: {e}'})
+
+@app.route('/api/cpu-load')
+def api_cpu_load():
+    if not psutil:
+        return jsonify({'error': 'psutil not installed'}), 500
+    return jsonify({'history': cpu_load_history[-60:]})
+
+@app.route('/api/mem-usage')
+def api_mem_usage():
+    if not psutil:
+        return jsonify({'error': 'psutil not installed'}), 500
+    mem = psutil.virtual_memory()
+    # Return total, used, free, percent
+    return jsonify({
+        'total': mem.total,
+        'used': mem.used,
+        'free': mem.available,
+        'percent': mem.percent
+    })
+
+@app.route('/api/disk-usage')
+def api_disk_usage():
+    if not psutil:
+        return jsonify({'error': 'psutil not installed'}), 500
+    disk = psutil.disk_usage('/')
+    return jsonify({
+        'total': disk.total,
+        'used': disk.used,
+        'free': disk.free,
+        'percent': disk.percent
+    })
 
 # Функція для очищення ресурсів GPIO
 def cleanup_gpio(signal=None, frame=None):
