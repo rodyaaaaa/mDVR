@@ -66,7 +66,7 @@ function updateViewButtons() {
 }
 
 function updateCameraPorts() {
-    fetch('/get-camera-ports')
+    fetch('/api/get-camera-ports')
         .then(response => response.json())
         .then(data => {
             cameraPorts = data;
@@ -230,7 +230,7 @@ function saveVideoLinks() {
         camera_list: videoLinks
     };
 
-    fetch('/save-video-links', {
+    fetch('/api/save-video-links', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -289,7 +289,7 @@ function saveFtpConfig() {
         ftp: ftpConfig
     };
 
-    fetch('/save-ftp-config', {
+    fetch('/api/save-ftp-config', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
@@ -335,7 +335,7 @@ function saveVideoOptions() {
         photo_timeout: selectedMode === 'photo' ? parseInt(document.getElementById('photo-timeout').value) : null
     };
 
-    fetch('/save-video-options', {
+    fetch('/api/save-video-options', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
@@ -359,7 +359,7 @@ function saveVpnConfig() {
     showPreloader();
     const vpnConfig = document.querySelector('#vpn-config textarea').value;
 
-    fetch('/save-vpn-config', {
+    fetch('/api/save-vpn-config', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -386,7 +386,7 @@ function updateWriteMode() {
     showPreloader();
     const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
 
-    fetch('/save-write-mode', {
+    fetch('/api/save-write-mode', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({write_mode: selectedMode})
@@ -419,7 +419,7 @@ function toggleModeSettings(mode) {
 function toggleReedSwitch() {
     showPreloader();
     const state = document.querySelector('input[name="reed_switch"]:checked').value;
-    fetch('/toggle-reed-switch', {
+    fetch('/api/toggle-reed-switch', {
          method: 'POST',
          headers: {'Content-Type': 'application/json'},
          body: JSON.stringify({reed_switch: state})
@@ -447,22 +447,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function updateReedSwitchState() {
-    fetch('/get-reed-switch-status')
+    fetch('/api/get-reed-switch-status')
         .then(response => response.json())
         .then(data => {
             const reedOnRadio = document.getElementById('reed-switch-on');
             const reedOffRadio = document.getElementById('reed-switch-off');
+            const rsTimeoutBlock = document.getElementById('rs-timeout-block');
             if (data.state === "on") {
                 reedOnRadio.checked = true;
+                rsTimeoutBlock.style.display = 'block';
             } else {
                 reedOffRadio.checked = true;
+                rsTimeoutBlock.style.display = 'none';
             }
         })
         .catch(error => console.error('Error fetching reed switch status:', error));
 }
 
 function updateImei() {
-    fetch('/get-imei')
+    fetch('/api/get-imei')
         .then(response => response.json())
         .then(data => {
             if (data.imei) {
@@ -499,7 +502,7 @@ function updateServiceStatus() {
         return;
     }
     
-    fetch(`/get-service-status/${serviceSelector.value}`)
+    fetch(`/api/get-service-status/${serviceSelector.value}`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
@@ -1065,3 +1068,27 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDiskUsageText();
     diskTextInterval = setInterval(updateDiskUsageText, 1000);
 });
+
+function saveRsTimeout() {
+    const value = parseInt(document.getElementById('rs-timeout-input').value, 10);
+    if (isNaN(value) || value < 0) {
+        showNotification('Введіть коректне число!', true);
+        return;
+    }
+    fetch('/api/save-rs-timeout', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({rs_timeout: value})
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showNotification('RS Timeout збережено!');
+        } else {
+            showNotification('Помилка: ' + result.error, true);
+        }
+    })
+    .catch(error => {
+        showNotification('Помилка збереження: ' + error.message, true);
+    });
+}

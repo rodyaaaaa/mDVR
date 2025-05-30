@@ -150,6 +150,11 @@
                     <label for="reed-switch-on">ON</label>
                     <input type="radio" id="reed-switch-off" name="reed_switch" value="off" onchange="toggleReedSwitch()" checked>
                     <label for="reed-switch-off">OFF</label>
+                    <div id="rs-timeout-block" style="display:none; margin-top:10px;">
+                        <label for="rs-timeout-input">RS Timeout (сек):</label>
+                        <input type="number" id="rs-timeout-input" min="0">
+                        <button id="save-rs-timeout-btn" onclick="saveRsTimeout()">Зберегти</button>
+                    </div>
                 </div>
             </div>
             <h2 class="photo-mode">Photo Settings</h2>

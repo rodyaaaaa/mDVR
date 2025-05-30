@@ -88,7 +88,7 @@ async def main():
                     links_names.append(str(current_link + 1) + "24" + file_name)
                     video_status = True
         elif door_state != GPIO.HIGH and video_status is True:
-            time.sleep(60)
+            time.sleep(config["rs_timeout"])
             door_state = GPIO.input(DOOR_SENSOR_PIN)
             if door_state != GPIO.HIGH:
                 loop = asyncio.get_running_loop()

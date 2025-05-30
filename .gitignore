@@ -1,3 +1,4 @@
 *.idea/
 /release/debian/mdvr/etc/
 /release/debian/mdvr/opt/
+venv/
