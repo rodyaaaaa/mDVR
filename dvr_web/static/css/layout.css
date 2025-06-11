@@ -1,0 +1,366 @@
+/* Header */
+header {
+    background: linear-gradient(90deg, #1b263b, #0d1b2a);
+    color: #ffffff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #415a77;
+}
+
+header h1 {
+    font-size: 28px;
+    margin: 4px 0;
+}
+
+header p {
+    font-size: 20px;
+    margin: 2px 0;
+}
+
+/* Main layout */
+.container {
+    display: flex;
+    background: linear-gradient(180deg, #1b263b, #0d1b2a);
+    height: calc(100vh - 80px);
+    align-items: flex-start;
+}
+
+.sidebar {
+    width: 20%;
+    background: linear-gradient(180deg, #1b263b, #0d1b2a);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    height: 100%;
+    border-right: 2px solid #415a77;
+}
+
+.sidebar button {
+    background: transparent;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    position: relative;
+    border-radius: 5px;
+}
+
+.sidebar button:hover {
+    transform: translateX(10px);
+    background: #3b4a5e;
+}
+
+.sidebar button.active {
+    background: #3b4a5e;
+    transform: translateX(10px);
+    border-bottom: 2px solid white;
+}
+
+.content {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+    margin: 0 20px;
+}
+
+.content-config {
+    flex-grow: 1;
+    padding: 30px;
+    background: #0d1b2a;
+    border-left: 2px solid #415a77;
+    overflow-y: auto;
+    border-radius: 10px;
+}
+
+/* Tab system */
+.tab {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.tab.active {
+    display: block;
+}
+
+/* Home page layout */
+.home-flex-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 40px;
+    min-height: 400px;
+}
+
+.home-main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+    flex: none;
+}
+
+/* Cards */
+.reed-switch-card,
+.ext5v-v-card,
+.cpu-load-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin-bottom: 30px;
+    max-width: 600px;
+    align-self: flex-start;
+}
+
+.mem-usage-card,
+.disk-usage-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin-bottom: 30px;
+    max-width: 350px;
+}
+
+.cpu-mem-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px 45px 20px 30px;
+    margin-bottom: 30px;
+    max-width: 350px;
+}
+
+.cpu-mem-charts-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.cpu-chart-container,
+.mem-chart-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Services layout */
+.services-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#service-selector {
+    width: 100%;
+    padding: 12px;
+    background: #1b263b;
+    color: white;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.service-status {
+    background: #1b263b;
+    padding: 20px;
+    border-radius: 5px;
+    border: 1px solid #415a77;
+}
+
+.service-status p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.service-status span {
+    font-weight: bold;
+    color: #4caf50;
+}
+
+.service-status span.error {
+    color: #e63946;
+}
+
+/* FTP Config */
+#ftp-config input {
+    width: 80%;
+    margin: auto;
+    padding: 10px;
+    font-size: 16px;
+}
+
+#ftp-config div {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#ftp-config .input-row {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+#ftp-config label {
+    margin: auto;
+    min-width: 60px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+#ftp-config h2 {
+    text-align: left;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ffffff;
+}
+
+#ftp-config input[type="text"],
+#ftp-config input[type="password"] {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #1b263b;
+    color: #ffffff;
+    font-size: 16px;
+}
+
+/* Video options */
+#video-options .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#video-options label {
+    font-size: 16px;
+    width: 150px;
+    text-align: left;
+}
+
+#video-options select,
+#video-options input {
+    padding: 10px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #1b263b;
+    color: #ffffff;
+    font-size: 16px;
+    flex-grow: 1;
+}
+
+#video-options button {
+    padding: 12px 20px;
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+#video-options h2 {
+    text-align: left;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ffffff;
+}
+
+#video-options button:hover {
+    background: #778da9;
+}
+
+/* VPN Config */
+#vpn-config h2 {
+    text-align: left;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ffffff;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .content {
+        padding: 20px;
+    }
+
+    input, textarea, select {
+        font-size: 14px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    #videoPlayer {
+        height: 250px;
+    }
+
+    .home-flex-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .reed-switch-card {
+        margin: 30px auto 0 auto;
+    }
+
+    .ext5v-v-card {
+        margin: 0 auto 30px auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .cam-field {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .cam-field label {
+        width: 100%;
+        text-align: left;
+    }
+
+    input, textarea, select {
+        font-size: 14px;
+    }
+
+    button {
+        font-size: 14px;
+    }
+
+    #videoPlayer {
+        height: 200px;
+    }
+} 

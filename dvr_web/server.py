@@ -1,30 +1,17 @@
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import re
-import shutil
-import json
-import time
 import threading
 import RPi.GPIO as GPIO
 import signal
-import datetime
-import subprocess
 import psutil
 
-from datetime import timedelta
-from flask import Flask, request, jsonify, render_template
-from pathlib import Path
-from dvr_video.data.utils import get_config_path
+from flask import Flask, render_template
 from routes.api import api_bp, cpu_load_history
 from routes.web import web_bp
 from routes.reed_switch import reed_switch_bp
 from dvr_web.utils import cleanup_gpio, generate_nginx_configs, load_config, update_imei
-from dvr_web.constants import (
-    CONFIG_PATH, CONFIG_FULL_PATH, DEFAULT_CONFIG_PATH, SERVICE_PATH,
-    VPN_CONFIG_PATH, REGULAR_SEARCH_IP, NGINX_CONF_DIR, BASE_PORT,
-    REED_SWITCH_PIN, REED_SWITCH_AUTOSTOP_SECONDS
-)
+from dvr_web.constants import VPN_CONFIG_PATH
 from dvr_web.sockets import init_socketio
 
 app = Flask(__name__)

@@ -1,0 +1,70 @@
+/* Dashboard Cards */
+.ext5v-v-card,
+.cpu-load-card,
+.reed-switch-card {
+    margin: 0 0 0 0;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    background: #1b263b;
+    color: #fff;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+/* Memory Usage Card */
+.mem-usage-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin-bottom: 30px;
+    max-width: 350px;
+}
+
+/* Disk Usage Card */
+.disk-usage-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin-bottom: 30px;
+    max-width: 350px;
+}
+
+/* CPU Memory Card */
+.cpu-mem-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px 45px 20px 30px;
+    margin-bottom: 30px;
+    max-width: 350px;
+}
+
+/* Charts Layout */
+.cpu-mem-charts-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.cpu-chart-container,
+.mem-chart-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@media (max-width: 1024px) {
+    .ext5v-v-card {
+        margin: 10px;
+        padding: 15px;
+    }
+} 

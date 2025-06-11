@@ -1,0 +1,183 @@
+/* Reed Switch Container */
+.reed-switch-container {
+    background: rgba(27, 38, 59, 0.7);
+    border-radius: 10px;
+    padding: 30px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Reed Switch Status */
+.reed-switch-status {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(13, 27, 42, 0.5);
+    border-radius: 8px;
+}
+
+.status-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #777;
+    transition: all 0.5s ease;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.status-circle.open {
+    background-color: #4caf50;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+}
+
+.status-circle.closed {
+    background-color: #e63946;
+    box-shadow: 0 0 20px rgba(230, 57, 70, 0.6);
+}
+
+.reed-switch-status p {
+    font-size: 24px;
+    margin: 0;
+}
+
+/* Reed Switch Info */
+.reed-switch-info {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: rgba(13, 27, 42, 0.3);
+    border-radius: 8px;
+}
+
+.reed-switch-info p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+#reed-status-text {
+    font-weight: bold;
+    font-size: 26px;
+}
+
+#reed-status-text.open {
+    color: #4caf50;
+}
+
+#reed-status-text.closed {
+    color: #e63946;
+}
+
+#reed-connection-status.connected {
+    color: #4caf50;
+}
+
+#reed-connection-status.disconnected {
+    color: #e63946;
+}
+
+/* Reed Switch Initialization */
+.reed-switch-init {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(13, 27, 42, 0.3);
+    border-radius: 8px;
+}
+
+#reed-init-status.initialized {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+#reed-init-status.not-initialized {
+    color: #e63946;
+    font-weight: bold;
+}
+
+.reed-switch-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#init-reed-switch-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    flex: 1;
+}
+
+#init-reed-switch-btn:hover {
+    background-color: #2980b9;
+}
+
+#init-reed-switch-btn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+#stop-reed-switch-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    flex: 1;
+}
+
+#stop-reed-switch-btn:hover {
+    background-color: #c0392b;
+}
+
+#stop-reed-switch-btn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+/* Auto-stop Timer */
+#auto-stop-timer {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #d9534f;
+    display: none !important;
+}
+
+/* Settings Button Highlight */
+.highlight {
+    animation: pulse 1s infinite;
+    box-shadow: 0 0 10px #f8d7da;
+    border-color: #f5c6cb !important;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: #fff;
+    }
+    50% {
+        background-color: #f8d7da;
+    }
+    100% {
+        background-color: #fff;
+    }
+}
+
+.reed-switch-options input[disabled] + label {
+    background: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+} 
