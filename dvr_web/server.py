@@ -14,37 +14,26 @@ import psutil
 
 from datetime import timedelta
 from flask import Flask, request, jsonify, render_template
-from flask_socketio import SocketIO, emit
 from pathlib import Path
 from dvr_video.data.utils import get_config_path
 from routes.api import api_bp, cpu_load_history
 from routes.web import web_bp
 from routes.reed_switch import reed_switch_bp
-from dvr_web.utils import cleanup_gpio, generate_nginx_configs, load_config, monitor_reed_switch, read_reed_switch_state, update_imei
+from dvr_web.utils import cleanup_gpio, generate_nginx_configs, load_config, update_imei
 from dvr_web.constants import (
     CONFIG_PATH, CONFIG_FULL_PATH, DEFAULT_CONFIG_PATH, SERVICE_PATH,
     VPN_CONFIG_PATH, REGULAR_SEARCH_IP, NGINX_CONF_DIR, BASE_PORT,
     REED_SWITCH_PIN, REED_SWITCH_AUTOSTOP_SECONDS
 )
+from dvr_web.sockets import init_socketio
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mdvr_secret_key'
-socketio = SocketIO(app, cors_allowed_origins="*")
-
-
-reed_switch_state = {
-    "status": "unknown",
-    "timestamp": int(time.time())
-}
+socketio = init_socketio(app)
 
 app.register_blueprint(api_bp, url_prefix='/api')
 app.register_blueprint(web_bp, url_prefix='/web')
 app.register_blueprint(reed_switch_bp, url_prefix='/reed_switch')
-
-reed_switch_monitor_active = False
-reed_switch_monitor_thread = None
-reed_switch_initialized = False
-reed_switch_autostop_time = None
 
 # Фоновий потік для збору CPU load
 if psutil:
@@ -78,72 +67,6 @@ def index():
                            vpn_config=vpn_config,
                            **config
                            )
-
-# WebSocket події
-@socketio.on('connect', namespace='/ws')
-def ws_connect(auth):
-    global reed_switch_monitor_active, reed_switch_monitor_thread
-    
-    print(f"WebSocket клієнт підключився: {request.sid}")
-    
-    # Запускаємо моніторинг геркона, якщо він ще не запущений
-    if not reed_switch_monitor_active:
-        reed_switch_monitor_active = True
-        reed_switch_monitor_thread = threading.Thread(target=monitor_reed_switch)
-        reed_switch_monitor_thread.daemon = True
-        reed_switch_monitor_thread.start()
-
-@socketio.on('disconnect', namespace='/ws')
-def ws_disconnect():
-    print(f"WebSocket клієнт відключився: {request.sid}")
-    
-    # Перевіряємо, чи ще є підключені клієнти
-    if not socketio.server.manager.rooms.get('/ws', {}):
-        global reed_switch_monitor_active
-        reed_switch_monitor_active = False
-
-@socketio.on('get_status', namespace='/ws')
-def ws_get_status():
-    global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time
-    
-    # Перевіряємо, чи геркон ініціалізовано
-    if not reed_switch_initialized:
-        emit('reed_switch_update', {
-            "status": "unknown",
-            "timestamp": int(time.time()),
-            "initialized": False,
-            "autostop": False,
-            "seconds_left": 0
-        })
-        return
-    
-    # Оновлюємо поточний стан перед відправкою
-    try:
-        current_status = read_reed_switch_state()
-        current_time = int(time.time())
-        
-        reed_switch_state = {
-            "status": current_status,
-            "timestamp": current_time
-        }
-    except Exception as e:
-        print(f"Помилка при оновленні стану геркона: {str(e)}")
-    
-    # Додаємо інформацію про ініціалізацію
-    response = reed_switch_state.copy()
-    response["initialized"] = reed_switch_initialized
-    
-    # Додаємо інформацію про автоматичну зупинку
-    if reed_switch_autostop_time:
-        seconds_left = max(0, int(reed_switch_autostop_time - time.time()))
-        response["autostop"] = True
-        response["seconds_left"] = seconds_left
-    else:
-        response["autostop"] = False
-        response["seconds_left"] = 0
-    
-    # Відправляємо поточний стан геркона клієнту, який запитав
-    emit('reed_switch_update', response)
 
 # Реєстрація обробників сигналів
 signal.signal(signal.SIGINT, cleanup_gpio)
