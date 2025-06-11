@@ -1,9 +1,23 @@
-@api_bp.route('/get-camera-ports')
+import json
+import os
+
+from flask import Blueprint, jsonify, request
+from datetime import timedelta
+
+from dvr_video.data.utils import get_config_path
+from dvr_web.constants import VPN_CONFIG_PATH
+from dvr_web.utils import generate_nginx_configs, get_camera_ports, load_config, restart_mdvr_engine, update_imei, update_watchdog
+
+
+web_bp = Blueprint('web', __name__)
+
+
+@web_bp.route('/get-camera-ports')
 def get_camera_ports_route():
     return jsonify(get_camera_ports())
 
 
-@api_bp.route('/get-imei')
+@web_bp.route('/get-imei')
 def get_imei():
     try:
         config = load_config()
@@ -12,7 +26,7 @@ def get_imei():
         return jsonify({"imei": "", "error": str(e)})
 
 
-@api_bp.route('/get-service-status/<service_name>')
+@web_bp.route('/get-service-status/<service_name>')
 def get_service_status(service_name):
     try:
         status = os.popen(f"systemctl is-active {service_name}").read().strip()
@@ -25,7 +39,7 @@ def get_service_status(service_name):
         return jsonify({"error": str(e)}), 500
 
 
-@api_bp.route('/save-write-mode', methods=['POST'])
+@web_bp.route('/save-write-mode', methods=['POST'])
 def save_write_mode():
     data = request.get_json()
     try:
@@ -42,7 +56,7 @@ def save_write_mode():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@api_bp.route('/save-rs-timeout', methods=['POST'])
+@web_bp.route('/save-rs-timeout', methods=['POST'])
 def save_rs_timeout():
     data = request.get_json()
     try:
@@ -56,7 +70,7 @@ def save_rs_timeout():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@api_bp.route('/save-ftp-config', methods=['POST'])
+@web_bp.route('/save-ftp-config', methods=['POST'])
 def save_ftp_config():
     data = request.get_json()
     try:
@@ -81,7 +95,7 @@ def save_ftp_config():
         return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
 
 
-@api_bp.route('/save-video-options', methods=['POST'])
+@web_bp.route('/save-video-options', methods=['POST'])
 def save_video_options():
     data = request.get_json()
     try:
@@ -142,7 +156,7 @@ def save_video_options():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@api_bp.route('/save-vpn-config', methods=['POST'])
+@web_bp.route('/save-vpn-config', methods=['POST'])
 def save_vpn_config():
     data = request.get_json()
     if not data or 'vpn_config' not in data:
@@ -163,7 +177,7 @@ def save_vpn_config():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@api_bp.route('/save-video-links', methods=['POST'])
+@web_bp.route('/save-video-links', methods=['POST'])
 def save_video_links():
     data = request.get_json()
     try:

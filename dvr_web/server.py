@@ -18,16 +18,14 @@ from flask_socketio import SocketIO, emit
 from pathlib import Path
 from dvr_video.data.utils import get_config_path
 from routes.api import api_bp, cpu_load_history
-
-CONFIG_PATH = '/opt/mdvr/dvr_video'
-CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, 'data_config.json')
-DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), '../dvr_video/default.json')
-SERVICE_PATH = "/etc/systemd/system/mdvr.service"
-VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"
-REGULAR_SEARCH_IP = r"\b(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}\b"
-NGINX_CONF_DIR = "/etc/nginx/sites-enabled"
-BASE_PORT = 10511
-REED_SWITCH_PIN = 17
+from routes.web import web_bp
+from routes.reed_switch import reed_switch_bp
+from dvr_web.utils import cleanup_gpio, generate_nginx_configs, load_config, monitor_reed_switch, read_reed_switch_state, update_imei
+from dvr_web.constants import (
+    CONFIG_PATH, CONFIG_FULL_PATH, DEFAULT_CONFIG_PATH, SERVICE_PATH,
+    VPN_CONFIG_PATH, REGULAR_SEARCH_IP, NGINX_CONF_DIR, BASE_PORT,
+    REED_SWITCH_PIN, REED_SWITCH_AUTOSTOP_SECONDS
+)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mdvr_secret_key'
@@ -40,12 +38,13 @@ reed_switch_state = {
 }
 
 app.register_blueprint(api_bp, url_prefix='/api')
+app.register_blueprint(web_bp, url_prefix='/web')
+app.register_blueprint(reed_switch_bp, url_prefix='/reed_switch')
 
 reed_switch_monitor_active = False
 reed_switch_monitor_thread = None
 reed_switch_initialized = False
 reed_switch_autostop_time = None
-REED_SWITCH_AUTOSTOP_SECONDS = 180
 
 # Фоновий потік для збору CPU load
 if psutil:

@@ -1,5 +1,18 @@
+import os
+import time
+import RPi.GPIO as GPIO
+
+from flask import Blueprint, jsonify, request
+
+from dvr_web.constants import REED_SWITCH_AUTOSTOP_SECONDS, REED_SWITCH_PIN
+from dvr_web.utils import check_reed_switch_status, initialize_reed_switch, read_reed_switch_state
+
+
+reed_switch_bp = Blueprint('reed_switch', __name__)
+
+
 # REST API для отримання поточного стану геркона
-@api_bp.route('/reed-switch-status')
+@reed_switch_bp.route('/reed-switch-status')
 def api_reed_switch_status():
     global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time
     
@@ -38,7 +51,7 @@ def api_reed_switch_status():
 
 
 # Новий API маршрут для ініціалізації геркона
-@api_bp.route('/initialize-reed-switch', methods=['POST'])
+@reed_switch_bp.route('/initialize-reed-switch', methods=['POST'])
 def api_initialize_reed_switch():
     global reed_switch_initialized, reed_switch_autostop_time
     
@@ -73,7 +86,7 @@ def api_initialize_reed_switch():
 
 
 # Новий API маршрут для зупинки моніторингу геркона
-@api_bp.route('/stop-reed-switch', methods=['POST'])
+@reed_switch_bp.route('/stop-reed-switch', methods=['POST'])
 def api_stop_reed_switch():
     global reed_switch_initialized, reed_switch_monitor_active, reed_switch_autostop_time
     
@@ -93,7 +106,7 @@ def api_stop_reed_switch():
         return jsonify({"success": False, "error": error_msg})
 
 
-@api_bp.route('/get-reed-switch-status')
+@reed_switch_bp.route('/get-reed-switch-status')
 def get_reed_switch_status():
     try:
         output = os.popen("systemctl is-enabled mdvr_rs.timer").read().strip()
@@ -103,7 +116,7 @@ def get_reed_switch_status():
         return jsonify({"state": "off", "error": str(e)})
 
 
-@api_bp.route('/toggle-reed-switch', methods=['POST'])
+@reed_switch_bp.route('/toggle-reed-switch', methods=['POST'])
 def toggle_reed_switch():
     data = request.get_json()
     state = data.get("reed_switch", "off")

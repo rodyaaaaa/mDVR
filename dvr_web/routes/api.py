@@ -2,10 +2,6 @@ import psutil
 import subprocess
 
 from flask import Blueprint, jsonify, request
-from utils import *
-from dvr_video.data.utils import get_config_path
-from reed_switch, web import *
-import json
 
 api_bp = Blueprint('api', __name__)
 
