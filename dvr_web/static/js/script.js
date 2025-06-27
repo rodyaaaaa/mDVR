@@ -66,7 +66,7 @@ function updateViewButtons() {
 }
 
 function updateCameraPorts() {
-    fetch('/api/get-camera-ports')
+    fetch('/get-camera-ports')
         .then(response => response.json())
         .then(data => {
             cameraPorts = data;
@@ -126,9 +126,21 @@ function showTab(tabId) {
     // Ініціалізація WebSocket з'єднання при переході на вкладку Reed Switch
     if (tabId === 'reed-switch') {
         initReedSwitchWebSocket();
+        // Додаємо примусову синхронізацію при переході на вкладку
+        forceSyncReedSwitch();
+    } else if (tabId === 'home') {
+        // На головній сторінці також є індикатор геркона
+        initReedSwitchWebSocket();
+        // Додаємо примусову синхронізацію при переході на вкладку
+        forceSyncReedSwitch();
     } else {
         // Закриваємо WebSocket з'єднання при переході на іншу вкладку
         closeReedSwitchWebSocket();
+        
+        // Відновлюємо стан радіокнопок Reed Switch при переході на вкладку налаштувань
+        if (tabId === 'video-options') {
+            updateReedSwitchState();
+        }
     }
 
     // EXT5V_V live logic: зупиняємо оновлення тільки якщо не на головній сторінці
@@ -230,7 +242,7 @@ function saveVideoLinks() {
         camera_list: videoLinks
     };
 
-    fetch('/api/save-video-links', {
+    fetch('/save-video-links', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -289,7 +301,7 @@ function saveFtpConfig() {
         ftp: ftpConfig
     };
 
-    fetch('/api/save-ftp-config', {
+    fetch('/save-ftp-config', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
@@ -312,30 +324,46 @@ function saveFtpConfig() {
 
 function saveVideoOptions() {
     showPreloader();
-    const rtspTransport = document.getElementById('rtsp-transport').value;
-    const rtspResolution = document.getElementById('rtsp-resolution').value;
-
-    if (!rtspResolution.includes('x')) {
-        hidePreloader();
-        showNotification('Invalid resolution format! Use "WIDTHxHEIGHT".', true);
-        return;
+    const resolution = document.getElementById('rtsp-resolution').value.split('x');
+    const transport = document.getElementById('rtsp-transport').value;
+    const duration = document.getElementById('video-duration').value;
+    const fps = document.getElementById('video-fps').value;
+    const folderSize = document.getElementById('size-folder-limit-gb').value;
+    const photoTimeout = document.getElementById('photo-timeout').value;
+    
+    // Отримуємо значення RS Timeout, якщо блок видимий
+    let rsTimeout = null;
+    const rsTimeoutBlock = document.getElementById('rs-timeout-block');
+    if (rsTimeoutBlock && rsTimeoutBlock.style.display !== 'none') {
+        const rsTimeoutInput = document.getElementById('rs-timeout-input');
+        if (rsTimeoutInput && rsTimeoutInput.value.trim() !== '') {
+            rsTimeout = rsTimeoutInput.value.trim();
+            
+            // Перевірка валідності значення таймаута
+            if (isNaN(Number(rsTimeout)) || Number(rsTimeout) < 0) {
+                hidePreloader();
+                showNotification('Please enter a valid RS Timeout value (in seconds)', true);
+                return;
+            }
+        }
     }
 
-    const [rtspResX, rtspResY] = rtspResolution.split('x').map(Number);
-
-    const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
-
     const data = {
-        rtsp_transport: rtspTransport,
-        rtsp_resolution_x: rtspResX,
-        rtsp_resolution_y: rtspResY,
-        folder_size: document.getElementById('size-folder-limit-gb').value,
-        video_duration: selectedMode === 'video' ? document.getElementById('video-duration').value : null,
-        fps: selectedMode === 'video' ? parseInt(document.getElementById('video-fps').value) : null,
-        photo_timeout: selectedMode === 'photo' ? parseInt(document.getElementById('photo-timeout').value) : null
+        rtsp_transport: transport,
+        rtsp_resolution_x: parseInt(resolution[0]),
+        rtsp_resolution_y: parseInt(resolution[1]),
+        video_duration: duration,
+        fps: parseInt(fps) || 15,
+        size_folder_limit_gb: parseInt(folderSize) || 10,
+        photo_timeout: parseInt(photoTimeout) || 10,
     };
+    
+    // Додаємо значення RS Timeout, якщо воно є
+    if (rsTimeout !== null) {
+        data.rs_timeout = parseInt(rsTimeout);
+    }
 
-    fetch('/api/save-video-options', {
+    fetch('/save-video-options', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
@@ -344,14 +372,14 @@ function saveVideoOptions() {
         .then(result => {
             hidePreloader();
             if (result.success) {
-                showNotification('The settings is saved!');
+                showNotification('Video options saved successfully!');
             } else {
-                showNotification(`ERROR ${result.error}`, true)
+                showNotification('ERROR: ' + result.error, true);
             }
         })
         .catch(error => {
             hidePreloader();
-            showNotification('Connection error', true)
+            showNotification('ERROR: ' + error.message, true);
         });
 }
 
@@ -359,7 +387,7 @@ function saveVpnConfig() {
     showPreloader();
     const vpnConfig = document.querySelector('#vpn-config textarea').value;
 
-    fetch('/api/save-vpn-config', {
+    fetch('/save-vpn-config', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -386,7 +414,7 @@ function updateWriteMode() {
     showPreloader();
     const selectedMode = document.querySelector('input[name="write_mode"]:checked').value;
 
-    fetch('/api/save-write-mode', {
+    fetch('/save-write-mode', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({write_mode: selectedMode})
@@ -429,6 +457,14 @@ function toggleReedSwitch() {
          hidePreloader();
          if(result.success) {
               showNotification('Reed Switch updated successfully!');
+              // Оновлюємо стан після успішного перемикання
+              setTimeout(updateReedSwitchState, 500);
+              
+              // Показуємо або приховуємо блок таймауту залежно від стану
+              const rsTimeoutBlock = document.getElementById('rs-timeout-block');
+              if (rsTimeoutBlock) {
+                  rsTimeoutBlock.style.display = state === 'on' ? 'flex' : 'none';
+              }
          } else {
               showNotification('ERROR: ' + result.error, true);
          }
@@ -453,19 +489,45 @@ function updateReedSwitchState() {
             const reedOnRadio = document.getElementById('reed-switch-on');
             const reedOffRadio = document.getElementById('reed-switch-off');
             const rsTimeoutBlock = document.getElementById('rs-timeout-block');
+            const rsTimeoutInput = document.getElementById('rs-timeout-input');
+            
+            if (!reedOnRadio || !reedOffRadio) {
+                console.error('Reed switch radio buttons not found');
+                return;
+            }
+            
             if (data.state === "on") {
                 reedOnRadio.checked = true;
-                rsTimeoutBlock.style.display = 'block';
+                if (rsTimeoutBlock) {
+                    rsTimeoutBlock.style.display = 'flex';
+                    
+                    // Отримуємо значення таймаута
+                    if (rsTimeoutInput) {
+                        fetch('/api/get-rs-timeout')
+                            .then(response => response.json())
+                            .then(timeoutData => {
+                                if (timeoutData && typeof timeoutData.timeout !== 'undefined') {
+                                    rsTimeoutInput.value = timeoutData.timeout;
+                                } else {
+                                    rsTimeoutInput.value = "0";
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching RS timeout:', error);
+                                rsTimeoutInput.value = "0";
+                            });
+                    }
+                }
             } else {
                 reedOffRadio.checked = true;
-                rsTimeoutBlock.style.display = 'none';
+                if (rsTimeoutBlock) rsTimeoutBlock.style.display = 'none';
             }
         })
         .catch(error => console.error('Error fetching reed switch status:', error));
 }
 
 function updateImei() {
-    fetch('/api/get-imei')
+    fetch('/get-imei')
         .then(response => response.json())
         .then(data => {
             if (data.imei) {
@@ -485,6 +547,19 @@ document.addEventListener('DOMContentLoaded', () => {
     updateImei();
     const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
     toggleModeSettings(initialMode);
+    
+    // При кліку на вкладку налаштувань також оновлюємо стан Reed Switch
+    const videoOptionsBtn = document.querySelector('.sidebar button[onclick="showTab(\'video-options\')"]');
+    if (videoOptionsBtn) {
+        videoOptionsBtn.addEventListener('click', updateReedSwitchState);
+    }
+    
+    // Перевіряємо початковий стан Reed Switch для правильного відображення поля RS Timeout
+    const reedOnRadio = document.getElementById('reed-switch-on');
+    const rsTimeoutBlock = document.getElementById('rs-timeout-block');
+    if (reedOnRadio && rsTimeoutBlock) {
+        rsTimeoutBlock.style.display = reedOnRadio.checked ? 'flex' : 'none';
+    }
 });
 
 function validateCarname(input) {
@@ -493,22 +568,20 @@ function validateCarname(input) {
 
 function updateServiceStatus() {
     const serviceSelector = document.getElementById('service-selector');
-    const serviceActive = document.getElementById('service-active');
-    const serviceEnabled = document.getElementById('service-enabled');
-    
-    if (!serviceSelector.value) {
-        serviceActive.textContent = '-';
-        serviceEnabled.textContent = '-';
+    if (!serviceSelector) {
         return;
     }
     
-    fetch(`/api/get-service-status/${serviceSelector.value}`)
+    fetch(`/get-service-status/${serviceSelector.value}`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
                 showNotification(data.error, true);
                 return;
             }
+            
+            const serviceActive = document.getElementById('service-active');
+            const serviceEnabled = document.getElementById('service-enabled');
             
             serviceActive.textContent = data.status;
             serviceActive.className = data.status === 'active' ? '' : 'error';
@@ -529,7 +602,8 @@ function startServiceStatusUpdates() {
     if (serviceStatusInterval) {
         clearInterval(serviceStatusInterval);
     }
-    serviceStatusInterval = setInterval(updateServiceStatus, 80);
+    updateServiceStatus(); // Immediately update status when tab is opened
+    serviceStatusInterval = setInterval(updateServiceStatus, 5000);
 }
 
 function stopServiceStatusUpdates() {
@@ -569,73 +643,69 @@ function updateReedSwitchUI(data) {
         if (data.initialized) {
             reedOnRadio.disabled = true;
             reedOffRadio.disabled = true;
-        } else {
-            reedOnRadio.disabled = false;
-            reedOffRadio.disabled = false;
-        }
-    }
-
-    console.log(data);
-
-    // Перевіряємо, чи геркон ініціалізовано
-    if (data.hasOwnProperty('initialized')) {
-        if (data.initialized) {
+            
+            // Оновлюємо статус ініціалізації
             initStatus.textContent = 'Initialized';
             initStatus.classList.add('initialized');
             initStatus.classList.remove('not-initialized');
-            document.getElementById('init-reed-switch-btn').textContent = 'Re-initialize Reed Switch';
-            
-            // Перевіряємо інформацію про автоматичну зупинку
-            if (data.hasOwnProperty('autostop') && data.autostop) {
-                autoStopTimer.classList.remove('hidden');
-                if (data.hasOwnProperty('seconds_left')) {
-                    autoStopTime.textContent = formatTime(data.seconds_left);
-                }
-            } else {
-                autoStopTimer.classList.add('hidden');
-            }
         } else {
+            reedOnRadio.disabled = false;
+            reedOffRadio.disabled = false;
+            
+            // Оновлюємо статус ініціалізації
             initStatus.textContent = 'Not initialized';
             initStatus.classList.add('not-initialized');
             initStatus.classList.remove('initialized');
-            document.getElementById('init-reed-switch-btn').textContent = 'Initialize Reed Switch';
-            
-            // Приховуємо таймер, якщо геркон не ініціалізовано
-            autoStopTimer.classList.add('hidden');
-            
-            // Якщо геркон не ініціалізовано, не відображаємо його стан
-            statusIndicator.classList.remove('open', 'closed');
-            statusText.textContent = 'Unavailable (not initialized)';
-            statusText.classList.remove('open', 'closed');
-            return;
         }
     }
-
-    // Встановлення статусу (відкритий/закритий)
-    if (data.status === 'open') {
-        statusIndicator.classList.add('open');
+    
+    console.log("Отримано оновлення через WebSocket:", data);
+    
+    // Оновлення відображення статусу геркона
+    if (data.hasOwnProperty('status')) {
         statusIndicator.classList.remove('closed');
-        statusText.textContent = 'Open';
-        statusText.classList.add('open');
-        statusText.classList.remove('closed');
-    } else if (data.status === 'closed') {
-        statusIndicator.classList.add('closed');
-        statusIndicator.classList.remove('open');
-        statusText.textContent = 'Closed';
-        statusText.classList.add('closed');
-        statusText.classList.remove('open');
-    } else {
-        statusIndicator.classList.remove('open', 'closed');
-        statusText.textContent = 'Unknown';
-        statusText.classList.remove('open', 'closed');
+        statusIndicator.classList.remove('opened');
+        statusIndicator.classList.remove('unknown');
+        
+        console.log(`Поточний статус геркона: ${data.status}, тип: ${typeof data.status}`);
+        
+        // Додаємо логування для перевірки
+        if (data.status === 'closed') {
+            console.log('Статус: закрито (closed)');
+            statusIndicator.classList.add('closed');
+            statusText.textContent = 'Closed (Magnet detected)';
+        } else if (data.status === 'opened') {
+            console.log('Статус: відкрито (opened)');
+            statusIndicator.classList.add('opened');
+            statusText.textContent = 'Opened';
+        } else {
+            console.log(`Статус: невідомий (${data.status})`);
+            statusIndicator.classList.add('unknown');
+            statusText.textContent = `Unknown (${data.status})`;
+        }
+        
+        // Оновлюємо час останнього оновлення
+        if (data.hasOwnProperty('timestamp')) {
+            const date = new Date(data.timestamp * 1000);
+            lastUpdated.textContent = date.toLocaleTimeString();
+        }
     }
     
-    // Оновлення часу останнього оновлення
-    if (data.timestamp) {
-        const date = new Date(data.timestamp * 1000);
-        lastUpdated.textContent = date.toLocaleString('uk-UA');
-    } else {
-        lastUpdated.textContent = new Date().toLocaleString('uk-UA');
+    // Оновлення таймера автоматичної зупинки
+    if (data.hasOwnProperty('autostop')) {
+        if (data.autostop && data.hasOwnProperty('seconds_left')) {
+            autoStopTimer.style.display = 'block';
+            autoStopTime.textContent = formatTime(data.seconds_left);
+            
+            // Якщо час закінчився, оновлюємо статус ініціалізації
+            if (data.seconds_left <= 0 && initStatus) {
+                initStatus.textContent = 'Not initialized';
+                initStatus.classList.add('not-initialized');
+                initStatus.classList.remove('initialized');
+            }
+        } else {
+            autoStopTimer.style.display = 'none';
+        }
     }
 }
 
@@ -828,12 +898,15 @@ function createReedSwitchWebSocket() {
     // Закриваємо попереднє з'єднання, якщо воно існує
     closeReedSwitchWebSocket();
     
+    console.log("Створюємо нове WebSocket з'єднання...");
+    
     // Створюємо нове з'єднання
     reedSwitchSocket = io('/ws', {
         transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionDelay: 1000,
+        forceNew: true
     });
     
     reedSwitchSocket.on('connect', function() {
@@ -845,9 +918,15 @@ function createReedSwitchWebSocket() {
         
         // Відправляємо запит на отримання початкового стану
         reedSwitchSocket.emit('get_status');
+        console.log("Відправлено запит get_status");
+    });
+    
+    reedSwitchSocket.on('connection_established', function(data) {
+        console.log("Отримано підтвердження встановлення з'єднання:", data);
     });
     
     reedSwitchSocket.on('reed_switch_update', function(data) {
+        console.log("Отримано оновлення reed_switch_update:", data);
         updateReedSwitchUI(data);
     });
     
@@ -857,6 +936,12 @@ function createReedSwitchWebSocket() {
         connectionStatus.textContent = 'Disconnected';
         connectionStatus.classList.add('disconnected');
         connectionStatus.classList.remove('connected');
+        
+        // Спробуємо повторно підключитися через 2 секунди
+        reedSwitchReconnectTimer = setTimeout(() => {
+            console.log("Спроба повторного підключення WebSocket...");
+            createReedSwitchWebSocket();
+        }, 2000);
     });
     
     reedSwitchSocket.on('connect_error', function(error) {
@@ -918,6 +1003,12 @@ function closeReedSwitchWebSocket() {
 
 // Додаємо обробник закриття з'єднання при закритті вікна
 window.addEventListener('beforeunload', closeReedSwitchWebSocket);
+
+// Ініціалізація Reed Switch WebSocket при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', () => {
+    // Ініціалізуємо WebSocket для геркона після завантаження сторінки
+    initReedSwitchWebSocket();
+});
 
 // CPU Load Chart
 let cpuChartInterval = null;
@@ -1069,26 +1160,74 @@ document.addEventListener('DOMContentLoaded', () => {
     diskTextInterval = setInterval(updateDiskUsageText, 1000);
 });
 
-function saveRsTimeout() {
-    const value = parseInt(document.getElementById('rs-timeout-input').value, 10);
-    if (isNaN(value) || value < 0) {
-        showNotification('Введіть коректне число!', true);
-        return;
-    }
-    fetch('/api/save-rs-timeout', {
+// Функція для примусової синхронізації стану геркона з сервером
+function forceSyncReedSwitch() {
+    fetch('/api/sync-reed-switch', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({rs_timeout: value})
+        headers: {
+            'Content-Type': 'application/json'
+        }
     })
     .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            showNotification('RS Timeout збережено!');
+    .then(data => {
+        if (data.success) {
+            console.log("Примусова синхронізація успішна:", data.state);
         } else {
-            showNotification('Помилка: ' + result.error, true);
+            console.error("Помилка примусової синхронізації:", data.error);
         }
     })
     .catch(error => {
-        showNotification('Помилка збереження: ' + error.message, true);
+        console.error("Помилка при примусовій синхронізації:", error);
     });
 }
+
+// Нова функція для регулярного опитування стану геркона
+function setupReedSwitchPolling() {
+    // Створюємо таймер для резервного опитування стану кожні 2 секунди
+    const pollingInterval = 2000; // 2 секунди
+    
+    // Функція для виконання опитування
+    function pollReedSwitchStatus() {
+        // Перевіряємо, чи ми зараз на вкладці Reed Switch або Home
+        const reedTabActive = document.getElementById('reed-switch').classList.contains('active');
+        const homeTabActive = document.getElementById('home').classList.contains('active');
+        
+        // Якщо ні одна з вкладок не активна, не опитуємо
+        if (!reedTabActive && !homeTabActive) {
+            return;
+        }
+        
+        // Відправляємо запит на сервер
+        fetch('/api/reed-switch-status')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Отримано дані через HTTP polling:', data);
+                updateReedSwitchUI(data);
+                
+                // Кожне четверте опитування робимо примусову синхронізацію
+                if (Math.random() < 0.25) {
+                    forceSyncReedSwitch();
+                }
+            })
+            .catch(error => {
+                console.error('Помилка при отриманні стану геркона через HTTP:', error);
+            });
+    }
+    
+    // Запускаємо опитування з вказаним інтервалом
+    return setInterval(pollReedSwitchStatus, pollingInterval);
+}
+
+// Ініціалізація Reed Switch WebSocket при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', () => {
+    // Ініціалізуємо WebSocket для геркона після завантаження сторінки
+    initReedSwitchWebSocket();
+    
+    // Запускаємо резервне опитування стану геркона
+    const reedSwitchPollingInterval = setupReedSwitchPolling();
+    
+    // Додаємо обробник для зупинки опитування при закритті сторінки
+    window.addEventListener('beforeunload', () => {
+        clearInterval(reedSwitchPollingInterval);
+    });
+});

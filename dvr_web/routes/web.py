@@ -101,13 +101,26 @@ def save_video_options():
     try:
         config = load_config()
 
-        config['program_options']['size_folder_limit_gb'] = int(data.get('folder_size'))
+        # Make sure size_folder_limit_gb is an integer with a default value
+        try:
+            config['program_options']['size_folder_limit_gb'] = int(data.get('size_folder_limit_gb', 10))
+        except (TypeError, ValueError):
+            config['program_options']['size_folder_limit_gb'] = 10
 
         config['rtsp_options'] = {
             "rtsp_transport": data.get('rtsp_transport', 'tcp'),
             "rtsp_resolution_x": data.get('rtsp_resolution_x', 640),
             "rtsp_resolution_y": data.get('rtsp_resolution_y', 480)
         }
+
+        # Обробка RS Timeout, якщо він присутній
+        if 'rs_timeout' in data and data['rs_timeout'] is not None:
+            try:
+                rs_timeout = int(data.get('rs_timeout', 0))
+                config['rs_timeout'] = rs_timeout
+            except (TypeError, ValueError):
+                config['rs_timeout'] = 0
+                print(f"Invalid RS Timeout value: {data.get('rs_timeout')}, using default 0")
 
         video_duration = data.get('video_duration')
         if video_duration:
@@ -132,16 +145,25 @@ def save_video_options():
 
             formatted_duration = f"{h:02d}:{m:02d}:{s:02d}"
             config['video_options']['video_duration'] = formatted_duration
-            config['video_options']['fps'] = data.get('fps', 15)
+            
+            # Make sure fps is an integer with a default value
+            try:
+                config['video_options']['fps'] = int(data.get('fps', 15))
+            except (TypeError, ValueError):
+                config['video_options']['fps'] = 15
 
             seconds = timedelta(hours=h, minutes=m, seconds=s).total_seconds()
             update_watchdog(int(seconds * 10))
 
-        photo_timeout = data['photo_timeout']
+        photo_timeout = data.get('photo_timeout')
 
         if photo_timeout:
-            config['photo_timeout'] = int(photo_timeout)
-            update_watchdog(int(photo_timeout * 5))
+            try:
+                config['photo_timeout'] = int(photo_timeout)
+                update_watchdog(int(int(photo_timeout) * 5))
+            except (TypeError, ValueError):
+                config['photo_timeout'] = 10
+                update_watchdog(50)  # Default 10 * 5
 
         with open(get_config_path(), 'w') as file:
             json.dump(config, file, indent=4)
@@ -154,6 +176,17 @@ def save_video_options():
         return jsonify({"success": False, "error": str(ve)}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@web_bp.route('/api/get-rs-timeout')
+def get_rs_timeout():
+    try:
+        config = load_config()
+        timeout = config.get('rs_timeout', 0)
+        return jsonify({"timeout": timeout})
+    except Exception as e:
+        print(f"Error getting RS timeout: {str(e)}")
+        return jsonify({"timeout": 0, "error": str(e)})
 
 
 @web_bp.route('/save-vpn-config', methods=['POST'])

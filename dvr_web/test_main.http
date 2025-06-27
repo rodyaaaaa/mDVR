@@ -1,11 +1,41 @@
-# Test your FastAPI endpoints
+# Test MDVR API endpoints
 
-GET http://127.0.0.1:8000/
+# Home page
+GET http://localhost:80/
+Accept: text/html
+
+###
+
+# Get camera ports (web)
+GET http://localhost:80/get-camera-ports
 Accept: application/json
 
 ###
 
-GET http://127.0.0.1:8000/hello/User
+# Save video links (web)
+POST http://localhost:80/save-video-links
+Content-Type: application/json
+
+{
+  "camera_list": ["rtsp://example.com/camera1", "rtsp://example.com/camera2"]
+}
+
+###
+
+# Get IMEI (web)
+GET http://localhost:80/get-imei
+Accept: application/json
+
+###
+
+# Reed switch status (api)
+GET http://localhost:80/api/reed-switch-status
+Accept: application/json
+
+###
+
+# CPU load (api)
+GET http://localhost:80/api/cpu-load
 Accept: application/json
 
 ###

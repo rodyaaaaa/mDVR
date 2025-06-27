@@ -90,6 +90,19 @@ if [ -f "$SERVICES_PATH/mdvr_modem.timer" ]; then
 
 fi
 
+echo "Rename main_rs_rasp.py"
+
+cp "$PROJECT_PATH/dvr_video/main_rs_rasp.py" "$PROJECT_PATH/dvr_video/main_rs.py"
+  
+echo "Delete some files"
+
+rm "$PROJECT_PATH/dvr_video/main_rs_rasp.py"
+rm "$PROJECT_PATH/dvr_web/server_orangepi.py"
+rm "$PROJECT_PATH/dvr_web/routes/reed_switch_orangepi.py"
+rm "$PROJECT_PATH/dvr_web/utils_orangepi.py"
+
+echo "Success"
+
 echo "All is ready. Try to build deb package!"
 
 dpkg --build mdvr

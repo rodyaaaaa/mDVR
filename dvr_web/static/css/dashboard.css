@@ -1,6 +1,6 @@
 /* Dashboard Cards */
-.ext5v-v-card,
-.cpu-load-card,
+.system-info-card,
+.cpu-mem-card,
 .reed-switch-card {
     margin: 0 0 0 0;
     padding: 20px;
@@ -11,6 +11,40 @@
     width: 100%;
     max-width: none;
     box-sizing: border-box;
+}
+
+/* System Info Card */
+.system-info-card {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.voltage-section,
+.equipment-section {
+    flex: 1;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.equipment-details {
+    margin-top: 15px;
+}
+
+.equipment-details p {
+    margin: 8px 0;
+    font-size: 1.1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.equipment-details span {
+    color: #bfc9da;
+    font-weight: 500;
 }
 
 /* Memory Usage Card */
@@ -63,8 +97,84 @@
 }
 
 @media (max-width: 1024px) {
-    .ext5v-v-card {
+    .system-info-card {
+        flex-direction: column;
+        gap: 15px;
         margin: 10px;
         padding: 15px;
     }
+
+    .voltage-section,
+    .equipment-section {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .equipment-details p {
+        font-size: 1em;
+    }
+}
+
+/* Стилі для статусу геркона */
+.status-circle {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 10px;
+    background-color: #888;
+    vertical-align: middle;
+    transition: background-color 0.3s ease;
+}
+
+.status-circle.opened {
+    background-color: #f44336;  /* Червоний колір для розімкнутого геркона */
+}
+
+.status-circle.closed {
+    background-color: #4CAF50;  /* Зелений колір для замкнутого геркона */
+}
+
+.status-circle.unknown {
+    background-color: #888;  /* Сірий колір для невідомого стану */
+}
+
+/* Стилі для статусу ініціалізації */
+#reed-init-status {
+    font-weight: bold;
+}
+
+#reed-init-status.initialized {
+    color: #4CAF50;
+}
+
+#reed-init-status.not-initialized {
+    color: #f44336;
+}
+
+#reed-connection-status {
+    font-weight: bold;
+}
+
+#reed-connection-status.connected {
+    color: #4CAF50;
+}
+
+#reed-connection-status.disconnected {
+    color: #f44336;
+}
+
+/* Стиль для таймера автоматичної зупинки */
+#auto-stop-timer {
+    background-color: rgba(255, 193, 7, 0.2);
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-top: 8px;
+    font-size: 0.95em;
+    display: none;
+}
+
+#auto-stop-time {
+    font-weight: bold;
+    color: #ff9800;
 } 

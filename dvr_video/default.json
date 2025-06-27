@@ -17,7 +17,7 @@
     "fps": 15
   },
   "photo_timeout": 120,
-  "rs_timeout": 0,
+  "rs_timeout": 2,
   "ftp": {
     "server": "",
     "user": "",

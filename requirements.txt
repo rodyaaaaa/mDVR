@@ -10,6 +10,7 @@ fastapi==0.115.8
 fastapi-cli==0.0.7
 ffmpeg-python==0.2.0
 Flask==3.1.0
+Flask-CORS==4.0.0
 Flask-SocketIO==5.3.6
 future==1.0.0
 h11==0.14.0
@@ -32,6 +33,7 @@ python-socketio==5.11.1
 python-multipart==0.0.20
 pythonping==1.1.4
 PyYAML==6.0.2
+requests==2.31.0
 rich==13.9.4
 rich-toolkit==0.13.2
 rpi-lgpio==0.6

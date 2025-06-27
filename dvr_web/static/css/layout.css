@@ -292,6 +292,15 @@ header p {
     background: #778da9;
 }
 
+/* RS Timeout Block */
+#rs-timeout-block {
+    align-items: center;
+}
+
+#rs-timeout-block input {
+    flex: 1;
+}
+
 /* VPN Config */
 #vpn-config h2 {
     text-align: left;
