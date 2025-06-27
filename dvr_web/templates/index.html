@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/monitoring.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/grid-layout.css') }}">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <!-- Core JS files -->
     <script src="{{ url_for('static', filename='js/core.js') }}"></script>
@@ -18,6 +19,7 @@
     <script src="{{ url_for('static', filename='js/monitoring.js') }}"></script>
     <script src="{{ url_for('static', filename='js/reed-switch.js') }}"></script>
     <script src="{{ url_for('static', filename='js/temperature.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/grid-layout.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body>
@@ -47,9 +49,13 @@
     </aside>
     <main class="content">
         <div id="home" class="tab active">
-            <div class="home-flex-row">
-                <div class="home-main-content">
-                    <div class="system-info-card">
+            <div id="dashboard-grid" class="grid-container">
+                <!-- System Info Card -->
+                <div id="system-info-card" class="grid-item size-2x1">
+                    <div class="grid-item-header">
+                        <h3>System Info</h3>
+                    </div>
+                    <div class="card-content">
                         <div class="voltage-section">
                             <h3>EXT5V_V (Live)</h3>
                             <div id="ext5v-v-output" style="font-size: 1.5em; text-align: center; margin: 15px 0;">Loading...</div>
@@ -62,8 +68,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="cpu-mem-card">
+                    <div class="resize-handle"></div>
+                </div>
+
+                <!-- CPU & Memory Card -->
+                <div id="cpu-mem-card" class="grid-item size-1x1">
+                    <div class="grid-item-header">
                         <h3>CPU & Memory Usage</h3>
+                    </div>
+                    <div class="card-content">
                         <div class="cpu-mem-charts-row">
                             <div class="cpu-chart-container">
                                 <canvas id="cpu-load-chart" width="150" height="100" style="display:block; margin:0 auto;"></canvas>
@@ -76,8 +89,15 @@
                         </div>
                         <div id="disk-usage-text" style="font-size: 1.1em; text-align: center; margin-top: 18px;">Loading...</div>
                     </div>
-                    <div class="temperature-card">
+                    <div class="resize-handle"></div>
+                </div>
+
+                <!-- Temperature Card -->
+                <div id="temperature-card" class="grid-item size-1x1">
+                    <div class="grid-item-header">
                         <h3>System Temperature</h3>
+                    </div>
+                    <div class="card-content">
                         <div class="temperature-container">
                             <div class="temperature-item">
                                 <div class="temperature-icon cpu-temp-icon"></div>
@@ -103,27 +123,35 @@
                         </div>
                         <div class="temperature-updated">Last updated: <span id="temp-last-updated">-</span></div>
                     </div>
+                    <div class="resize-handle"></div>
                 </div>
-                <div class="reed-switch-card">
-                    <h3 style="margin-top: 0;">Reed Switch Status</h3>
-                    <div class="reed-switch-container">
-                        <div class="reed-switch-status">
-                            <div class="status-circle" id="reed-status-indicator"></div>
-                            <p>Status: <span id="reed-status-text">Connecting...</span></p>
-                        </div>
-                        <div class="reed-switch-info">
-                            <p>Last updated: <span id="reed-last-updated">-</span></p>
-                            <p>Connection: <span id="reed-connection-status">Disconnected</span></p>
-                        </div>
-                        <div class="reed-switch-init">
-                            <p>Status: <span id="reed-init-status">Not initialized</span></p>
-                            <p id="auto-stop-timer" class="hidden">Auto-stop in: <span id="auto-stop-time">03:00</span></p>
-                            <div class="reed-switch-buttons">
-                                <button id="init-reed-switch-btn" onclick="initializeReedSwitch()">Initialize Reed Switch</button>
-                                <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button">Stop Monitoring</button>
+
+                <!-- Reed Switch Card -->
+                <div id="reed-switch-card" class="grid-item size-1x1">
+                    <div class="grid-item-header">
+                        <h3>Reed Switch Status</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="reed-switch-container">
+                            <div class="reed-switch-status">
+                                <div class="status-circle" id="reed-status-indicator"></div>
+                                <p>Status: <span id="reed-status-text">Connecting...</span></p>
+                            </div>
+                            <div class="reed-switch-info">
+                                <p>Last updated: <span id="reed-last-updated">-</span></p>
+                                <p>Connection: <span id="reed-connection-status">Disconnected</span></p>
+                            </div>
+                            <div class="reed-switch-init">
+                                <p>Status: <span id="reed-init-status">Not initialized</span></p>
+                                <p id="auto-stop-timer" class="hidden">Auto-stop in: <span id="auto-stop-time">03:00</span></p>
+                                <div class="reed-switch-buttons">
+                                    <button id="init-reed-switch-btn" onclick="initializeReedSwitch()">Initialize Reed Switch</button>
+                                    <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button">Stop Monitoring</button>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <div class="resize-handle"></div>
                 </div>
             </div>
         </div>
