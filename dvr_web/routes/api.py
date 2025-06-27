@@ -526,3 +526,73 @@ def api_sync_reed_switch():
             "success": False,
             "error": error_msg
         })
+
+
+@api_bp.route('/system-temperature')
+def api_system_temperature():
+    try:
+        # Get CPU temperature
+        cpu_temp = None
+        try:
+            # On Raspberry Pi, CPU temperature is available via vcgencmd
+            cpu_result = subprocess.run(['vcgencmd', 'measure_temp'], capture_output=True, text=True, check=True)
+            cpu_temp_text = cpu_result.stdout.strip()
+            # Extract temperature value from output like "temp=45.8'C"
+            cpu_temp = float(cpu_temp_text.split('=')[1].replace("'C", ""))
+        except Exception as e:
+            print(f"Error getting CPU temperature: {str(e)}")
+            # Try alternative method
+            try:
+                if os.path.exists('/sys/class/thermal/thermal_zone0/temp'):
+                    with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+                        cpu_temp = float(f.read().strip()) / 1000.0
+            except Exception:
+                pass
+
+        # Get GPU temperature (on Raspberry Pi)
+        gpu_temp = None
+        try:
+            gpu_result = subprocess.run(['vcgencmd', 'measure_temp'], capture_output=True, text=True, check=True)
+            gpu_temp_text = gpu_result.stdout.strip()
+            # Extract temperature value from output like "temp=45.8'C"
+            gpu_temp = float(gpu_temp_text.split('=')[1].replace("'C", ""))
+        except Exception as e:
+            print(f"Error getting GPU temperature: {str(e)}")
+
+        # Get system temperature (could be the same as CPU on some systems)
+        system_temp = None
+        try:
+            # Try to get temperature from another thermal zone if available
+            if os.path.exists('/sys/class/thermal/thermal_zone1/temp'):
+                with open('/sys/class/thermal/thermal_zone1/temp', 'r') as f:
+                    system_temp = float(f.read().strip()) / 1000.0
+            else:
+                # If not available, use CPU temperature as system temperature
+                system_temp = cpu_temp
+        except Exception as e:
+            print(f"Error getting system temperature: {str(e)}")
+            system_temp = cpu_temp
+
+        # Round temperatures to one decimal place
+        if cpu_temp is not None:
+            cpu_temp = round(cpu_temp, 1)
+        if gpu_temp is not None:
+            gpu_temp = round(gpu_temp, 1)
+        if system_temp is not None:
+            system_temp = round(system_temp, 1)
+
+        return jsonify({
+            "cpu": cpu_temp,
+            "gpu": gpu_temp,
+            "system": system_temp,
+            "timestamp": int(time.time())
+        })
+    except Exception as e:
+        print(f"Error in system temperature API: {str(e)}")
+        return jsonify({
+            "cpu": None,
+            "gpu": None,
+            "system": None,
+            "timestamp": int(time.time()),
+            "error": str(e)
+        })

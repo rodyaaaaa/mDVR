@@ -1,6 +1,7 @@
 /* Dashboard Cards */
 .system-info-card,
 .cpu-mem-card,
+.temperature-card,
 .reed-switch-card {
     margin: 0 0 0 0;
     padding: 20px;
@@ -76,8 +77,81 @@
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     padding: 20px 45px 20px 30px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     max-width: 350px;
+}
+
+/* Temperature Card */
+.temperature-card {
+    background: #1b263b;
+    color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin-bottom: 20px;
+    max-width: 350px;
+}
+
+.temperature-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.temperature-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.temperature-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 15px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 20px;
+}
+
+.cpu-temp-icon {
+    background-color: #3498db;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 9a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0v-4a3 3 0 0 0-3-3zm1 7a1 1 0 0 1-2 0v-4a1 1 0 0 1 2 0v4zm9-5a1 1 0 0 0-1 1v2a1 1 0 0 0 2 0v-2a1 1 0 0 0-1-1zM4 12a1 1 0 0 0-1 1v2a1 1 0 0 0 2 0v-2a1 1 0 0 0-1-1zm5-8a1 1 0 0 0-1 1v12a1 1 0 0 0 2 0V5a1 1 0 0 0-1-1zm10 0a1 1 0 0 0-1 1v12a1 1 0 0 0 2 0V5a1 1 0 0 0-1-1zm-5 3a1 1 0 0 0-1 1v8a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1z'/%3E%3C/svg%3E");
+}
+
+.gpu-temp-icon {
+    background-color: #e74c3c;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6zm0 4h8v2H6z'/%3E%3C/svg%3E");
+}
+
+.system-temp-icon {
+    background-color: #2ecc71;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z'/%3E%3C/svg%3E");
+}
+
+.temperature-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.temperature-label {
+    font-size: 0.9em;
+    color: #bfc9da;
+}
+
+.temperature-value {
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+.temperature-updated {
+    font-size: 0.85em;
+    color: #bfc9da;
+    text-align: right;
+    margin-top: 10px;
 }
 
 /* Charts Layout */
@@ -112,6 +186,18 @@
 
     .equipment-details p {
         font-size: 1em;
+    }
+    
+    .temperature-container {
+        gap: 10px;
+    }
+    
+    .temperature-item {
+        padding: 8px;
+    }
+    
+    .temperature-value {
+        font-size: 1.1em;
     }
 }
 

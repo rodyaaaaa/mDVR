@@ -17,6 +17,7 @@
     <script src="{{ url_for('static', filename='js/config.js') }}"></script>
     <script src="{{ url_for('static', filename='js/monitoring.js') }}"></script>
     <script src="{{ url_for('static', filename='js/reed-switch.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/temperature.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body>
@@ -74,6 +75,33 @@
                             </div>
                         </div>
                         <div id="disk-usage-text" style="font-size: 1.1em; text-align: center; margin-top: 18px;">Loading...</div>
+                    </div>
+                    <div class="temperature-card">
+                        <h3>System Temperature</h3>
+                        <div class="temperature-container">
+                            <div class="temperature-item">
+                                <div class="temperature-icon cpu-temp-icon"></div>
+                                <div class="temperature-info">
+                                    <div class="temperature-label">CPU</div>
+                                    <div class="temperature-value" id="cpu-temp">Loading...</div>
+                                </div>
+                            </div>
+                            <div class="temperature-item">
+                                <div class="temperature-icon gpu-temp-icon"></div>
+                                <div class="temperature-info">
+                                    <div class="temperature-label">GPU</div>
+                                    <div class="temperature-value" id="gpu-temp">Loading...</div>
+                                </div>
+                            </div>
+                            <div class="temperature-item">
+                                <div class="temperature-icon system-temp-icon"></div>
+                                <div class="temperature-info">
+                                    <div class="temperature-label">System</div>
+                                    <div class="temperature-value" id="system-temp">Loading...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="temperature-updated">Last updated: <span id="temp-last-updated">-</span></div>
                     </div>
                 </div>
                 <div class="reed-switch-card">
