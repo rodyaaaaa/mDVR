@@ -12,7 +12,7 @@ from flask_cors import CORS
 import json
 
 # Now import using relative imports
-from dvr_web.routes.api import api_bp
+from dvr_web.routes.api import api_bp, start_cpu_monitoring
 from dvr_web.routes.web import web_bp
 from dvr_web.routes.reed_switch import reed_switch_bp
 from dvr_web.utils import cleanup_gpio, generate_nginx_configs, load_config, update_imei
@@ -82,6 +82,9 @@ def start_server(debug=False, host='0.0.0.0', port=8080):
     
     # Ініціалізація Socket.IO з покращеними налаштуваннями
     socketio = init_socketio(app)
+    
+    # Запуск моніторингу CPU
+    start_cpu_monitoring()
     
     # Реєстрація функції для очищення ресурсів GPIO при завершенні
     atexit.register(cleanup_gpio)

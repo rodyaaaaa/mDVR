@@ -21,7 +21,43 @@ reed_switch_state = {"status": "unknown", "timestamp": 0}
 reed_switch_autostop_time = None
 
 cpu_load_history = []
+cpu_monitor_active = False
 
+# Функція для моніторингу CPU навантаження
+def monitor_cpu_load():
+    global cpu_load_history, cpu_monitor_active
+    
+    while cpu_monitor_active:
+        try:
+            # Отримуємо поточне навантаження CPU
+            cpu_percent = psutil.cpu_percent(interval=1)
+            
+            # Додаємо значення до історії
+            cpu_load_history.append(cpu_percent)
+            
+            # Обмежуємо розмір історії до 60 значень
+            if len(cpu_load_history) > 60:
+                cpu_load_history = cpu_load_history[-60:]
+                
+            # Пауза між вимірами
+            time.sleep(1)
+        except Exception as e:
+            print(f"[DEBUG CPU] Помилка в моніторингу CPU: {str(e)}")
+            time.sleep(5)
+
+# Запускаємо потік моніторингу CPU
+def start_cpu_monitoring():
+    global cpu_monitor_active
+    
+    if not cpu_monitor_active:
+        cpu_monitor_active = True
+        cpu_monitor_thread = threading.Thread(target=monitor_cpu_load)
+        cpu_monitor_thread.daemon = True
+        cpu_monitor_thread.start()
+        print("[DEBUG CPU] Запущено потік моніторингу CPU")
+
+# Запускаємо моніторинг CPU при імпорті модуля
+start_cpu_monitoring()
 
 # Функція для моніторингу стану геркона
 def monitor_reed_switch():
@@ -396,6 +432,12 @@ def toggle_reed_switch():
 def api_cpu_load():
     if not psutil:
         return jsonify({'error': 'psutil not installed'}), 500
+    
+    # Якщо історія порожня, додаємо поточне значення
+    if not cpu_load_history:
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        cpu_load_history.append(cpu_percent)
+    
     return jsonify({'history': cpu_load_history[-60:]})
 
 

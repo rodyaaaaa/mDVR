@@ -313,13 +313,24 @@ def update_imei():
 
 
 # Функція для очищення ресурсів GPIO при завершенні програми
-def cleanup_gpio(signal=None, frame=None):
+def cleanup_gpio(signum=None, frame=None):
+    """
+    Функція для звільнення ресурсів GPIO при завершенні програми.
+    """
     try:
-        # Використовуємо RPi.GPIO для очищення
-        GPIO.cleanup(REED_SWITCH_PIN)
-        print(f"GPIO ресурси для піна {REED_SWITCH_PIN} звільнено")
-    except Exception as e:
-        print(f"Помилка при звільненні GPIO ресурсів: {str(e)}")
+        # Зупиняємо моніторинг CPU
+        try:
+            import dvr_web.routes.api
+            dvr_web.routes.api.cpu_monitor_active = False
+        except:
+            pass
+            
+        # Звільняємо ресурси GPIO
+        import RPi.GPIO as GPIO
+        GPIO.cleanup()
+        print("GPIO ресурси звільнено")
+    except:
+        pass
 
 
 # Функція для надсилання WebSocket повідомлення

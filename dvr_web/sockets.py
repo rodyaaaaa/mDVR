@@ -2,6 +2,7 @@ import time
 import threading
 from flask import request
 from flask_socketio import SocketIO, emit
+from dvr_web.routes.api import monitor_reed_switch, reed_switch_initialized, reed_switch_autostop_time, reed_switch_state
 
 # Змінна для зберігання екземпляру SocketIO
 socketio = None
@@ -34,8 +35,6 @@ def init_socketio(app):
     # Register event handlers
     @socketio.on('connect', namespace='/ws')
     def ws_connect(auth):
-        from dvr_web.routes.api import monitor_reed_switch
-        
         print(f"[DEBUG SOCKET] WebSocket клієнт підключився: {request.sid}")
         
         # Запускаємо моніторинг геркона, якщо він ще не запущений
@@ -61,8 +60,6 @@ def init_socketio(app):
 
     @socketio.on('get_status', namespace='/ws')
     def ws_get_status():
-        from dvr_web.routes.api import reed_switch_initialized, reed_switch_autostop_time, reed_switch_state
-        
         # Перевіряємо, чи геркон ініціалізовано
         print(f"[DEBUG SOCKET] Отримано запит на статус геркона. reed_switch_initialized = {reed_switch_initialized}")
         
