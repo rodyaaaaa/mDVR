@@ -11,6 +11,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <!-- Core JS files -->
+    <script src="{{ url_for('static', filename='js/core.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/monitoring.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/reed-switch.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body>
 <header>
@@ -269,7 +276,5 @@
 <div id="preloader" class="preloader">
     <div class="spinner"></div>
 </div>
-
-<script src="../static/js/script.js"></script>
 </body>
 </html>
