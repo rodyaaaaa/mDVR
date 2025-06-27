@@ -22,14 +22,14 @@ header p {
 /* Main layout */
 .container {
     display: flex;
-    background: linear-gradient(180deg, #1b263b, #0d1b2a);
+    background: #1b263b;
     height: calc(100vh - 80px);
     align-items: flex-start;
 }
 
 .sidebar {
     width: 20%;
-    background: linear-gradient(180deg, #1b263b, #0d1b2a);
+    background: #1b263b;
     padding: 20px;
     display: flex;
     flex-direction: column;
