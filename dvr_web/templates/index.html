@@ -43,8 +43,6 @@
         <button class="active" onclick="showTab('home')">Home</button>
         <button onclick="showTab('cam-config')">RTSP</button>
         <button onclick="showTab('video-options')">Settings</button>
-        <button onclick="showTab('ftp-config')">FTP</button>
-        <button onclick="showTab('vpn-config')">VPN</button>
         <button onclick="showTab('services')">Services</button>
     </aside>
     <main class="content">
@@ -125,34 +123,6 @@
                     </div>
                     <div class="resize-handle"></div>
                 </div>
-
-                <!-- Reed Switch Card -->
-                <div id="reed-switch-card" class="grid-item size-1x1">
-                    <div class="grid-item-header">
-                        <h3>Reed Switch Status</h3>
-                    </div>
-                    <div class="card-content">
-                        <div class="reed-switch-container">
-                            <div class="reed-switch-status">
-                                <div class="status-circle" id="reed-status-indicator"></div>
-                                <p>Status: <span id="reed-status-text">Connecting...</span></p>
-                            </div>
-                            <div class="reed-switch-info">
-                                <p>Last updated: <span id="reed-last-updated">-</span></p>
-                                <p>Connection: <span id="reed-connection-status">Disconnected</span></p>
-                            </div>
-                            <div class="reed-switch-init">
-                                <p>Status: <span id="reed-init-status">Not initialized</span></p>
-                                <p id="auto-stop-timer" class="hidden">Auto-stop in: <span id="auto-stop-time">03:00</span></p>
-                                <div class="reed-switch-buttons">
-                                    <button id="init-reed-switch-btn" onclick="initializeReedSwitch()">Initialize Reed Switch</button>
-                                    <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button">Stop Monitoring</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="resize-handle"></div>
-                </div>
             </div>
         </div>
         <div id="cam-config" class="tab">
@@ -175,103 +145,145 @@
             </div>
         </div>
         <div id="video-options" class="tab">
-            <h2>Camera Settings</h2>
-            <div class="input-row">
-                <label for="rtsp-transport">RTSP Transport:</label>
-                <select id="rtsp-transport">
-                    <option value="tcp" {% if rtsp_options.rtsp_transport == 'tcp' %}selected{% endif %}>TCP</option>
-                    <option value="udp" {% if rtsp_options.rtsp_transport == 'udp' %}selected{% endif %}>UDP</option>
-                </select>
+            <div class="settings-tabs">
+                <button id="general-settings-tab" class="settings-tab active" onclick="showSettingsTab('general-settings-content')">Camera Settings</button>
+                <button id="reed-switch-tab" class="settings-tab" onclick="showSettingsTab('reed-switch-settings-content')">Reed Switch</button>
+                <button id="ftp-settings-tab" class="settings-tab" onclick="showSettingsTab('ftp-settings-content')">FTP</button>
+                <button id="vpn-settings-tab" class="settings-tab" onclick="showSettingsTab('vpn-settings-content')">VPN</button>
             </div>
-            <div class="input-row video-mode">
-                <label for="rtsp-resolution">RTSP Resolution:</label>
-                <select id="rtsp-resolution">
-                    <option value="1920x1080"
-                            {% if rtsp_options.rtsp_resolution_x == 1920 and rtsp_options.rtsp_resolution_y == 1080 %}selected{% endif %}>
-                        1920x1080
-                    </option>
-                    <option value="1280x720"
-                            {% if rtsp_options.rtsp_resolution_x == 1280 and rtsp_options.rtsp_resolution_y == 720 %}selected{% endif %}>
-                        1280x720
-                    </option>
-                    <option value="640x480"
-                            {% if rtsp_options.rtsp_resolution_x == 640 and rtsp_options.rtsp_resolution_y == 480 %}selected{% endif %}>
-                        640x480
-                    </option>
-                    <option value="320x240"
-                            {% if rtsp_options.rtsp_resolution_x == 320 and rtsp_options.rtsp_resolution_y == 240 %}selected{% endif %}>
-                        320x240
-                    </option>
-                </select>
-            </div>
-            <div class="input-row">
-                <label for="size-folder-limit-gb">Maximum folder size (GB)</label>
-                <input type="number" id="size-folder-limit-gb" value="{{ program_options.size_folder_limit_gb }}"
-                       placeholder="Size in gb (example: 10)">
-            </div>
-            <h2 class="video-mode">Video Settings</h2>
-            <div class="input-row video-mode">
-                <label for="video-duration">Video duration:</label>
-                <input type="text" id="video-duration" value="{{ video_options.video_duration }}"
-                       placeholder="HH:MM:SS or minutes (e.g., '10' or '10 min')">
-            </div>
-            <div class="input-row video-mode">
-                <label for="video-fps">Frames Per Second (FPS):</label>
-                <input type="number" id="video-fps" value="{{ video_options.fps }}" placeholder="15">
-            </div>
-            <div class="input-row video-mode" id="rs-timeout-block" style="display:none;">
-                <label for="rs-timeout-input">RS Timeout (сек):</label>
-                <input type="number" id="rs-timeout-input" min="0" placeholder="Timeout in seconds">
-            </div>
-            <div class="input-row">
-                <label>Reed Switch:</label>
-                <div class="reed-switch-options">
-                    <input type="radio" id="reed-switch-on" name="reed_switch" value="on" onchange="toggleReedSwitch()">
-                    <label for="reed-switch-on">ON</label>
-                    <input type="radio" id="reed-switch-off" name="reed_switch" value="off" onchange="toggleReedSwitch()" checked>
-                    <label for="reed-switch-off">OFF</label>
-                </div>
-            </div>
-            <h2 class="photo-mode">Photo Settings</h2>
-            <div class="input-row photo-mode" style="display: none;">
-                <label for="photo-timeout">Photo Timeout (seconds):</label>
-                <input type="number" id="photo-timeout" value="{{ photo_timeout }}" placeholder="10">
-            </div>
-            <button onclick="saveVideoOptions()">Save</button>
-        </div>
-        <div id="ftp-config" class="tab">
-            <h2>FTP settings</h2>
-            <div>
+            
+            <!-- Загальні налаштування камери -->
+            <div id="general-settings-content" class="settings-content active">
+                <h2>Camera Settings</h2>
                 <div class="input-row">
-                    <label for="ftp-server-ip">IP: </label>
-                    <input type="text" id="ftp-server-ip" value="{{ ftp.server }}" placeholder="Server URL">
+                    <label for="rtsp-transport">RTSP Transport:</label>
+                    <select id="rtsp-transport">
+                        <option value="tcp" {% if rtsp_options.rtsp_transport == 'tcp' %}selected{% endif %}>TCP</option>
+                        <option value="udp" {% if rtsp_options.rtsp_transport == 'udp' %}selected{% endif %}>UDP</option>
+                    </select>
+                </div>
+                <div class="input-row video-mode">
+                    <label for="rtsp-resolution">RTSP Resolution:</label>
+                    <select id="rtsp-resolution">
+                        <option value="1920x1080"
+                                {% if rtsp_options.rtsp_resolution_x == 1920 and rtsp_options.rtsp_resolution_y == 1080 %}selected{% endif %}>
+                            1920x1080
+                        </option>
+                        <option value="1280x720"
+                                {% if rtsp_options.rtsp_resolution_x == 1280 and rtsp_options.rtsp_resolution_y == 720 %}selected{% endif %}>
+                            1280x720
+                        </option>
+                        <option value="640x480"
+                                {% if rtsp_options.rtsp_resolution_x == 640 and rtsp_options.rtsp_resolution_y == 480 %}selected{% endif %}>
+                            640x480
+                        </option>
+                        <option value="320x240"
+                                {% if rtsp_options.rtsp_resolution_x == 320 and rtsp_options.rtsp_resolution_y == 240 %}selected{% endif %}>
+                            320x240
+                        </option>
+                    </select>
                 </div>
                 <div class="input-row">
-                    <label for="ftp-server-port">Port: </label>
-                    <input type="number" id="ftp-server-port" value="{{ ftp.port }}" placeholder="Port (e.g., 21)">
+                    <label for="size-folder-limit-gb">Maximum folder size (GB)</label>
+                    <input type="number" id="size-folder-limit-gb" value="{{ program_options.size_folder_limit_gb }}"
+                           placeholder="Size in gb (example: 10)">
                 </div>
+                <h2 class="video-mode">Video Settings</h2>
+                <div class="input-row video-mode">
+                    <label for="video-duration">Video duration:</label>
+                    <input type="text" id="video-duration" value="{{ video_options.video_duration }}"
+                           placeholder="HH:MM:SS or minutes (e.g., '10' or '10 min')">
+                </div>
+                <div class="input-row video-mode">
+                    <label for="video-fps">Frames Per Second (FPS):</label>
+                    <input type="number" id="video-fps" value="{{ video_options.fps }}" placeholder="15">
+                </div>
+                <h2 class="photo-mode">Photo Settings</h2>
+                <div class="input-row photo-mode" style="display: none;">
+                    <label for="photo-timeout">Photo Timeout (seconds):</label>
+                    <input type="number" id="photo-timeout" value="{{ photo_timeout }}" placeholder="10">
+                </div>
+                <button onclick="saveVideoOptions()">Save</button>
             </div>
-            <div>
+            
+            <!-- Reed Switch налаштування -->
+            <div id="reed-switch-settings-content" class="settings-content">
+                <h2>Reed Switch Settings</h2>
                 <div class="input-row">
-                    <label for="ftp-server-login">Login: </label>
-                    <input type="text" id="ftp-server-login" value="{{ ftp.user }}" placeholder="Login">
+                    <label>Reed Switch:</label>
+                    <div class="reed-switch-options">
+                        <input type="radio" id="reed-switch-on" name="reed_switch" value="on" onchange="toggleReedSwitch()">
+                        <label for="reed-switch-on">ON</label>
+                        <input type="radio" id="reed-switch-off" name="reed_switch" value="off" onchange="toggleReedSwitch()" checked>
+                        <label for="reed-switch-off">OFF</label>
+                    </div>
+                </div>
+                <div class="input-row video-mode" id="rs-timeout-block">
+                    <label for="rs-timeout-input">RS Timeout (сек):</label>
+                    <input type="number" id="rs-timeout-input" min="0" placeholder="Timeout in seconds">
+                </div>
+                
+                <!-- Reed Switch Status Card -->
+                <h2>Reed Switch Status</h2>
+                <div class="reed-switch-full-width">
+                    <div class="reed-switch-status">
+                        <div class="status-circle" id="reed-status-indicator"></div>
+                        <p>Status: <span id="reed-status-text">Connecting...</span></p>
+                    </div>
+                    <div class="reed-switch-info">
+                        <p>Last updated: <span id="reed-last-updated">-</span></p>
+                        <p>Connection: <span id="reed-connection-status">Disconnected</span></p>
+                    </div>
+                    <div class="reed-switch-init">
+                        <p>Status: <span id="reed-init-status">Not initialized</span></p>
+                        <p id="auto-stop-timer" class="hidden">Auto-stop in: <span id="auto-stop-time">03:00</span></p>
+                        <div class="reed-switch-buttons">
+                            <button id="init-reed-switch-btn" onclick="initializeReedSwitch()">Initialize Reed Switch</button>
+                            <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button">Stop Monitoring</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="saveVideoOptions()">Save</button>
+            </div>
+            
+            <!-- FTP налаштування -->
+            <div id="ftp-settings-content" class="settings-content">
+                <h2>FTP settings</h2>
+                <div>
+                    <div class="input-row">
+                        <label for="ftp-server-ip">IP: </label>
+                        <input type="text" id="ftp-server-ip" value="{{ ftp.server }}" placeholder="Server URL">
+                    </div>
+                    <div class="input-row">
+                        <label for="ftp-server-port">Port: </label>
+                        <input type="number" id="ftp-server-port" value="{{ ftp.port }}" placeholder="Port (e.g., 21)">
+                    </div>
+                </div>
+                <div>
+                    <div class="input-row">
+                        <label for="ftp-server-login">Login: </label>
+                        <input type="text" id="ftp-server-login" value="{{ ftp.user }}" placeholder="Login">
+                    </div>
+                    <div class="input-row">
+                        <label for="ftp-server-passwd">Password: </label>
+                        <input type="password" id="ftp-server-passwd" value="{{ ftp.password }}" placeholder="Password">
+                    </div>
                 </div>
                 <div class="input-row">
-                    <label for="ftp-server-passwd">Password: </label>
-                    <input type="password" id="ftp-server-passwd" value="{{ ftp.password }}" placeholder="Password">
+                    <label for="ftp-server-carname">Carname: </label>
+                    <input type="text" id="ftp-server-carname" value="{{ ftp.car_name }}" maxlength="6"
+                           placeholder="000" oninput="validateCarname(this)">
                 </div>
+                <button onclick="saveFtpConfig()">Save</button>
             </div>
-            <div class="input-row">
-                <label for="ftp-server-carname">Carname: </label>
-                <input type="text" id="ftp-server-carname" value="{{ ftp.car_name }}" maxlength="6"
-                       placeholder="000" oninput="validateCarname(this)">
+            
+            <!-- VPN налаштування -->
+            <div id="vpn-settings-content" class="settings-content">
+                <h2>VPN config</h2>
+                <textarea placeholder="wgo.conf WireGuard">{{ vpn_config }}</textarea>
+                <button onclick="saveVpnConfig()">Save</button>
             </div>
-            <button onclick="saveFtpConfig()">Save</button>
-        </div>
-        <div id="vpn-config" class="tab">
-            <h2>VPN config</h2>
-            <textarea placeholder="wgo.conf WireGuard">{{ vpn_config }}</textarea>
-            <button onclick="saveVpnConfig()">Save</button>
         </div>
         <div id="services" class="tab">
             <h2>Services Status</h2>
@@ -291,27 +303,6 @@
                 <div id="service-status" class="service-status">
                     <p>Status: <span id="service-active">-</span></p>
                     <p>Enabled: <span id="service-enabled">-</span></p>
-                </div>
-            </div>
-        </div>
-        <div id="reed-switch" class="tab">
-            <h2>Reed Switch Status</h2>
-            <div class="reed-switch-container">
-                <div class="reed-switch-status">
-                    <div class="status-circle" id="reed-status-indicator"></div>
-                    <p>Status: <span id="reed-status-text">Connecting...</span></p>
-                </div>
-                <div class="reed-switch-info">
-                    <p>Last updated: <span id="reed-last-updated">-</span></p>
-                    <p>Connection: <span id="reed-connection-status">Disconnected</span></p>
-                </div>
-                <div class="reed-switch-init">
-                    <p>Status: <span id="reed-init-status">Not initialized</span></p>
-                    <p id="auto-stop-timer" class="hidden">Auto-stop in: <span id="auto-stop-time">03:00</span></p>
-                    <div class="reed-switch-buttons">
-                        <button id="init-reed-switch-btn" onclick="initializeReedSwitch()">Initialize Reed Switch</button>
-                        <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button">Stop Monitoring</button>
-                    </div>
                 </div>
             </div>
         </div>

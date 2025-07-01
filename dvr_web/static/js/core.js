@@ -50,29 +50,60 @@ function showTab(tabId) {
         stopServiceStatusUpdates();
     }
     
-    // Initialize WebSocket connection when switching to Reed Switch tab
-    if (tabId === 'reed-switch') {
-        initReedSwitchWebSocket();
-        // Force sync when switching to the tab
-        forceSyncReedSwitch();
-    } else if (tabId === 'home') {
+    // Initialize WebSocket connection for Reed Switch
+    if (tabId === 'home') {
         // Reed switch indicator is also on the home page
         initReedSwitchWebSocket();
         // Force sync when switching to the tab
         forceSyncReedSwitch();
+    } else if (tabId === 'video-options') {
+        // For settings tab, handle Reed Switch separately in showSettingsTab
+        updateReedSwitchState();
+        // Set the first settings tab as active by default
+        showSettingsTab('general-settings-content');
     } else {
-        // Close WebSocket connection when switching to another tab
+        // Close WebSocket connection when switching to tabs that don't need Reed Switch data
         closeReedSwitchWebSocket();
-        
-        // Restore Reed Switch radio buttons state when switching to settings tab
-        if (tabId === 'video-options') {
-            updateReedSwitchState();
-        }
     }
 
     // EXT5V_V live logic: stop updates only if not on home page
     if (tabId !== 'home') {
         stopExt5vVUpdates();
+    }
+}
+
+// Settings subtab switching function
+function showSettingsTab(contentId) {
+    // Hide all settings content
+    document.querySelectorAll('.settings-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Show selected content
+    document.getElementById(contentId).classList.add('active');
+    
+    // Update tab button states
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Find and activate the correct tab button based on content ID
+    const tabButtonMap = {
+        'general-settings-content': 'general-settings-tab',
+        'reed-switch-settings-content': 'reed-switch-tab',
+        'ftp-settings-content': 'ftp-settings-tab',
+        'vpn-settings-content': 'vpn-settings-tab'
+    };
+    
+    const tabId = tabButtonMap[contentId];
+    if (tabId) {
+        document.getElementById(tabId).classList.add('active');
+    }
+    
+    // Initialize Reed Switch WebSocket when switching to Reed Switch tab
+    if (contentId === 'reed-switch-settings-content') {
+        initReedSwitchWebSocket();
+        forceSyncReedSwitch();
     }
 }
 
@@ -116,6 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeButton = document.querySelector(`.sidebar button[onclick="showTab('${tabId}')"]`);
         if (activeButton) activeButton.classList.add('active');
     }
+    
+    // Load Reed Switch state for settings
+    updateReedSwitchState();
 });
 
 // Clean up before page unload

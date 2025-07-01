@@ -94,7 +94,6 @@ function updateReedSwitchState() {
         .then(data => {
             const reedOnRadio = document.getElementById('reed-switch-on');
             const reedOffRadio = document.getElementById('reed-switch-off');
-            const rsTimeoutBlock = document.getElementById('rs-timeout-block');
             const rsTimeoutInput = document.getElementById('rs-timeout-input');
             
             if (!reedOnRadio || !reedOffRadio) {
@@ -104,29 +103,42 @@ function updateReedSwitchState() {
             
             if (data.state === "on") {
                 reedOnRadio.checked = true;
-                if (rsTimeoutBlock) {
-                    rsTimeoutBlock.style.display = 'flex';
-                    
-                    // Get timeout value
-                    if (rsTimeoutInput) {
-                        fetch('/api/get-rs-timeout')
-                            .then(response => response.json())
-                            .then(timeoutData => {
-                                if (timeoutData && typeof timeoutData.timeout !== 'undefined') {
-                                    rsTimeoutInput.value = timeoutData.timeout;
-                                } else {
-                                    rsTimeoutInput.value = "0";
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error fetching RS timeout:', error);
+                
+                // Get timeout value regardless of state
+                if (rsTimeoutInput) {
+                    fetch('/api/get-rs-timeout')
+                        .then(response => response.json())
+                        .then(timeoutData => {
+                            if (timeoutData && typeof timeoutData.timeout !== 'undefined') {
+                                rsTimeoutInput.value = timeoutData.timeout;
+                            } else {
                                 rsTimeoutInput.value = "0";
-                            });
-                    }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching RS timeout:', error);
+                            rsTimeoutInput.value = "0";
+                        });
                 }
             } else {
                 reedOffRadio.checked = true;
-                if (rsTimeoutBlock) rsTimeoutBlock.style.display = 'none';
+                
+                // Still get the timeout value when reed switch is off
+                if (rsTimeoutInput) {
+                    fetch('/api/get-rs-timeout')
+                        .then(response => response.json())
+                        .then(timeoutData => {
+                            if (timeoutData && typeof timeoutData.timeout !== 'undefined') {
+                                rsTimeoutInput.value = timeoutData.timeout;
+                            } else {
+                                rsTimeoutInput.value = "0";
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching RS timeout:', error);
+                            rsTimeoutInput.value = "0";
+                        });
+                }
             }
         })
         .catch(error => console.error('Error fetching reed switch status:', error));
@@ -147,12 +159,6 @@ function toggleReedSwitch() {
               showNotification('Reed Switch updated successfully!');
               // Update state after successful toggle
               setTimeout(updateReedSwitchState, 500);
-              
-              // Show or hide timeout block depending on state
-              const rsTimeoutBlock = document.getElementById('rs-timeout-block');
-              if (rsTimeoutBlock) {
-                  rsTimeoutBlock.style.display = state === 'on' ? 'flex' : 'none';
-              }
          } else {
               showNotification('ERROR: ' + result.error, true);
          }
@@ -254,6 +260,10 @@ function initializeReedSwitch() {
                     switchTabBtn.classList.add('highlight');
                     setTimeout(() => {
                         switchTabBtn.classList.remove('highlight');
+                        // After highlighting the button, show the Reed Switch tab
+                        setTimeout(() => {
+                            showSettingsTab('reed-switch-settings-content');
+                        }, 500);
                     }, 3000);
                 }
             } else {
@@ -507,17 +517,19 @@ function setupReedSwitchPolling() {
     
     // Function to perform polling
     function pollReedSwitchStatus() {
-        // Check if we're currently on Reed Switch or Home tab
-        const reedTab = document.getElementById('reed-switch');
+        // Check if we're currently on Home tab or Reed Switch settings tab
         const homeTab = document.getElementById('home');
+        const settingsTab = document.getElementById('video-options');
+        const reedSwitchSettingsContent = document.getElementById('reed-switch-settings-content');
         
-        if (!reedTab || !homeTab) return;
+        if (!homeTab || !settingsTab || !reedSwitchSettingsContent) return;
         
-        const reedTabActive = reedTab.classList.contains('active');
         const homeTabActive = homeTab.classList.contains('active');
+        const settingsTabActive = settingsTab.classList.contains('active');
+        const reedSwitchSettingsActive = reedSwitchSettingsContent.classList.contains('active');
         
-        // If neither tab is active, don't poll
-        if (!reedTabActive && !homeTabActive) {
+        // Only poll if we're on the home tab or reed switch settings is active
+        if (!homeTabActive && !(settingsTabActive && reedSwitchSettingsActive)) {
             return;
         }
         
@@ -564,10 +576,11 @@ document.addEventListener('DOMContentLoaded', () => {
         videoOptionsBtn.addEventListener('click', updateReedSwitchState);
     }
     
-    // Check initial Reed Switch state for correct display of RS Timeout field
-    const reedOnRadio = document.getElementById('reed-switch-on');
-    const rsTimeoutBlock = document.getElementById('rs-timeout-block');
-    if (reedOnRadio && rsTimeoutBlock) {
-        rsTimeoutBlock.style.display = reedOnRadio.checked ? 'flex' : 'none';
+    // When clicking on Reed Switch settings tab, force sync
+    const reedSwitchSettingsBtn = document.querySelector('#reed-switch-tab');
+    if (reedSwitchSettingsBtn) {
+        reedSwitchSettingsBtn.addEventListener('click', () => {
+            forceSyncReedSwitch();
+        });
     }
 }); 

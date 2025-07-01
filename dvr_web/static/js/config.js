@@ -10,20 +10,17 @@ function saveVideoOptions() {
     const folderSize = document.getElementById('size-folder-limit-gb').value;
     const photoTimeout = document.getElementById('photo-timeout').value;
     
-    // Get RS Timeout value if block is visible
+    // Get RS Timeout value
     let rsTimeout = null;
-    const rsTimeoutBlock = document.getElementById('rs-timeout-block');
-    if (rsTimeoutBlock && rsTimeoutBlock.style.display !== 'none') {
-        const rsTimeoutInput = document.getElementById('rs-timeout-input');
-        if (rsTimeoutInput && rsTimeoutInput.value.trim() !== '') {
-            rsTimeout = rsTimeoutInput.value.trim();
-            
-            // Validate timeout value
-            if (isNaN(Number(rsTimeout)) || Number(rsTimeout) < 0) {
-                hidePreloader();
-                showNotification('Please enter a valid RS Timeout value (in seconds)', true);
-                return;
-            }
+    const rsTimeoutInput = document.getElementById('rs-timeout-input');
+    if (rsTimeoutInput && rsTimeoutInput.value.trim() !== '') {
+        rsTimeout = rsTimeoutInput.value.trim();
+        
+        // Validate timeout value
+        if (isNaN(Number(rsTimeout)) || Number(rsTimeout) < 0) {
+            hidePreloader();
+            showNotification('Please enter a valid RS Timeout value (in seconds)', true);
+            return;
         }
     }
 

@@ -6,10 +6,10 @@ import re
 import sys
 import threading
 import time
+import dvr_web.routes.api
+import RPi.GPIO as GPIO
+
 from pathlib import Path
-
-import RPi.GPIO as GPIO  # Add RPi.GPIO import
-
 from flask import request
 
 from dvr_video.data.utils import get_config_path
@@ -320,13 +320,10 @@ def cleanup_gpio(signum=None, frame=None):
     try:
         # Зупиняємо моніторинг CPU
         try:
-            import dvr_web.routes.api
             dvr_web.routes.api.cpu_monitor_active = False
         except:
             pass
             
-        # Звільняємо ресурси GPIO
-        import RPi.GPIO as GPIO
         GPIO.cleanup()
         print("GPIO ресурси звільнено")
     except:

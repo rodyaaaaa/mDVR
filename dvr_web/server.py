@@ -9,7 +9,6 @@ import RPi.GPIO as GPIO
 
 from flask import Flask, render_template, request, redirect, url_for
 from flask_cors import CORS
-import json
 
 # Now import using relative imports
 from dvr_web.routes.api import api_bp, start_cpu_monitoring
@@ -96,12 +95,8 @@ def start_server(debug=False, host='0.0.0.0', port=8080):
 signal.signal(signal.SIGINT, cleanup_gpio)
 signal.signal(signal.SIGTERM, cleanup_gpio)
 
-# Головна точка входу
 if __name__ == '__main__':
     try:
-        # Запускаємо сервер на порту 80, якщо запущено безпосередньо
         start_server(host='0.0.0.0', port=80)
     finally:
-        # Очищення ресурсів GPIO при завершенні програми
         cleanup_gpio()
-        print("GPIO ресурси звільнено")
