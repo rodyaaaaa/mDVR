@@ -101,7 +101,7 @@ function saveFtpConfig() {
 // VPN config functions
 function saveVpnConfig() {
     showPreloader();
-    const vpnConfig = document.querySelector('#vpn-config textarea').value;
+    const vpnConfig = document.querySelector('#vpn-config-text').value;
 
     fetch('/save-vpn-config', {
         method: 'POST',
@@ -124,6 +124,55 @@ function saveVpnConfig() {
             hidePreloader();
             console.error('Error saving VPN config:', error);
         });
+}
+
+function uploadVpnConfigFile() {
+    const fileInput = document.getElementById('vpn-config-file');
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        showNotification('Please select a configuration file first', true);
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    showPreloader();
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Update the textarea with the file contents
+        const fileContent = e.target.result;
+        document.getElementById('vpn-config-text').value = fileContent;
+        
+        // Save the uploaded configuration
+        fetch('/save-vpn-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({vpn_config: fileContent}),
+        })
+            .then(response => response.json())
+            .then(result => {
+                hidePreloader();
+                if (result.success) {
+                    showNotification('VPN config file uploaded and saved successfully!');
+                    setTimeout(updateImei, 1000);
+                } else {
+                    showNotification(`ERROR: ${result.error}`, true);
+                }
+            })
+            .catch(error => {
+                hidePreloader();
+                showNotification(`ERROR: ${error.message}`, true);
+            });
+    };
+    
+    reader.onerror = function() {
+        hidePreloader();
+        showNotification('Error reading file', true);
+    };
+    
+    reader.readAsText(file);
 }
 
 // Write mode functions
@@ -174,6 +223,39 @@ function updateImei() {
         .catch(error => console.error('Error fetching IMEI:', error));
 }
 
+// Show Settings Tab function - додамо код для відображення фіксованої кнопки
+function showSettingsTab(tabId) {
+    // Hide all settings content
+    const allSettingsContent = document.querySelectorAll('.settings-content');
+    allSettingsContent.forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    const allTabs = document.querySelectorAll('.settings-tab');
+    allTabs.forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show the selected tab content
+    const selectedContent = document.getElementById(tabId);
+    selectedContent.classList.add('active');
+    
+    // Add active class to clicked tab
+    const activeTabId = tabId.replace('-content', '-tab');
+    const activeTab = document.getElementById(activeTabId);
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
+    
+    // Контроль видимості фіксованої кнопки збереження VPN
+    const fixedSaveButton = document.querySelector('.fixed-save-button');
+    if (fixedSaveButton) {
+        // Показуємо кнопку, тільки якщо відкрита вкладка VPN
+        fixedSaveButton.style.display = (tabId === 'vpn-settings-content') ? 'block' : 'none';
+    }
+}
+
 // Initialize configuration functionality
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize write mode settings
@@ -185,4 +267,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Update IMEI every 10 seconds
     setInterval(updateImei, 10000);
+    
+    // Add settings tab click handlers
+    document.getElementById('general-settings-tab').addEventListener('click', () => showSettingsTab('general-settings-content'));
+    document.getElementById('reed-switch-tab').addEventListener('click', () => showSettingsTab('reed-switch-settings-content'));
+    document.getElementById('ftp-settings-tab').addEventListener('click', () => showSettingsTab('ftp-settings-content'));
+    document.getElementById('vpn-settings-tab').addEventListener('click', () => showSettingsTab('vpn-settings-content'));
 }); 

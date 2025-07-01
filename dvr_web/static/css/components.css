@@ -835,4 +835,120 @@
 
 #liveVideo.active + #streamStatus {
     display: none;
+}
+
+/* VPN Configuration Styles */
+.vpn-config-options {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.vpn-config-textarea {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vpn-config-textarea label {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.vpn-config-textarea textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 10px;
+    border: 1px solid #415a77;
+    border-radius: 5px;
+    background: #0d1b2a;
+    color: #ffffff;
+    font-family: monospace;
+    resize: vertical;
+}
+
+.vpn-config-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+    border: 1px dashed #415a77;
+    border-radius: 5px;
+    background: rgba(65, 90, 119, 0.1);
+}
+
+.vpn-config-upload label {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.vpn-config-upload input[type="file"] {
+    margin: 10px 0;
+    padding: 8px;
+    background: #1b263b;
+    border-radius: 5px;
+    border: 1px solid #415a77;
+    color: #fff;
+}
+
+#upload-vpn-file-btn {
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+#upload-vpn-file-btn:hover {
+    background: #778da9;
+}
+
+/* Mobile responsiveness for VPN config */
+@media screen and (max-width: 768px) {
+    .vpn-config-options {
+        flex-direction: column;
+    }
+    
+    .vpn-config-textarea textarea {
+        min-height: 120px;
+    }
+}
+
+/* Fixed position save button for VPN tab */
+.fixed-save-button {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    padding: 15px 30px;
+    background: #4caf50; /* Green color for better visibility */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 500;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1000; /* Higher z-index to ensure visibility */
+    display: none; /* Hidden by default */
+}
+
+#vpn-settings-content.active .fixed-save-button {
+    display: block; /* Show only when parent is active */
+}
+
+.fixed-save-button:hover {
+    background: #45a049; /* Darker green on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* Hide the regular save button in VPN tab */
+#vpn-settings-content > button:not(.fixed-save-button) {
+    display: none;
 } 
