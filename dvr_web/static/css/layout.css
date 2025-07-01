@@ -51,11 +51,27 @@ header p {
     transition: all 0.3s ease;
     position: relative;
     border-radius: 5px;
+    overflow: hidden;
+}
+
+.sidebar button::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #fff;
+    transition: width 0.3s ease;
 }
 
 .sidebar button:hover {
     transform: translateX(10px);
     background: #3b4a5e;
+}
+
+.sidebar button:hover::after {
+    width: 100%;
 }
 
 .sidebar button.active {
@@ -83,11 +99,23 @@ header p {
 /* Tab system */
 .tab {
     display: none;
-    animation: fadeIn 0.5s ease-in-out;
+    position: relative;
 }
 
 .tab.active {
     display: block;
+    animation: fadeInRight 0.4s ease-out forwards;
+}
+
+/* Add animation classes for settings tabs too */
+.settings-content {
+    display: none;
+    position: relative;
+}
+
+.settings-content.active {
+    display: block;
+    animation: scaleUp 0.3s ease-out forwards;
 }
 
 /* Home page layout */

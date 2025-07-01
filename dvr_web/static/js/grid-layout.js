@@ -13,6 +13,7 @@ class GridLayout {
         this.layoutConfig = this.loadLayoutConfig() || {};
         this.editMode = false;
         this.lastSwapTime = null;
+        this.gridSize = { cols: 6, rows: 0 }; // Кількість колонок у сітці
         
         this.init();
     }
@@ -36,6 +37,7 @@ class GridLayout {
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
+                this.updateGridSize();
                 this.saveLayoutConfig();
                 this.reinitializeGrid(); // Ensure proper layout after resize
             }, 500);
@@ -45,7 +47,20 @@ class GridLayout {
         this.setupDoubleClickReset();
         
         // Call once to ensure proper initial layout
+        this.updateGridSize();
         this.reinitializeGrid();
+    }
+    
+    // Визначає кількість колонок у сітці залежно від ширини екрана
+    updateGridSize() {
+        const containerWidth = this.container.clientWidth;
+        if (containerWidth > 1024) {
+            this.gridSize.cols = 6;
+        } else if (containerWidth > 600) {
+            this.gridSize.cols = 4;
+        } else {
+            this.gridSize.cols = 2;
+        }
     }
     
     setupEditModeIndicators() {
@@ -55,14 +70,14 @@ class GridLayout {
         instructionsEl.innerHTML = `
             <div class="instructions-content">
                 <p>Перетягніть картку в будь-яке місце, щоб змінити її розташування</p>
-                <p>Використовуйте маркер у правому нижньому куті, щоб змінити розмір (ширину та висоту)</p>
+                <p>Використовуйте маркер у правому нижньому куті, щоб змінити розмір</p>
                 <p>Подвійний клік на маркер скидає висоту картки до стандартної</p>
             </div>
         `;
         instructionsEl.style.display = 'none';
         
-        // Add to container
-        this.container.parentNode.insertBefore(instructionsEl, this.container);
+        // Add to body
+        document.body.appendChild(instructionsEl);
         
         // Show/hide based on edit mode
         const observer = new MutationObserver((mutations) => {
@@ -189,17 +204,63 @@ class GridLayout {
             this.dragItem.style.top = `${top}px`;
         });
         
-        // Find the item under the cursor for swapping - but throttle this check
-        // to avoid excessive DOM operations
-        if (!this.lastSwapTime || Date.now() - this.lastSwapTime > 100) {
-            this.lastSwapTime = Date.now();
-            
-            const elemBelow = this.getElementBelow(clientX, clientY);
+        // Find closest grid cell based on cursor position
+        const containerRect = this.container.getBoundingClientRect();
+        const relativeX = clientX - containerRect.left;
+        const relativeY = clientY - containerRect.top;
         
-        if (elemBelow && elemBelow !== this.dragItem && elemBelow.classList.contains('grid-item')) {
-            this.swapItems(this.dragItem, elemBelow);
-            }
+        // Знаходимо найближчу комірку сітки
+        this.moveItemToClosestCell(relativeX, relativeY);
+    }
+    
+    // Рухаємо картку до найближчої комірки сітки
+    moveItemToClosestCell(x, y) {
+        if (!this.dragItem || !this.isDragging) return;
+        
+        const containerRect = this.container.getBoundingClientRect();
+        const cellWidth = containerRect.width / this.gridSize.cols;
+        const cellHeight = 190; // Приблизна висота комірки з урахуванням відступів
+        
+        // Визначаємо розмір картки в комірках сітки
+        let colSpan = 2; // За замовчуванням, маленька картка (size-1x1) займає 2 колонки
+        if (this.dragItem.classList.contains('size-2x1') || this.dragItem.classList.contains('size-2x2')) {
+            colSpan = 4; // Велика картка займає 4 колонки
         }
+        
+        // Визначаємо найближчу комірку для лівого верхнього кута картки
+        const cellX = Math.max(0, Math.floor(x / cellWidth));
+        const cellY = Math.max(0, Math.floor(y / cellHeight));
+        
+        // Знаходимо всі картки, щоб перевірити, чи є вільне місце
+        const items = Array.from(this.container.querySelectorAll('.grid-item:not(.dragging)'));
+        const placeholder = this.container.querySelector('.grid-item-placeholder');
+        
+        // Видаляємо поточний placeholder
+        if (placeholder) {
+            this.container.removeChild(placeholder);
+        }
+        
+        // Створюємо новий placeholder в потрібній позиції
+        const newPlaceholder = document.createElement('div');
+        newPlaceholder.className = 'grid-item-placeholder';
+        
+        // Встановлюємо розмір placeholder відповідно до розміру картки
+        if (this.dragItem.classList.contains('size-1x1')) {
+            newPlaceholder.style.gridColumn = `${cellX + 1} / span 2`;
+            newPlaceholder.style.gridRow = `${cellY + 1} / span 1`;
+        } else if (this.dragItem.classList.contains('size-1x2')) {
+            newPlaceholder.style.gridColumn = `${cellX + 1} / span 2`;
+            newPlaceholder.style.gridRow = `${cellY + 1} / span 2`;
+        } else if (this.dragItem.classList.contains('size-2x1')) {
+            newPlaceholder.style.gridColumn = `${cellX + 1} / span 4`;
+            newPlaceholder.style.gridRow = `${cellY + 1} / span 1`;
+        } else if (this.dragItem.classList.contains('size-2x2')) {
+            newPlaceholder.style.gridColumn = `${cellX + 1} / span 4`;
+            newPlaceholder.style.gridRow = `${cellY + 1} / span 2`;
+        }
+        
+        // Додаємо placeholder до контейнера
+        this.container.appendChild(newPlaceholder);
     }
     
     onDragEnd(e) {
@@ -212,73 +273,58 @@ class GridLayout {
             // Get the placeholder
             const placeholder = this.container.querySelector('.grid-item-placeholder');
             
-            // Move the dragged item to the placeholder's position before removing the placeholder
             if (placeholder) {
-                // Insert the dragged item where the placeholder is
-                this.container.insertBefore(this.dragItem, placeholder);
+                // Get grid position from placeholder
+                const gridColumnStart = placeholder.style.gridColumn.split(' ')[0];
+                const gridRowStart = placeholder.style.gridRow.split(' ')[0];
                 
-                // Now remove the placeholder
+                // Apply grid position to the dragged item
+                this.dragItem.style.gridColumn = placeholder.style.gridColumn;
+                this.dragItem.style.gridRow = placeholder.style.gridRow;
+                
+                // Reset the item's position to static and clear inline styles
+                this.dragItem.style.position = '';
+                this.dragItem.style.top = '';
+                this.dragItem.style.left = '';
+                this.dragItem.style.width = '';
+                this.dragItem.style.height = '';
+                this.dragItem.style.zIndex = '';
+                
+                // Remove the placeholder
                 this.container.removeChild(placeholder);
-            } else {
-                // If no placeholder found, still keep the item in the grid
-                this.container.appendChild(this.dragItem);
             }
-            
-            // Reset the item's position to static and clear inline styles
-            this.dragItem.style.position = '';
-            this.dragItem.style.top = '';
-            this.dragItem.style.left = '';
-            this.dragItem.style.width = '';
-            this.dragItem.style.height = '';
-            this.dragItem.style.zIndex = '';
-            this.dragItem.style.transform = '';
             
             // Remove dragging class
             this.dragItem.classList.remove('dragging');
             
-            // Refresh layout to ensure proper positioning
-            this.refreshLayout();
-            
             // Save the new layout
             this.saveLayoutConfig();
-            
-            // Add a brief delay to ensure the layout change is properly applied
-            setTimeout(() => {
-                // Check if the item is still in the grid - sometimes it might get removed from the DOM
-                if (!this.container.contains(this.dragItem) && this.dragItem.parentNode !== this.container) {
-                    console.log("Re-adding item to grid because it was removed");
-                    this.container.appendChild(this.dragItem);
-                }
-                
-                // Force another refresh to make sure everything is properly positioned
-                this.refreshLayout();
-            }, 50);
-            
-            this.dragItem = null;
         }
     }
     
     onResizeStart(e, item) {
-        if (!this.editMode) return;
+        if (this.isDragging || !this.editMode) return;
         
         e.preventDefault();
-        e.stopPropagation();
         
-        // Get pointer position
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         
         this.isResizing = true;
         this.resizeItem = item;
         
-        // Store initial size
+        // Get content element for height adjustment
+        this.resizeContent = item.querySelector('.card-content');
+        
+        // Store initial size and position
         const rect = item.getBoundingClientRect();
+        const contentRect = this.resizeContent ? this.resizeContent.getBoundingClientRect() : rect;
+        
         this.resizeStartSize = {
             width: rect.width,
-            height: rect.height
+            height: contentRect.height
         };
         
-        // Store initial position
         this.resizeStartPosition = {
             x: clientX,
             y: clientY
@@ -286,310 +332,137 @@ class GridLayout {
         
         // Add resizing class
         item.classList.add('resizing');
-        
-        // Highlight this card specifically during resize
-        item.style.boxShadow = '0 0 0 2px #e63946';
     }
     
     onResizeMove(e) {
-        if (!this.isResizing || !this.resizeItem) return;
+        if (!this.isResizing || !this.resizeItem || !this.resizeContent) return;
         
         e.preventDefault();
         
-        // Get pointer position
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         
-        // Calculate new size
-        const deltaX = clientX - this.resizeStartPosition.x;
+        // Calculate new dimensions
         const deltaY = clientY - this.resizeStartPosition.y;
+        const newHeight = Math.max(50, this.resizeStartSize.height + deltaY); // Minimum height
         
-        const newWidth = this.resizeStartSize.width + deltaX;
-        const newHeight = this.resizeStartSize.height + deltaY;
+        // Apply new height to the content element
+        this.resizeContent.style.height = `${newHeight}px`;
         
-        // Apply direct height to the item's content for more precise control
-        const minHeight = 100; // Мінімальна висота в пікселях
-        if (newHeight >= minHeight) {
-            const contentElement = this.resizeItem.querySelector('.card-content');
-            if (contentElement) {
-                // Store original height if not already stored
-                if (!this.resizeItem.dataset.originalHeight && contentElement.style.height) {
-                    this.resizeItem.dataset.originalHeight = contentElement.style.height;
-                }
-                
-                // Apply new height directly to this card only
-                contentElement.style.height = `${newHeight - 80}px`; // Віднімаємо висоту заголовка і відступів
-                
-                // Force this card to have independent height by adding a specific class
-                this.resizeItem.classList.add('custom-height');
-                
-                // Ensure grid container recalculates layout for optimal spacing
-                this.refreshLayout();
-                
-                // Display a resize indicator
-                if (!this.resizeItem.querySelector('.resize-indicator')) {
-                    const indicator = document.createElement('div');
-                    indicator.className = 'resize-indicator';
-                    indicator.textContent = 'Змінюється тільки ця картка';
-                    indicator.style.position = 'absolute';
-                    indicator.style.top = '5px';
-                    indicator.style.right = '5px';
-                    indicator.style.background = 'rgba(230, 57, 70, 0.8)';
-                    indicator.style.color = 'white';
-                    indicator.style.padding = '3px 6px';
-                    indicator.style.borderRadius = '4px';
-                    indicator.style.fontSize = '10px';
-                    indicator.style.zIndex = '100';
-                    this.resizeItem.appendChild(indicator);
-                }
-            }
-        }
-        
-        // Only update width classes if width significantly changed
-        // This ensures height-only changes don't affect the grid column span
-        if (Math.abs(deltaX) > 50) {
-            this.updateItemWidth(this.resizeItem, newWidth);
-            // Refresh layout to optimize card positions
-            this.refreshLayout();
-        }
-    }
-    
-    updateItemWidth(item, width) {
-        // Calculate columns based on width
-        const cellWidth = 300; // Base cell width
-        const cols = Math.max(1, Math.min(2, Math.round(width / cellWidth)));
-        
-        // Get current row span (height) class - we keep this as is
-        let currentClass = '';
-        if (item.classList.contains('size-1x1')) currentClass = 'size-1x1';
-        else if (item.classList.contains('size-1x2')) currentClass = 'size-1x2';
-        else if (item.classList.contains('size-2x1')) currentClass = 'size-2x1';
-        else if (item.classList.contains('size-2x2')) currentClass = 'size-2x2';
-        
-        // Extract current height
-        const currentHeight = parseInt(currentClass.split('x')[1]);
-        
-        // Remove existing width classes
-        item.classList.remove('size-1x1', 'size-1x2', 'size-2x1', 'size-2x2');
-        
-        // Add appropriate size class with new width but keep same height
-        item.classList.add(`size-${cols}x${currentHeight}`);
+        // Mark as custom height
+        this.resizeItem.classList.add('custom-height');
     }
     
     onResizeEnd(e) {
         if (!this.isResizing) return;
         
-        // Reset resizing state
         this.isResizing = false;
         
         if (this.resizeItem) {
             // Remove resizing class
             this.resizeItem.classList.remove('resizing');
             
-            // Remove resize highlight
-            this.resizeItem.style.boxShadow = '';
-            
-            // Remove resize indicator if present
-            const indicator = this.resizeItem.querySelector('.resize-indicator');
-            if (indicator) {
-                this.resizeItem.removeChild(indicator);
-            }
-            
             // Save the new layout
             this.saveLayoutConfig();
             
-            // Refresh layout one more time to ensure optimal positioning
-            this.refreshLayout();
-            
+            // Clean up
             this.resizeItem = null;
-        }
-    }
-    
-    getElementBelow(x, y) {
-        // Hide dragged element temporarily to find element below
-        if (this.dragItem) {
-            this.dragItem.style.display = 'none';
-        }
-        
-        // Get multiple elements at position to improve accuracy
-        // We'll check points in the center and corners of a small area
-        const elements = [
-            document.elementFromPoint(x, y),                  // Center
-            document.elementFromPoint(x - 10, y - 10),        // Top-left
-            document.elementFromPoint(x + 10, y - 10),        // Top-right
-            document.elementFromPoint(x - 10, y + 10),        // Bottom-left
-            document.elementFromPoint(x + 10, y + 10)         // Bottom-right
-        ].filter(Boolean); // Remove null results
-        
-        // Restore dragged element
-        if (this.dragItem) {
-            this.dragItem.style.display = '';
-        }
-        
-        // Find closest grid-item parent for each element point, prioritizing center point
-        let gridItem = null;
-        
-        for (const elem of elements) {
-            let parent = elem;
-            while (parent && !parent.classList.contains('grid-item')) {
-                parent = parent.parentElement;
-            }
-            
-            if (parent && parent.classList.contains('grid-item')) {
-                gridItem = parent;
-                break;
-            }
-        }
-        
-        // If we found a grid item that isn't the one being dragged or its placeholder
-        if (gridItem && 
-            gridItem !== this.dragItem && 
-            !gridItem.classList.contains('grid-item-placeholder')) {
-        return gridItem;
-        }
-        
-        return null;
-    }
-    
-    swapItems(item1, item2) {
-        // Don't swap with the same item
-        if (item1 === item2) return;
-        
-        // Don't swap with placeholder
-        if (item1.classList.contains('grid-item-placeholder') || 
-            item2.classList.contains('grid-item-placeholder')) {
-            return;
-        }
-        
-        // Get the items' positions in the DOM
-        const items = Array.from(this.container.children);
-        const index1 = items.indexOf(item1);
-        const index2 = items.indexOf(item2);
-        
-        // Only swap if both items are found in the grid
-        if (index1 >= 0 && index2 >= 0) {
-            // Find the placeholder
-            const placeholder = this.container.querySelector('.grid-item-placeholder');
-            
-            if (placeholder) {
-                // Mark the target position with our placeholder
-            if (index1 < index2) {
-                    this.container.insertBefore(placeholder, item2.nextSibling);
-            } else {
-                    this.container.insertBefore(placeholder, item2);
-                }
-                
-                // Add a visual cue to the placeholder
-                placeholder.style.transition = 'all 0.2s ease';
-                placeholder.style.boxShadow = '0 0 10px rgba(65, 90, 119, 0.8)';
-                setTimeout(() => {
-                    placeholder.style.boxShadow = '';
-                }, 200);
-            }
+            this.resizeContent = null;
         }
     }
     
     createPlaceholder(item) {
         const placeholder = document.createElement('div');
-        placeholder.className = 'grid-item grid-item-placeholder';
+        placeholder.className = 'grid-item-placeholder';
         
-        // Copy size classes
-        if (item.classList.contains('size-1x1')) placeholder.classList.add('size-1x1');
-        if (item.classList.contains('size-1x2')) placeholder.classList.add('size-1x2');
-        if (item.classList.contains('size-2x1')) placeholder.classList.add('size-2x1');
-        if (item.classList.contains('size-2x2')) placeholder.classList.add('size-2x2');
-        
-        // Copy height styles to ensure placeholder is the same size
-        const contentElement = item.querySelector('.card-content');
-        if (contentElement && contentElement.style.height) {
-            const placeholderContent = document.createElement('div');
-            placeholderContent.className = 'card-content';
-            placeholderContent.style.height = contentElement.style.height;
-            placeholder.appendChild(placeholderContent);
-            
-            if (item.classList.contains('custom-height')) {
-                placeholder.classList.add('custom-height');
-            }
+        // Match the size of the original item
+        if (item.classList.contains('size-1x1')) {
+            placeholder.style.gridColumn = 'span 2';
+            placeholder.style.gridRow = 'span 1';
+        } else if (item.classList.contains('size-1x2')) {
+            placeholder.style.gridColumn = 'span 2';
+            placeholder.style.gridRow = 'span 2';
+        } else if (item.classList.contains('size-2x1')) {
+            placeholder.style.gridColumn = 'span 4';
+            placeholder.style.gridRow = 'span 1';
+        } else if (item.classList.contains('size-2x2')) {
+            placeholder.style.gridColumn = 'span 4';
+            placeholder.style.gridRow = 'span 2';
         }
         
         // Insert placeholder at the same position
         this.container.insertBefore(placeholder, item);
     }
     
-    removePlaceholder() {
-        const placeholder = this.container.querySelector('.grid-item-placeholder');
-        if (placeholder) {
-            this.container.removeChild(placeholder);
-        }
-    }
-    
     saveLayoutConfig() {
+        // Create a fresh config object
         const config = {};
         
-        // Save each item's position and size
+        // Save position and size for each item
         this.items.forEach(item => {
             const id = item.id;
             if (!id) return;
             
-            let size = '1x1';
-            if (item.classList.contains('size-1x2')) size = '1x2';
+            // Get grid position
+            const computedStyle = window.getComputedStyle(item);
+            const gridColumn = item.style.gridColumn || computedStyle.gridColumn;
+            const gridRow = item.style.gridRow || computedStyle.gridRow;
+            
+            // Determine the current size class
+            let size = '1x1'; // Default size
             if (item.classList.contains('size-2x1')) size = '2x1';
             if (item.classList.contains('size-2x2')) size = '2x2';
+            if (item.classList.contains('size-1x2')) size = '1x2';
             
-            // Get position in grid
-            const items = Array.from(this.container.children);
-            const index = items.indexOf(item);
-            
-            // Get custom height if set
-            let height = null;
-            const contentElement = item.querySelector('.card-content');
-            if (contentElement && contentElement.style.height) {
-                height = parseInt(contentElement.style.height);
-            }
-            
+            // Save item's current state
             config[id] = {
                 size: size,
-                position: index,
-                height: height
+                gridColumn: gridColumn,
+                gridRow: gridRow
             };
+            
+            // Save custom height if present
+            const contentElement = item.querySelector('.card-content');
+            if (contentElement && contentElement.style.height) {
+                config[id].height = parseInt(contentElement.style.height);
+            }
         });
         
         // Save to localStorage
         localStorage.setItem('gridLayoutConfig', JSON.stringify(config));
-        this.layoutConfig = config;
+        
+        return config;
     }
     
     loadLayoutConfig() {
-        const configStr = localStorage.getItem('gridLayoutConfig');
-        return configStr ? JSON.parse(configStr) : null;
+        const savedConfig = localStorage.getItem('gridLayoutConfig');
+        return savedConfig ? JSON.parse(savedConfig) : null;
     }
     
     applyLayoutConfig() {
-        if (!this.layoutConfig) return;
+        if (!this.layoutConfig || Object.keys(this.layoutConfig).length === 0) {
+            console.log("No saved layout config found");
+            return;
+        }
         
-        // Sort items by saved position
-        const sortedItems = [...this.items].sort((a, b) => {
-            const posA = this.layoutConfig[a.id]?.position || 0;
-            const posB = this.layoutConfig[b.id]?.position || 0;
-            return posA - posB;
-        });
-        
-        // Remove all items from the grid
-        sortedItems.forEach(item => {
-            if (item.parentNode === this.container) {
-                this.container.removeChild(item);
-            }
-        });
-        
-        // Apply positions and sizes to each item and add them back to the container in order
-        sortedItems.forEach(item => {
+        // Apply config to each item
+        this.items.forEach(item => {
             const id = item.id;
             if (!id || !this.layoutConfig[id]) return;
             
-            // Apply size
+            // Apply size class
             const size = this.layoutConfig[id].size || '1x1';
             item.classList.remove('size-1x1', 'size-1x2', 'size-2x1', 'size-2x2');
             item.classList.add(`size-${size}`);
+            
+            // Apply grid position if saved
+            if (this.layoutConfig[id].gridColumn) {
+                item.style.gridColumn = this.layoutConfig[id].gridColumn;
+            }
+            
+            if (this.layoutConfig[id].gridRow) {
+                item.style.gridRow = this.layoutConfig[id].gridRow;
+            }
             
             // Apply custom height if set
             if (this.layoutConfig[id].height) {
@@ -601,15 +474,6 @@ class GridLayout {
                     item.classList.add('custom-height');
                 }
             }
-            
-            // Clear any existing styles that might interfere with layout
-            item.style.position = '';
-            item.style.top = '';
-            item.style.left = '';
-            item.style.transform = '';
-            
-            // Add the item back to the container
-            this.container.appendChild(item);
         });
         
         // Force a layout refresh
@@ -666,28 +530,29 @@ class GridLayout {
         });
     }
     
-    // New method to refresh the grid layout for optimal space utilization
     refreshLayout() {
         // Toggle a class to force reflow of the grid
         this.container.classList.add('refresh-grid');
         setTimeout(() => {
             this.container.classList.remove('refresh-grid');
-            
-            // Update items array in case DOM has changed
-            this.items = Array.from(this.container.querySelectorAll('.grid-item'));
-        }, 10);
+        }, 100);
     }
     
-    // Force re-initialization of all grid items
     reinitializeGrid() {
+        // Update grid size based on window width
+        this.updateGridSize();
+        
         // Get all current items
         this.items = Array.from(this.container.querySelectorAll('.grid-item'));
         
-        // Re-apply all styles and positions
+        // Clear any temporary styles
         this.items.forEach(item => {
-            // Make sure the item is in the grid
-            if (item.parentNode !== this.container) {
-                this.container.appendChild(item);
+            if (!this.layoutConfig || !this.layoutConfig[item.id]) {
+                // Reset any styles that might interfere with layout
+                item.style.position = '';
+                item.style.top = '';
+                item.style.left = '';
+                item.style.transform = '';
             }
         });
         
@@ -712,17 +577,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create button container
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'dashboard-controls';
-        buttonContainer.style.position = 'fixed';
-        buttonContainer.style.bottom = '20px';
-        buttonContainer.style.right = '20px';
-        buttonContainer.style.zIndex = '100';
-        buttonContainer.style.display = 'flex';
-        buttonContainer.style.gap = '10px';
-        buttonContainer.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-        buttonContainer.style.padding = '8px 10px';
-        buttonContainer.style.borderRadius = '8px';
-        buttonContainer.style.background = 'rgba(27, 38, 59, 0.8)';
-        buttonContainer.style.border = '2px solid #ffffff';
         
         // Edit mode button
         const editButton = document.createElement('button');
@@ -756,7 +610,26 @@ document.addEventListener('DOMContentLoaded', () => {
         buttonContainer.appendChild(editButton);
         buttonContainer.appendChild(resetButton);
         
-        // Add container to home tab
-        homeTab.appendChild(buttonContainer);
+        // Add container to the body instead of home tab to ensure it stays fixed regardless of scrolling
+        document.body.appendChild(buttonContainer);
+        
+        // Add event listener to hide the buttons when not on the home tab
+        document.querySelectorAll('.sidebar button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabId = this.getAttribute('onclick').match(/'([^']+)'/)[1];
+                if (tabId === 'home') {
+                    buttonContainer.style.display = 'flex';
+                } else {
+                    buttonContainer.style.display = 'none';
+                }
+            });
+        });
+        
+        // Ensure buttons are visible initially if home tab is active
+        if (document.getElementById('home').classList.contains('active')) {
+            buttonContainer.style.display = 'flex';
+        } else {
+            buttonContainer.style.display = 'none';
+        }
     }
 }); 

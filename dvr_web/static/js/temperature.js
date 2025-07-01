@@ -2,9 +2,9 @@
 
 // Variables to store temperature data
 let temperatureData = {
-    cpu: null,
-    gpu: null,
-    system: null,
+    cpu_temp: null,
+    gpu_temp: null,
+    system_temp: null,
     timestamp: null
 };
 
@@ -17,25 +17,37 @@ function updateTemperatureUI(data) {
     
     if (!cpuTemp || !gpuTemp || !systemTemp || !lastUpdated) return;
     
-    if (data.cpu !== null) {
-        cpuTemp.textContent = `${data.cpu}°C`;
-        applyTemperatureColor(cpuTemp, data.cpu);
+    if (data.cpu_temp) {
+        cpuTemp.textContent = data.cpu_temp;
+        applyTemperatureColor(cpuTemp, parseTemperature(data.cpu_temp));
     }
     
-    if (data.gpu !== null) {
-        gpuTemp.textContent = `${data.gpu}°C`;
-        applyTemperatureColor(gpuTemp, data.gpu);
+    if (data.gpu_temp) {
+        gpuTemp.textContent = data.gpu_temp;
+        applyTemperatureColor(gpuTemp, parseTemperature(data.gpu_temp));
     }
     
-    if (data.system !== null) {
-        systemTemp.textContent = `${data.system}°C`;
-        applyTemperatureColor(systemTemp, data.system);
+    if (data.system_temp) {
+        systemTemp.textContent = data.system_temp;
+        applyTemperatureColor(systemTemp, parseTemperature(data.system_temp));
     }
     
     if (data.timestamp) {
         const date = new Date(data.timestamp * 1000);
         lastUpdated.textContent = date.toLocaleTimeString();
     }
+}
+
+// Function to parse temperature from string (e.g. "45.5°C" -> 45.5)
+function parseTemperature(tempStr) {
+    if (!tempStr) return 0;
+    
+    // Extract numeric value from string like "45.5°C"
+    const matches = tempStr.match(/(\d+(\.\d+)?)/);
+    if (matches && matches[1]) {
+        return parseFloat(matches[1]);
+    }
+    return 0;
 }
 
 // Function to apply color based on temperature

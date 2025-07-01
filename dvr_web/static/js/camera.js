@@ -48,6 +48,96 @@ function viewCamera(button) {
     }
 }
 
+function checkCamera(button) {
+    const field = button.closest('.cam-field');
+    const input = field.querySelector('input');
+    const rtspUrl = input.value;
+    
+    // Display the RTSP URL in the modal
+    document.getElementById('rtspUrlDisplay').textContent = rtspUrl;
+    
+    // Reset status display
+    const statusText = document.getElementById('connectionStatusText');
+    statusText.textContent = 'Not checked yet';
+    statusText.classList.remove('success', 'error');
+    
+    // Clear previous details
+    document.getElementById('connectionDetailsText').textContent = '';
+    
+    // Reset live stream status
+    const video = document.getElementById('liveVideo');
+    video.src = '';
+    video.classList.remove('active');
+    document.getElementById('streamStatus').textContent = 'Stream not started';
+    
+    // Open the modal
+    document.getElementById('checkCamModal').style.display = 'block';
+}
+
+function closeCheckModal() {
+    // Stop any playing video
+    const video = document.getElementById('liveVideo');
+    if (video.src) {
+        video.pause();
+        video.src = '';
+    }
+    
+    // Hide the modal
+    document.getElementById('checkCamModal').style.display = 'none';
+}
+
+function checkRtspConnection() {
+    const rtspUrl = document.getElementById('rtspUrlDisplay').textContent;
+    const statusText = document.getElementById('connectionStatusText');
+    const detailsText = document.getElementById('connectionDetailsText');
+    
+    // Reset status
+    statusText.textContent = 'Checking...';
+    statusText.classList.remove('success', 'error');
+    detailsText.textContent = '';
+    
+    // Show preloader
+    showPreloader();
+    
+    // Send request to the backend
+    fetch('/api/check-rtsp-connection', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rtsp_url: rtspUrl }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        hidePreloader();
+        
+        // Update status text and class
+        statusText.textContent = data.message || 'Check complete';
+        statusText.classList.add(data.success ? 'success' : 'error');
+        
+        // Update details
+        if (data.details) {
+            detailsText.textContent = data.details;
+        } else {
+            detailsText.textContent = data.success ? 
+                'Connection successful but no details available.' : 
+                'Connection failed but no error details available.';
+        }
+    })
+    .catch(error => {
+        hidePreloader();
+        console.error('RTSP check error:', error);
+        statusText.textContent = 'Error: ' + error.message;
+        statusText.classList.add('error');
+        detailsText.textContent = 'An error occurred while trying to check the RTSP connection. Please try again.';
+    });
+}
+
 // Camera management functions
 function confirmAddCam() {
     const rtspUrl = document.getElementById('rtspUrlInput').value;
@@ -89,6 +179,7 @@ function addCam() {
         <input type="text" placeholder="Select RTSP url://">
         <button class="edit-cam" onclick="enableEdit(this)">Edit</button>
         <button class="view-cam" onclick="viewCamera(this)">View</button>
+        <button class="check-cam" onclick="checkCamera(this)">Check</button>
         <button class="delete-cam" onclick="deleteCam(this)">×</button>
     `;
     camFields.appendChild(newCamField);
@@ -152,6 +243,139 @@ function changeStream(select) {
     videoPlayer.src = `https://example.com/${select.value}.mp4`;
 }
 
+function startRtspStream() {
+    const rtspUrl = document.getElementById('rtspUrlDisplay').textContent;
+    const streamStatus = document.getElementById('streamStatus');
+    const video = document.getElementById('liveVideo');
+    
+    // Update status
+    streamStatus.textContent = 'Starting stream...';
+    
+    // Reset video
+    video.src = '';
+    video.classList.remove('active');
+    
+    // Clean up any existing HLS instance
+    if (window.hlsPlayer) {
+        window.hlsPlayer.destroy();
+        window.hlsPlayer = null;
+    }
+    
+    // Show preloader
+    showPreloader();
+    
+    // Request stream from the backend
+    fetch('/api/start-rtsp-stream', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rtsp_url: rtspUrl }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        hidePreloader();
+        
+        if (data.success && data.stream_url) {
+            console.log("Stream URL:", data.stream_url);
+            streamStatus.textContent = 'Connecting to stream...';
+            
+            // Set up video player with HLS.js if supported
+            if (Hls.isSupported()) {
+                const hls = new Hls({
+                    debug: true,
+                    xhrSetup: function(xhr) {
+                        // Add custom headers or configurations if needed
+                        xhr.withCredentials = false;
+                    }
+                });
+                
+                // Store hls instance for cleanup
+                window.hlsPlayer = hls;
+                
+                hls.loadSource(data.stream_url);
+                hls.attachMedia(video);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    console.log("HLS manifest parsed, attempting to play");
+                    video.play()
+                        .then(() => {
+                            video.classList.add('active');
+                            streamStatus.textContent = '';
+                        })
+                        .catch(e => {
+                            console.error("Play error:", e);
+                            streamStatus.textContent = 'Error: Playback blocked. Try again.';
+                        });
+                });
+                
+                // Handle errors
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    console.error('HLS error:', data);
+                    if (data.fatal) {
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                // Try to recover network error
+                                console.log("Network error, trying to recover");
+                                streamStatus.textContent = 'Network error, retrying...';
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.log("Media error, trying to recover");
+                                streamStatus.textContent = 'Media error, retrying...';
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                // Cannot recover, destroy and show error
+                                streamStatus.textContent = `Error: Stream playback failed (${data.details})`;
+                                hls.destroy();
+                                break;
+                        }
+                    }
+                });
+            }
+            // For Safari which has native HLS support
+            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = data.stream_url;
+                video.addEventListener('loadedmetadata', function() {
+                    video.play()
+                        .then(() => {
+                            video.classList.add('active');
+                            streamStatus.textContent = '';
+                        })
+                        .catch(e => {
+                            console.error("Play error:", e);
+                            streamStatus.textContent = 'Error: Playback blocked. Try again.';
+                        });
+                });
+                video.addEventListener('error', function(e) {
+                    console.error("Video error:", e);
+                    streamStatus.textContent = 'Error: Stream playback failed';
+                });
+            }
+            else {
+                streamStatus.textContent = 'Error: HLS playback not supported by your browser';
+            }
+        } else {
+            let errorMessage = data.message || 'Unknown error';
+            if (data.details) {
+                console.error("Stream error details:", data.details);
+            }
+            streamStatus.textContent = 'Error: ' + errorMessage;
+        }
+    })
+    .catch(error => {
+        hidePreloader();
+        console.error('Stream error:', error);
+        streamStatus.textContent = 'Error: ' + error.message;
+    });
+}
+
 // Initialize camera functionality
 document.addEventListener('DOMContentLoaded', () => {
     // Setup Add Camera button
@@ -159,6 +383,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (addCamBtn) {
         addCamBtn.addEventListener('click', openModal);
     }
+    
+    // Setup close button for check modal
+    const closeCheckBtn = document.querySelector('#checkCamModal .close');
+    if (closeCheckBtn) {
+        closeCheckBtn.addEventListener('click', closeCheckModal);
+    }
+    
+    // Setup modal background click to close for check modal
+    window.addEventListener('click', (event) => {
+        if (event.target === document.getElementById('checkCamModal')) {
+            closeCheckModal();
+        }
+    });
     
     // Update camera ports on page load
     updateCameraPorts();

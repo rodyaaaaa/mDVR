@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/grid-layout.css') }}">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <!-- Core JS files -->
     <script src="{{ url_for('static', filename='js/core.js') }}"></script>
     <script src="{{ url_for('static', filename='js/camera.js') }}"></script>
@@ -48,29 +49,21 @@
     <main class="content">
         <div id="home" class="tab active">
             <div id="dashboard-grid" class="grid-container">
-                <!-- System Info Card -->
-                <div id="system-info-card" class="grid-item size-2x1">
+                <!-- EXT5V_V Card -->
+                <div id="system-info-card" class="grid-item size-1x1">
                     <div class="grid-item-header">
-                        <h3>System Info</h3>
+                        <h3>EXT5V_V (Live)</h3>
                     </div>
                     <div class="card-content">
                         <div class="voltage-section">
-                            <h3>EXT5V_V (Live)</h3>
-                            <div id="ext5v-v-output" style="font-size: 1.5em; text-align: center; margin: 15px 0;">Loading...</div>
-                        </div>
-                        <div class="equipment-section">
-                            <h3>Equipment Info</h3>
-                            <div class="equipment-details">
-                                <p>IMEI: <span>{{ program_options.imei }}</span></p>
-                                <p>Mode: <span id="current-mode">{% if program_options.photo_mode == 0 %}Video{% else %}Photo{% endif %}</span></p>
-                            </div>
+                            <div id="ext5v-v-output" style="font-size: 2em; font-weight: bold; text-align: center;">Loading...</div>
                         </div>
                     </div>
                     <div class="resize-handle"></div>
                 </div>
 
                 <!-- CPU & Memory Card -->
-                <div id="cpu-mem-card" class="grid-item size-1x1">
+                <div id="cpu-mem-card" class="grid-item size-2x2">
                     <div class="grid-item-header">
                         <h3>CPU & Memory Usage</h3>
                     </div>
@@ -85,7 +78,15 @@
                                 <div style="text-align:center; margin-top:5px; font-size:0.95em; color:#bfc9da;">Memory</div>
                             </div>
                         </div>
-                        <div id="disk-usage-text" style="font-size: 1.1em; text-align: center; margin-top: 18px;">Loading...</div>
+                        
+                        <!-- CPU Detailed Information -->
+                        <div id="cpu-details" class="detailed-info-section"></div>
+                        
+                        <!-- Memory Detailed Information -->
+                        <div id="mem-details" class="detailed-info-section"></div>
+                        
+                        <!-- Disk Usage Information -->
+                        <div id="disk-usage-container" class="detailed-info-section"></div>
                     </div>
                     <div class="resize-handle"></div>
                 </div>
@@ -139,6 +140,7 @@
                         <input type="text" value="{{ url }}" placeholder="Select RTSP url://" disabled>
                         <button class="edit-cam" onclick="enableEdit(this)">Edit</button>
                         <button class="view-cam" onclick="viewCamera(this)">View</button>
+                        <button class="check-cam" onclick="checkCamera(this)">Check</button>
                         <button class="delete-cam" onclick="deleteCam(this)">×</button>
                     </div>
                 {% endfor %}
@@ -147,7 +149,7 @@
         <div id="video-options" class="tab">
             <div class="settings-tabs">
                 <button id="general-settings-tab" class="settings-tab active" onclick="showSettingsTab('general-settings-content')">Camera Settings</button>
-                <button id="reed-switch-tab" class="settings-tab" onclick="showSettingsTab('reed-switch-settings-content')">Reed Switch</button>
+                <button id="reed-switch-tab" class="settings-tab" onclick="showSettingsTab('reed-switch-settings-content')">Sensors</button>
                 <button id="ftp-settings-tab" class="settings-tab" onclick="showSettingsTab('ftp-settings-content')">FTP</button>
                 <button id="vpn-settings-tab" class="settings-tab" onclick="showSettingsTab('vpn-settings-content')">VPN</button>
             </div>
@@ -208,9 +210,9 @@
             
             <!-- Reed Switch налаштування -->
             <div id="reed-switch-settings-content" class="settings-content">
-                <h2>Reed Switch Settings</h2>
+                <h2>Sensors Settings</h2>
                 <div class="input-row">
-                    <label>Reed Switch:</label>
+                    <label>Sensors:</label>
                     <div class="reed-switch-options">
                         <input type="radio" id="reed-switch-on" name="reed_switch" value="on" onchange="toggleReedSwitch()">
                         <label for="reed-switch-on">ON</label>
@@ -224,7 +226,7 @@
                 </div>
                 
                 <!-- Reed Switch Status Card -->
-                <h2>Reed Switch Status</h2>
+                <h2>Sensors Status</h2>
                 <div class="reed-switch-full-width">
                     <div class="reed-switch-status">
                         <div class="status-circle" id="reed-status-indicator"></div>
@@ -238,8 +240,8 @@
                         <p>Status: <span id="reed-init-status">Not initialized</span></p>
                         <p id="auto-stop-timer" class="hidden">Auto-stop in: <span id="auto-stop-time">03:00</span></p>
                         <div class="reed-switch-buttons">
-                            <button id="init-reed-switch-btn" onclick="initializeReedSwitch()">Initialize Reed Switch</button>
-                            <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button">Stop Monitoring</button>
+                            <button id="init-reed-switch-btn" onclick="initializeReedSwitch()"><span>Initialize Reed Switch</span></button>
+                            <button id="stop-reed-switch-btn" onclick="stopReedSwitchMonitoring()" class="stop-button"><span>Stop Monitoring</span></button>
                         </div>
                     </div>
                 </div>
@@ -315,6 +317,39 @@
         <div class="modal-body">
             <input type="text" id="rtspUrlInput" placeholder="Input RTSP-link">
             <button onclick="confirmAddCam()">Add</button>
+        </div>
+    </div>
+</div>
+
+<div id="checkCamModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeCheckModal()">&times;</span>
+        <h2>Check RTSP Connection</h2>
+        <div class="modal-body">
+            <div id="rtspUrlDisplay" class="rtsp-url-display"></div>
+            
+            <div class="check-options">
+                <button id="checkConnectionBtn" onclick="checkRtspConnection()">Check Connection</button>
+                <button id="startStreamBtn" onclick="startRtspStream()">Start Live Stream</button>
+            </div>
+            
+            <div id="checkResults" class="check-results">
+                <h3>Connection Results:</h3>
+                <div id="connectionStatus">
+                    <p>Status: <span id="connectionStatusText">Not checked yet</span></p>
+                </div>
+                <div id="connectionDetails">
+                    <pre id="connectionDetailsText"></pre>
+                </div>
+            </div>
+            
+            <div id="liveStreamContainer" class="live-stream-container">
+                <h3>Live Stream:</h3>
+                <div class="video-container">
+                    <video id="liveVideo" autoplay controls muted></video>
+                    <div id="streamStatus">Stream not started</div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

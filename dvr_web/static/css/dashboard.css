@@ -14,16 +14,28 @@
     box-sizing: border-box;
 }
 
-/* System Info Card */
+/* System Info Card (now EXT5V_V) */
 .system-info-card {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 30px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     margin-bottom: 20px;
+    height: fit-content;
 }
 
-.voltage-section,
+.voltage-section {
+    flex: 1;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: auto;
+}
+
 .equipment-section {
     flex: 1;
     padding: 15px;
@@ -90,6 +102,7 @@
     padding: 20px;
     margin-bottom: 20px;
     max-width: 350px;
+    height: fit-content;
 }
 
 .temperature-container {
@@ -97,6 +110,7 @@
     flex-direction: column;
     gap: 15px;
     margin: 15px 0;
+    height: auto;
 }
 
 .temperature-item {
@@ -172,20 +186,14 @@
 
 @media (max-width: 1024px) {
     .system-info-card {
-        flex-direction: column;
         gap: 15px;
         margin: 10px;
         padding: 15px;
     }
 
-    .voltage-section,
-    .equipment-section {
+    .voltage-section {
         width: 100%;
         padding: 12px;
-    }
-
-    .equipment-details p {
-        font-size: 1em;
     }
     
     .temperature-container {

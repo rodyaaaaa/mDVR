@@ -71,8 +71,13 @@ function stopExt5vVUpdates() {
     }
 }
 
-// CPU Chart
+// CPU Chart and Information
 let cpuChartInterval = null;
+let cpuDetailedInfo = {
+    cores: { logical: 0, physical: 0 },
+    frequency: { current: 0, min: 0, max: 0 },
+    per_core: []
+};
 
 function drawCpuChart(history) {
     const canvas = document.getElementById('cpu-load-chart');
@@ -110,10 +115,54 @@ function drawCpuChart(history) {
         else ctx.lineTo(x, y);
     });
     ctx.stroke();
-    // Current value
+    
+    // Current value with larger font
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 16px Arial';
     ctx.fillText(points[points.length - 1].toFixed(1) + '%', canvas.width - 60, 30);
+    
+    // Update the CPU details container
+    updateCpuDetails();
+}
+
+function updateCpuDetails() {
+    const detailsContainer = document.getElementById('cpu-details');
+    if (!detailsContainer) return;
+    
+    // Format the CPU frequency
+    const freqCurrent = cpuDetailedInfo.frequency.current ? 
+        (cpuDetailedInfo.frequency.current / 1000).toFixed(2) + ' GHz' : 'N/A';
+    
+    let coreUsageHTML = '';
+    if (cpuDetailedInfo.per_core && cpuDetailedInfo.per_core.length > 0) {
+        coreUsageHTML = '<div class="core-usage-grid">';
+        cpuDetailedInfo.per_core.forEach((usage, idx) => {
+            coreUsageHTML += `
+                <div class="core-usage-item">
+                    <div class="core-label">Core ${idx + 1}</div>
+                    <div class="core-meter">
+                        <div class="core-progress" style="width: ${usage}%"></div>
+                    </div>
+                    <div class="core-value">${usage.toFixed(1)}%</div>
+                </div>
+            `;
+        });
+        coreUsageHTML += '</div>';
+    }
+    
+    detailsContainer.innerHTML = `
+        <div class="cpu-details-row">
+            <div class="detail-item">
+                <span class="detail-label">Cores:</span>
+                <span class="detail-value">${cpuDetailedInfo.cores.logical} logical (${cpuDetailedInfo.cores.physical} physical)</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Frequency:</span>
+                <span class="detail-value">${freqCurrent}</span>
+            </div>
+        </div>
+        ${coreUsageHTML}
+    `;
 }
 
 function startCpuChartUpdates() {
@@ -123,15 +172,36 @@ function startCpuChartUpdates() {
             .then(r => r.json())
             .then(data => {
                 if (data.history) drawCpuChart(data.history);
+                // Store detailed CPU information
+                if (data.cores) cpuDetailedInfo.cores = data.cores;
+                if (data.frequency) cpuDetailedInfo.frequency = data.frequency;
+                if (data.per_core) cpuDetailedInfo.per_core = data.per_core;
+                // Update CPU details
+                updateCpuDetails();
             });
     }
     updateCpuChart();
     cpuChartInterval = setInterval(updateCpuChart, 1000);
 }
 
-// Memory Chart
+// Memory Chart and Information
 let memChartInterval = null;
 let memPercentHistory = [];
+let memDetailedInfo = {
+    memory: {
+        total: 0,
+        used: 0,
+        free: 0,
+        cached: 0,
+        buffers: 0
+    },
+    swap: {
+        total: 0,
+        used: 0,
+        free: 0,
+        percent: 0
+    }
+};
 
 function drawMemChart(percentHistory) {
     const canvas = document.getElementById('mem-usage-chart');
@@ -169,10 +239,59 @@ function drawMemChart(percentHistory) {
         else ctx.lineTo(x, y);
     });
     ctx.stroke();
-    // Current value
+    
+    // Current value with larger font
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 16px Arial';
     ctx.fillText(points[points.length - 1].toFixed(1) + '%', canvas.width - 60, 30);
+    
+    // Update the memory details container
+    updateMemDetails();
+}
+
+function updateMemDetails() {
+    const detailsContainer = document.getElementById('mem-details');
+    if (!detailsContainer) return;
+    
+    // Format memory values to GB
+    const totalGB = formatGB(memDetailedInfo.memory.total);
+    const usedGB = formatGB(memDetailedInfo.memory.used);
+    const freeGB = formatGB(memDetailedInfo.memory.free);
+    const cachedGB = memDetailedInfo.memory.cached ? formatGB(memDetailedInfo.memory.cached) : 'N/A';
+    
+    // Format swap values to GB
+    const swapTotalGB = formatGB(memDetailedInfo.swap.total);
+    const swapUsedGB = formatGB(memDetailedInfo.swap.used);
+    
+    // Memory usage progress bar
+    const memPercent = memDetailedInfo.memory.percent || 0;
+    const swapPercent = memDetailedInfo.swap.percent || 0;
+    
+    detailsContainer.innerHTML = `
+        <div class="mem-details-row">
+            <div class="mem-usage-info">
+                <div class="mem-progress-container">
+                    <div class="mem-progress-label">RAM: ${memPercent.toFixed(1)}%</div>
+                    <div class="mem-progress-bar">
+                        <div class="mem-progress" style="width: ${memPercent}%"></div>
+                    </div>
+                </div>
+                <div class="mem-values">Used: ${usedGB} / Total: ${totalGB}</div>
+                <div class="mem-free">Free: ${freeGB}</div>
+            </div>
+        </div>
+        <div class="mem-details-row">
+            <div class="swap-usage-info">
+                <div class="mem-progress-container">
+                    <div class="mem-progress-label">Swap: ${swapPercent.toFixed(1)}%</div>
+                    <div class="mem-progress-bar">
+                        <div class="mem-progress swap" style="width: ${swapPercent}%"></div>
+                    </div>
+                </div>
+                <div class="mem-values">Used: ${swapUsedGB} / Total: ${swapTotalGB}</div>
+            </div>
+        </div>
+    `;
 }
 
 function startMemChartUpdates() {
@@ -181,10 +300,16 @@ function startMemChartUpdates() {
         fetch('/api/mem-usage')
             .then(r => r.json())
             .then(data => {
-                if (typeof data.percent === 'number') {
-                    memPercentHistory.push(data.percent);
+                if (data.memory && typeof data.memory.percent === 'number') {
+                    memPercentHistory.push(data.memory.percent);
                     if (memPercentHistory.length > 60) memPercentHistory = memPercentHistory.slice(-60);
                     drawMemChart(memPercentHistory);
+                    
+                    // Store detailed memory information
+                    memDetailedInfo = data;
+                    
+                    // Update memory details
+                    updateMemDetails();
                 }
             });
     }
@@ -192,23 +317,68 @@ function startMemChartUpdates() {
     memChartInterval = setInterval(updateMemChart, 1000);
 }
 
-// Disk Usage Text
+// Disk Usage Information
 let diskTextInterval = null;
+let diskDetailedInfo = {
+    total: 0,
+    used: 0,
+    free: 0,
+    percent: 0,
+    io: {
+        read_bytes: 0,
+        write_bytes: 0
+    },
+    partitions: []
+};
 
-function updateDiskUsageText() {
+function updateDiskUsageInfo() {
     fetch('/api/disk-usage')
         .then(r => r.json())
         .then(data => {
-            if (typeof data.total === 'number' && typeof data.used === 'number') {
-                document.getElementById('disk-usage-text').textContent =
-                    `Used: ${formatGB(data.used)} / Total: ${formatGB(data.total)}`;
-            } else {
-                document.getElementById('disk-usage-text').textContent = 'No data';
-            }
+            // Store detailed disk information
+            diskDetailedInfo = data;
+            
+            // Update disk usage text
+            updateDiskUsageText();
         })
         .catch(() => {
             document.getElementById('disk-usage-text').textContent = 'Error';
         });
+}
+
+function updateDiskUsageText() {
+    const diskContainer = document.getElementById('disk-usage-container');
+    if (!diskContainer) return;
+    
+    const percent = diskDetailedInfo.percent || 0;
+    const usedGB = formatGB(diskDetailedInfo.used);
+    const totalGB = formatGB(diskDetailedInfo.total);
+    const freeGB = formatGB(diskDetailedInfo.free);
+    
+    // Format I/O values if available
+    let ioHTML = '';
+    if (diskDetailedInfo.io && diskDetailedInfo.io.read_bytes !== null && diskDetailedInfo.io.write_bytes !== null) {
+        const readMB = (diskDetailedInfo.io.read_bytes / 1024 / 1024).toFixed(2);
+        const writeMB = (diskDetailedInfo.io.write_bytes / 1024 / 1024).toFixed(2);
+        ioHTML = `
+            <div class="disk-io-info">
+                <div>Read: ${readMB} MB</div>
+                <div>Write: ${writeMB} MB</div>
+            </div>
+        `;
+    }
+    
+    diskContainer.innerHTML = `
+        <div class="disk-progress-container">
+            <div class="disk-progress-label">Disk: ${percent.toFixed(1)}%</div>
+            <div class="disk-progress-bar">
+                <div class="disk-progress" style="width: ${percent}%"></div>
+            </div>
+        </div>
+        <div class="disk-values">Used: ${usedGB} / Total: ${totalGB}</div>
+        <div class="disk-free">Free: ${freeGB}</div>
+        ${ioHTML}
+    `;
 }
 
 // Initialize monitoring functionality
@@ -223,6 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
     startMemChartUpdates();
     
     // Start disk usage text updates
-    updateDiskUsageText();
-    diskTextInterval = setInterval(updateDiskUsageText, 1000);
+    updateDiskUsageInfo();
+    diskTextInterval = setInterval(updateDiskUsageInfo, 1000);
 }); 
