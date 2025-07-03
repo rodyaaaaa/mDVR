@@ -12,8 +12,13 @@ import RPi.GPIO as GPIO
 from pathlib import Path
 from flask import request
 
-from dvr_video.data.utils import get_config_path
-from dvr_web.constants import BASE_PORT, DEFAULT_CONFIG_PATH, NGINX_CONF_DIR, REED_SWITCH_AUTOSTOP_SECONDS, REED_SWITCH_PIN, REGULAR_SEARCH_IP, SERVICE_PATH, VPN_CONFIG_PATH
+from dvr_web.constants import BASE_PORT, DEFAULT_CONFIG_PATH, NGINX_CONF_DIR, REED_SWITCH_AUTOSTOP_SECONDS, REED_SWITCH_PIN, REGULAR_SEARCH_IP, SERVICE_PATH, VPN_CONFIG_PATH, CONFIG_FILENAME
+
+# Define our own config path function for the web interface
+def get_config_path():
+    config_dir = '/etc/mdvr'
+    os.makedirs(config_dir, exist_ok=True)
+    return os.path.join(config_dir, CONFIG_FILENAME)
 
 # Initialize GPIO at module level
 GPIO.setwarnings(False)  # Disable warnings
@@ -172,8 +177,22 @@ def load_config():
     config_path = get_config_path()
     if not os.path.exists(config_path):
         shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
-    with open(config_path, 'r') as file:
-        config = json.load(file)
+    
+    try:
+        # Check if file is empty
+        if os.path.getsize(config_path) == 0:
+            print(f"Config file {config_path} is empty, copying default config")
+            shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
+        
+        with open(config_path, 'r') as file:
+            try:
+                config = json.load(file)
+            except json.JSONDecodeError as e:
+                # If JSON is corrupted, use the default config
+                print(f"Error decoding JSON: {str(e)}. Using default config instead.")
+                shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
+                with open(config_path, 'r') as default_file:
+                    config = json.load(default_file)
         
         # Ensure required sections exist
         if "rtsp_options" not in config:
@@ -182,15 +201,17 @@ def load_config():
         if "program_options" not in config:
             config["program_options"] = {"photo_mode": 0, "size_folder_limit_gb": 10, "imei": 0}
         
-        # Handle car_name
-        if "car_name" not in config["program_options"] and "ftp" in config and "car_name" in config["ftp"]:
-            config["program_options"]["car_name"] = config["ftp"]["car_name"]
-        elif "car_name" not in config["program_options"]:
-            config["program_options"]["car_name"] = "MDVR"
+        # Ensure FTP section exists
+        if "ftp" not in config:
+            config["ftp"] = {"server": "", "port": 21, "user": "", "password": "", "car_name": ""}
+        
+        # Ensure camera_list exists
+        if "camera_list" not in config:
+            config["camera_list"] = []
         
         # Handle rs_timeout - ensure it's only at the root level
         # If it exists in program_options, move it to root level if not already there
-        if "rs_timeout" in config["program_options"]:
+        if "rs_timeout" in config.get("program_options", {}):
             if "rs_timeout" not in config:
                 config["rs_timeout"] = config["program_options"]["rs_timeout"]
             # Remove from program_options to avoid duplication
@@ -204,6 +225,16 @@ def load_config():
             json.dump(config, write_file, indent=4)
         
         return config
+    except Exception as e:
+        print(f"Critical error in load_config: {str(e)}")
+        # In case of any other error, return a minimal valid config
+        return {
+            "camera_list": [],
+            "program_options": {"photo_mode": 0, "size_folder_limit_gb": 10, "imei": 0},
+            "rtsp_options": {"rtsp_x": 640, "rtsp_y": 480},
+            "ftp": {"server": "", "port": 21, "user": "", "password": "", "car_name": ""},
+            "rs_timeout": 2
+        }
 
 
 def generate_nginx_configs(camera_list):
@@ -258,58 +289,57 @@ server {{
 
 
 def update_imei():
-    config = load_config()
-    car_name = None
-    
-    # Try to get car_name from program_options first
-    if 'program_options' in config and 'car_name' in config['program_options']:
-        car_name = config['program_options']['car_name']
-    # If not found, try to get it from ftp section
-    elif 'ftp' in config and 'car_name' in config['ftp']:
-        car_name = config['ftp']['car_name']
-        # Also add it to program_options for future use
-        if 'program_options' not in config:
-            config['program_options'] = {}
-        config['program_options']['car_name'] = car_name
-    
-    # If car_name is still not found, use a default value
-    if not car_name:
-        car_name = "MDVR"
-        if 'program_options' not in config:
-            config['program_options'] = {}
-        config['program_options']['car_name'] = car_name
-    
-    vpn_ip = ''
-
     try:
-        with open(VPN_CONFIG_PATH, 'r') as f:
-            for line in f:
-                if line.startswith('Address'):
-                    vpn_ip = re.search(REGULAR_SEARCH_IP, line).group(0)
-                    vpn_ip = vpn_ip.replace('.', '')
-    except Exception as e:
-        print(f"Error reading VPN config: {e}")
+        config = load_config()
+        car_name = None
+        
+        # Only get car_name from the ftp section
+        if 'ftp' in config and 'car_name' in config['ftp']:
+            car_name = config['ftp']['car_name']
+        
+        # If car_name is not found, use a default value
+        if not car_name:
+            car_name = "000"  # Default car name if not specified in FTP settings
+        
+        vpn_ip = ''
 
-    print(f"Car name: {car_name}, VPN IP: {vpn_ip}")
-
-    if car_name and vpn_ip:
         try:
-            space = max(0, 15 - (len(car_name) + len(vpn_ip)))
-            print(f"Space padding: {space}")
-            imei = str(car_name) + ('0' * space) + str(vpn_ip)
-
-            if 'program_options' not in config:
-                config['program_options'] = {}
-            config['program_options']['imei'] = imei
-            
-            with open(get_config_path(), 'w') as file:
-                json.dump(config, file, indent=4)
-            
-            print(f"IMEI updated to: {imei}")
+            with open(VPN_CONFIG_PATH, 'r') as f:
+                for line in f:
+                    if line.startswith('Address'):
+                        ip_match = re.search(REGULAR_SEARCH_IP, line)
+                        if ip_match:
+                            vpn_ip = ip_match.group(0)
+                            vpn_ip = vpn_ip.replace('.', '')
         except Exception as e:
-            print(f"Error updating IMEI: {e}")
-    else:
-        print("Cannot update IMEI: Missing car_name or vpn_ip")
+            print(f"Error reading VPN config: {e}")
+
+        print(f"Car name: {car_name}, VPN IP: {vpn_ip}")
+
+        if car_name and vpn_ip:
+            try:
+                space = max(0, 15 - (len(car_name) + len(vpn_ip)))
+                print(f"Space padding: {space}")
+                imei = str(car_name) + ('0' * space) + str(vpn_ip)
+
+                if 'program_options' not in config:
+                    config['program_options'] = {}
+                config['program_options']['imei'] = imei
+                
+                with open(get_config_path(), 'w') as file:
+                    json.dump(config, file, indent=4)
+                
+                print(f"IMEI updated to: {imei}")
+                return True
+            except Exception as e:
+                print(f"Error updating IMEI: {e}")
+                return False
+        else:
+            print("Cannot update IMEI: Missing car_name or vpn_ip")
+            return False
+    except Exception as e:
+        print(f"Critical error in update_imei: {str(e)}")
+        return False
 
 
 # Функція для очищення ресурсів GPIO при завершенні програми

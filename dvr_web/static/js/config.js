@@ -62,16 +62,23 @@ function saveVideoOptions() {
 // FTP config functions
 function saveFtpConfig() {
     showPreloader();
-    const activeTab = document.getElementById('ftp-config');
-    const inputs = activeTab.querySelectorAll('input');
+    
+    // Get the FTP form inputs by their correct IDs
+    const server = document.getElementById('ftp-server-ip').value;
+    const port = parseInt(document.getElementById('ftp-server-port').value) || 21;
+    const user = document.getElementById('ftp-server-login').value;
+    const password = document.getElementById('ftp-server-passwd').value;
+    const car_name = document.getElementById('ftp-server-carname').value;
 
     const ftpConfig = {
-        server: inputs[0].value,
-        port: inputs[1].value,
-        user: inputs[2].value,
-        password: inputs[3].value,
-        car_name: inputs[4].value
+        server: server,
+        port: port,
+        user: user,
+        password: password,
+        car_name: car_name
     };
+    
+    console.log("FTP config to save:", ftpConfig);
 
     const data = {
         ftp: ftpConfig
@@ -82,20 +89,26 @@ function saveFtpConfig() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
     })
-        .then(response => response.json())
-        .then(result => {
-            hidePreloader();
-            if (result.success) {
-                showNotification('The ftp settings is saved!');
-                setTimeout(updateImei, 1000);
-            } else {
-                showNotification(`ERROR: ${result.error}`, true);
-            }
-        })
-        .catch(error => {
-            hidePreloader();
-            console.error('ERROR:', error);
-        });
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(result => {
+        hidePreloader();
+        if (result.success) {
+            showNotification('The FTP settings have been saved!');
+            setTimeout(updateImei, 1000);
+        } else {
+            showNotification(`ERROR: ${result.error}`, true);
+        }
+    })
+    .catch(error => {
+        hidePreloader();
+        showNotification(`ERROR: ${error.message}`, true);
+        console.error('ERROR saving FTP config:', error);
+    });
 }
 
 // VPN config functions
@@ -273,4 +286,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('reed-switch-tab').addEventListener('click', () => showSettingsTab('reed-switch-settings-content'));
     document.getElementById('ftp-settings-tab').addEventListener('click', () => showSettingsTab('ftp-settings-content'));
     document.getElementById('vpn-settings-tab').addEventListener('click', () => showSettingsTab('vpn-settings-content'));
-}); 
+});
+
+// Validate car name input - allow only numbers and uppercase letters
+function validateCarname(input) {
+    // Replace any characters that are not uppercase letters or numbers
+    input.value = input.value.replace(/[^A-Z0-9]/g, '');
+    
+    // Ensure maximum length of 6 characters (also set in HTML)
+    if (input.value.length > 6) {
+        input.value = input.value.substring(0, 6);
+    }
+} 

@@ -220,6 +220,15 @@
                         <label for="reed-switch-off">OFF</label>
                     </div>
                 </div>
+                <div class="input-row">
+                    <label>Reed Switch Mode:</label>
+                    <div class="reed-switch-mode-options radio-group">
+                        <input type="radio" id="reed-switch-mode-mechanical" name="reed_switch_mode" value="mechanical" onchange="toggleReedSwitchMode()">
+                        <label for="reed-switch-mode-mechanical">Mechanical</label>
+                        <input type="radio" id="reed-switch-mode-impulse" name="reed_switch_mode" value="impulse" onchange="toggleReedSwitchMode()">
+                        <label for="reed-switch-mode-impulse">Impulse</label>
+                    </div>
+                </div>
                 <div class="input-row video-mode" id="rs-timeout-block">
                     <label for="rs-timeout-input">RS Timeout (сек):</label>
                     <input type="number" id="rs-timeout-input" min="0" placeholder="Timeout in seconds">

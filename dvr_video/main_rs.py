@@ -15,15 +15,17 @@ from data.constants import CAMERA_LIST_KEY, RTSP_OPTIONS_KEY, RTSP_X, RTSP_Y, VI
 from data.LoggerFactory import LoggerFactory
 from main_common import async_write_photo
 
+from data.rs_utils import RSFactory
+
 config = read_config()
 CustomFactory = LoggerFactory(level=10)
 logger = CustomFactory.create_logger('mdvr_engine', "engine.log")
 notifier = SystemdNotifier()
 notifier.notify('READY=1')
 
-GPIO.setmode(GPIO.BCM)
-DOOR_SENSOR_PIN = 17
-GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setmode(GPIO.BCM)
+# DOOR_SENSOR_PIN = 17
+# GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 async def async_write_video(current_link, file_name):
     stream = ffmpeg.input(
@@ -58,17 +60,19 @@ async def main():
     pathlib.Path(DIR_NAME).mkdir(parents=True, exist_ok=True)
     photo_mode = bool(config[PROGRAM_OPTIONS_KEY]['photo_mode'])
     video_status = False
+    rs = RSFactory.create(bool(config['reed_switch']['impulse']))
+    rs.setup()
 
     await move()
 
     while True:
         notifier.notify(WATCH_DOG_NOTIFICATION)
-        door_state = GPIO.input(DOOR_SENSOR_PIN)
+        door_state = rs.pressed()
 
-        if door_state == GPIO.HIGH and video_status is False:
+        if door_state is True and video_status is False:
             time.sleep(0.5)
-            door_state = GPIO.input(DOOR_SENSOR_PIN)
-            if door_state == GPIO.HIGH:
+            door_state = rs.pressed()
+            if door_state is True:
                 for current_link in range(len(config[CAMERA_LIST_KEY])):
                     now = datetime.now()
                     file_name = now.strftime(DATE_FORMAT)
@@ -87,10 +91,10 @@ async def main():
                     jobs.append(process)
                     links_names.append(str(current_link + 1) + "24" + file_name)
                     video_status = True
-        elif door_state != GPIO.HIGH and video_status is True:
+        elif door_state is False and video_status is True:
             time.sleep(config["rs_timeout"])
-            door_state = GPIO.input(DOOR_SENSOR_PIN)
-            if door_state != GPIO.HIGH:
+            door_state = rs.pressed()
+            if door_state is False:
                 loop = asyncio.get_running_loop()
                 for process in jobs:
                     try:

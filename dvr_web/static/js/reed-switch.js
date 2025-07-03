@@ -140,8 +140,60 @@ function updateReedSwitchState() {
                         });
                 }
             }
+            
+            // Get reed switch mode
+            updateReedSwitchMode();
         })
         .catch(error => console.error('Error fetching reed switch status:', error));
+}
+
+// Function to update reed switch mode from server
+function updateReedSwitchMode() {
+    fetch('/api/get-reed-switch-mode')
+        .then(response => response.json())
+        .then(data => {
+            const mechanicalModeRadio = document.getElementById('reed-switch-mode-mechanical');
+            const impulseModeRadio = document.getElementById('reed-switch-mode-impulse');
+            
+            if (!mechanicalModeRadio || !impulseModeRadio) {
+                console.error('Reed switch mode radio buttons not found');
+                return;
+            }
+            
+            if (data.impulse === 1) {
+                impulseModeRadio.checked = true;
+                mechanicalModeRadio.checked = false;
+            } else {
+                mechanicalModeRadio.checked = true;
+                impulseModeRadio.checked = false;
+            }
+        })
+        .catch(error => console.error('Error fetching reed switch mode:', error));
+}
+
+function toggleReedSwitchMode() {
+    showPreloader();
+    const mode = document.querySelector('input[name="reed_switch_mode"]:checked').value;
+    const impulse = mode === 'impulse' ? 1 : 0;
+    
+    fetch('/api/toggle-reed-switch-mode', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({impulse: impulse})
+    })
+    .then(response => response.json())
+    .then(result => {
+        hidePreloader();
+        if(result.success) {
+            showNotification('Reed Switch mode updated successfully!');
+        } else {
+            showNotification('ERROR: ' + result.error, true);
+        }
+    })
+    .catch(error => {
+        hidePreloader();
+        showNotification('ERROR: ' + error.message, true);
+    });
 }
 
 function toggleReedSwitch() {
@@ -554,8 +606,10 @@ function setupReedSwitchPolling() {
     return setInterval(pollReedSwitchStatus, pollingInterval);
 }
 
-// Initialize Reed Switch functionality
-document.addEventListener('DOMContentLoaded', () => {
+// Initialization function that runs when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Reed Switch JS loaded');
+    
     // Initialize WebSocket for reed switch after page load
     initReedSwitchWebSocket();
     
@@ -567,13 +621,19 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(reedSwitchPollingInterval);
     });
     
-    // Update reed switch state on page load
+    // Initialize reed switch state
     updateReedSwitchState();
+    
+    // Initialize reed switch mode
+    updateReedSwitchMode();
     
     // When clicking on settings tab, also update Reed Switch state
     const videoOptionsBtn = document.querySelector('.sidebar button[onclick="showTab(\'video-options\')"]');
     if (videoOptionsBtn) {
-        videoOptionsBtn.addEventListener('click', updateReedSwitchState);
+        videoOptionsBtn.addEventListener('click', () => {
+            updateReedSwitchState();
+            updateReedSwitchMode();
+        });
     }
     
     // When clicking on Reed Switch settings tab, force sync
@@ -581,6 +641,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (reedSwitchSettingsBtn) {
         reedSwitchSettingsBtn.addEventListener('click', () => {
             forceSyncReedSwitch();
+            updateReedSwitchMode();
         });
     }
+    
+    // Check if reed switch is already initialized
+    checkReedSwitchInitialized();
 }); 

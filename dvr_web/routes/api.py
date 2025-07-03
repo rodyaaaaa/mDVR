@@ -4,11 +4,12 @@ import time
 import os
 import threading
 import RPi.GPIO as GPIO
+import json
 
 from flask import Blueprint, jsonify, request, send_from_directory
 from dvr_web.utils import (
     load_config, sync_reed_switch_state, read_reed_switch_state, 
-    emit_reed_switch_update, check_reed_switch_status
+    emit_reed_switch_update, check_reed_switch_status, get_config_path
 )
 from dvr_web.constants import REED_SWITCH_PIN, REED_SWITCH_AUTOSTOP_SECONDS
 
@@ -834,3 +835,56 @@ def serve_stream_file(stream_id, filename):
     except Exception as e:
         print(f"Error serving stream file: {str(e)}")
         return jsonify({'error': str(e)}), 404
+
+@api_bp.route('/get-rs-timeout')
+def get_rs_timeout():
+    try:
+        config = load_config()
+        if "reed_switch" in config and "rs_timeout" in config["reed_switch"]:
+            timeout = config["reed_switch"]["rs_timeout"]
+        else:
+            timeout = config.get("rs_timeout", 2)
+        return jsonify({"timeout": timeout})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api_bp.route('/get-reed-switch-mode')
+def get_reed_switch_mode():
+    try:
+        config = load_config()
+        if "reed_switch" in config and "impulse" in config["reed_switch"]:
+            impulse = config["reed_switch"]["impulse"]
+        else:
+            impulse = 0  # Default to mechanical (0) if not found
+        return jsonify({"impulse": impulse})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api_bp.route('/toggle-reed-switch-mode', methods=['POST'])
+def toggle_reed_switch_mode():
+    try:
+        data = request.json
+        impulse = data.get('impulse', 0)
+        
+        config = load_config()
+        
+        # Ensure reed_switch section exists
+        if "reed_switch" not in config:
+            config["reed_switch"] = {}
+        
+        # Update impulse value
+        config["reed_switch"]["impulse"] = impulse
+        
+        # Save updated config
+        with open(get_config_path(), 'w') as file:
+            json.dump(config, file, indent=4)
+        
+        # If the reed switch service is running, restart it to apply changes
+        if check_reed_switch_status():
+            os.system("systemctl restart mdvr_rs")
+            
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500

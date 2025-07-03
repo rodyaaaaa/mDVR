@@ -13,3 +13,6 @@ RTSP_Y = 'rtsp_resolution_y'
 FPS = 'fps'
 CONFIG_FILENAME = 'data_config.json'
 LOG_DIR = "/etc/mdvr/logs"
+BTN_A_PIN = 22
+BTN_B_PIN = 23
+DOOR_SENSOR_PIN = 17

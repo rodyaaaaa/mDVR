@@ -44,31 +44,51 @@ def create_app():
     # Додаємо обробник кореневого маршруту
     @app.route('/')
     def index():
-        # Оновлюємо інформацію про IMEI
-        update_imei()
-        
-        # Завантажуємо конфігурацію
-        config = load_config()
-        camera_list = config['camera_list']
-        
-        # Зчитуємо конфігурацію VPN
-        vpn_config = ""
         try:
-            if os.path.exists(VPN_CONFIG_PATH):
-                with open(VPN_CONFIG_PATH, 'r') as f:
-                    vpn_config = f.read()
+            # Оновлюємо інформацію про IMEI
+            update_imei()
+            
+            # Завантажуємо конфігурацію
+            config = load_config()
+            camera_list = config.get('camera_list', [])
+            
+            # Зчитуємо конфігурацію VPN
+            vpn_config = ""
+            try:
+                if os.path.exists(VPN_CONFIG_PATH):
+                    with open(VPN_CONFIG_PATH, 'r') as f:
+                        vpn_config = f.read()
+            except Exception as e:
+                print(f"Error reading VPN config: {str(e)}")
+            
+            # Генеруємо конфігурації Nginx
+            if camera_list:
+                if not generate_nginx_configs(camera_list):
+                    print("Warning: Failed to generate Nginx configs")
+            
+            # Рендеримо головний шаблон
+            return render_template('index.html',
+                                vpn_config=vpn_config,
+                                camera_list=config.get('camera_list', []),
+                                program_options=config.get('program_options', {}),
+                                rtsp_options=config.get('rtsp_options', {}),
+                                video_options=config.get('video_options', {}),
+                                ftp=config.get('ftp', {}),
+                                photo_timeout=config.get('photo_timeout', 10)
+                                )
         except Exception as e:
-            print(f"Error reading VPN config: {str(e)}")
-        
-        # Генеруємо конфігурації Nginx
-        if not generate_nginx_configs(camera_list):
-            print("Warning: Failed to generate Nginx configs")
-        
-        # Рендеримо головний шаблон
-        return render_template('index.html',
-                            vpn_config=vpn_config,
-                            **config
-                            )
+            print(f"Critical error in index route: {str(e)}")
+            # Return a simplified template with error message
+            return render_template('index.html',
+                                vpn_config="",
+                                camera_list=[],
+                                program_options={},
+                                rtsp_options={},
+                                video_options={},
+                                ftp={},
+                                photo_timeout=10,
+                                error_message=f"Error loading configuration: {str(e)}"
+                                )
         
     return app
 

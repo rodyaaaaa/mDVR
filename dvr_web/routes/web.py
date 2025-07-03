@@ -4,9 +4,8 @@ import os
 from flask import Blueprint, jsonify, request
 from datetime import timedelta
 
-from dvr_video.data.utils import get_config_path
 from dvr_web.constants import VPN_CONFIG_PATH
-from dvr_web.utils import generate_nginx_configs, get_camera_ports, load_config, restart_mdvr_engine, update_imei, update_watchdog
+from dvr_web.utils import generate_nginx_configs, get_camera_ports, load_config, restart_mdvr_engine, update_imei, update_watchdog, get_config_path
 
 
 web_bp = Blueprint('web', __name__)
@@ -73,10 +72,13 @@ def save_rs_timeout():
 @web_bp.route('/save-ftp-config', methods=['POST'])
 def save_ftp_config():
     data = request.get_json()
+    print(f"[DEBUG FTP] Received FTP config data: {data}")
     try:
         config = load_config()
+        print(f"[DEBUG FTP] Loaded config: {config}")
 
         ftp_data = data.get('ftp', {})
+        print(f"[DEBUG FTP] FTP data to save: {ftp_data}")
         config['ftp'] = {
             "server": ftp_data.get('server', ''),
             "port": ftp_data.get('port', 21),
@@ -84,14 +86,20 @@ def save_ftp_config():
             "password": ftp_data.get('password', ''),
             "car_name": ftp_data.get('car_name', '')
         }
+        
+        config_path = get_config_path()
+        print(f"[DEBUG FTP] Saving to: {config_path}")
+        print(f"[DEBUG FTP] Updated config: {config}")
 
-        with open(get_config_path(), 'w') as file:
+        with open(config_path, 'w') as file:
             json.dump(config, file, indent=4)
         
+        print(f"[DEBUG FTP] Config file saved successfully")
         update_imei()
 
         return jsonify({"success": True, "message": "FTP settings saved!"})
     except Exception as e:
+        print(f"[DEBUG FTP] Error saving FTP config: {str(e)}")
         return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
 
 
