@@ -49,45 +49,45 @@ def get_camera_ports():
     return ports
 
 
-# Функція для ініціалізації геркона
+# Функція для ініціалізації геркона через єдиний інтерфейс
+from dvr_web.reed_switch_interface import RSFactory
+
+global_reed_switch = None  # Глобальний об'єкт геркона
+
 def initialize_reed_switch():
-    global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time, reed_switch_monitor_active
-    
+    global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time, reed_switch_monitor_active, global_reed_switch
     try:
-        print(f"[DEBUG] Початок ініціалізації геркона на піні {REED_SWITCH_PIN}")
-        
-        # Налаштування GPIO з використанням RPi.GPIO
-        GPIO.setup(REED_SWITCH_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        
-        # Ініціалізуємо початковий стан геркона
-        gpio_value = GPIO.input(REED_SWITCH_PIN)
-        initial_status = "open" if gpio_value == GPIO.HIGH else "closed"
-        
-        print(f"[DEBUG] Успішно налаштовано GPIO. Зчитане значення: {gpio_value}, статус: {initial_status}")
-        
+        print(f"[DEBUG] Початок ініціалізації геркона через RSFactory")
+        config = load_config()
+        impulse = 0
+        if "reed_switch" in config and "impulse" in config["reed_switch"]:
+            impulse = config["reed_switch"]["impulse"]
+        # Створюємо об'єкт геркона через фабрику лише один раз
+        if global_reed_switch is not None:
+            # Якщо вже був створений, спробуємо його "перезібрати" (можливо, додати .close() у майбутньому)
+            try:
+                if hasattr(global_reed_switch, 'btn_a') and global_reed_switch.btn_a:
+                    global_reed_switch.btn_a.close()
+                if hasattr(global_reed_switch, 'btn_b') and global_reed_switch.btn_b:
+                    global_reed_switch.btn_b.close()
+            except Exception as e:
+                print(f"[DEBUG] Не вдалося закрити попередні Button: {e}")
+        global_reed_switch = RSFactory.create(bool(impulse))
+        global_reed_switch.setup()
+        initial_status = "opened" if global_reed_switch.pressed() else "closed"
+        print(f"[DEBUG] Початковий стан геркона (RSFactory): {initial_status}")
         reed_switch_state = {
             "status": initial_status,
             "timestamp": int(time.time())
         }
-        
         reed_switch_initialized = True
-        
-        # Встановлюємо час автоматичної зупинки через вказаний час
         reed_switch_autostop_time = time.time() + REED_SWITCH_AUTOSTOP_SECONDS
-        
-        # Запускаємо потік моніторингу, якщо він ще не запущений
         if not reed_switch_monitor_active and monitor_reed_switch is not None:
             reed_switch_monitor_active = True
             reed_switch_monitor_thread = threading.Thread(target=monitor_reed_switch)
             reed_switch_monitor_thread.daemon = True
             reed_switch_monitor_thread.start()
-            print(f"[DEBUG] Запущено потік моніторингу геркона")
-        
-        print(f"[DEBUG] GPIO налаштовано для геркона на піні {REED_SWITCH_PIN}")
-        print(f"[DEBUG] Початковий стан геркона: {initial_status}")
-        print(f"[DEBUG] Встановлено автоматичну зупинку через {REED_SWITCH_AUTOSTOP_SECONDS} секунд")
-        print(f"[DEBUG] reed_switch_initialized = {reed_switch_initialized}")
-        
+            print(f"[DEBUG] Запущено потік моніторингу геркона через RSFactory")
         return {"success": True, "status": initial_status}
     except Exception as e:
         error_msg = f"Помилка при ініціалізації геркона: {str(e)}"
@@ -95,39 +95,26 @@ def initialize_reed_switch():
         return {"success": False, "error": error_msg}
 
 
-# Функція для читання стану геркона з GPIO
+# Функція для читання стану геркона через єдиний інтерфейс
 def read_reed_switch_state():
     """
-    Зчитує стан геркона.
+    Зчитує стан геркона через глобальний об'єкт (RSFactory singleton).
     Повертає "closed" якщо геркон замкнутий (магніт присутній),
     "opened" якщо геркон розімкнутий,
     "unknown" якщо стан не вдалося визначити.
     """
+    global global_reed_switch
     try:
-        # Для підвищення стабільності, робимо кілька зчитувань
-        readings = []
-        for _ in range(3):  # 3 зчитування підряд
-            # Використання RPi.GPIO для читання стану
-            gpio_value = GPIO.input(REED_SWITCH_PIN)
-            readings.append(gpio_value)
-            time.sleep(0.01)  # Невелика затримка між зчитуваннями
-            
-        # Вибираємо найбільш часте значення (мажоритарне голосування)
-        gpio_value = max(set(readings), key=readings.count)
-        
-        print(f"[DEBUG] Зчитані значення геркона: {readings}, вибрано {gpio_value}")
-            
-        # У RPi.GPIO:
-        # GPIO.HIGH (1) = розімкнутий (магніт відсутній)
-        # GPIO.LOW (0) = замкнутий (магніт присутній)
-        if gpio_value == GPIO.LOW:
-            return "closed"
-        elif gpio_value == GPIO.HIGH:
-            return "opened"
-        else:
+        if global_reed_switch is None:
+            print("[DEBUG] Глобальний об'єкт геркона не створено, ініціалізую...")
+            initialize_reed_switch()
+        if global_reed_switch is None:
+            print("[DEBUG] Не вдалося створити об'єкт геркона")
             return "unknown"
+        pressed = global_reed_switch.pressed()
+        return "opened" if pressed else "closed"
     except Exception as e:
-        print(f"[DEBUG] Помилка при читанні стану геркона: {str(e)}")
+        print(f"[DEBUG] Помилка при читанні стану геркона через RSFactory: {str(e)}")
         return "unknown"
 
 

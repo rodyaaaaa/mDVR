@@ -11,5 +11,10 @@ BASE_PORT = 10511
 REED_SWITCH_PIN = 17
 REED_SWITCH_AUTOSTOP_SECONDS = 180
 
+# Reed Switch (геркони) GPIO pins
+BTN_A_PIN = 22
+BTN_B_PIN = 23
+DOOR_SENSOR_PIN = 24
+
 # Configuration constants
 CONFIG_FILENAME = 'data_config.json'
