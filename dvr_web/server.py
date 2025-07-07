@@ -116,7 +116,4 @@ signal.signal(signal.SIGINT, cleanup_gpio)
 signal.signal(signal.SIGTERM, cleanup_gpio)
 
 if __name__ == '__main__':
-    try:
-        start_server(host='0.0.0.0', port=80)
-    finally:
-        cleanup_gpio()
+    start_server(host='0.0.0.0', port=80)

@@ -10,7 +10,6 @@ function saveVideoOptions() {
     const folderSize = document.getElementById('size-folder-limit-gb').value;
     const photoTimeout = document.getElementById('photo-timeout').value;
     
-    // Get RS Timeout value
     let rsTimeout = null;
     const rsTimeoutInput = document.getElementById('rs-timeout-input');
     if (rsTimeoutInput && rsTimeoutInput.value.trim() !== '') {
@@ -49,6 +48,46 @@ function saveVideoOptions() {
             hidePreloader();
             if (result.success) {
                 showNotification('Video options saved successfully!');
+            } else {
+                showNotification('ERROR: ' + result.error, true);
+            }
+        })
+        .catch(error => {
+            hidePreloader();
+            showNotification('ERROR: ' + error.message, true);
+        });
+}
+
+function saveRSConfig() {
+    showPreloader();
+
+    let rsTimeout = null;
+    const rsTimeoutInput = document.getElementById('rs-timeout-input');
+    if (rsTimeoutInput && rsTimeoutInput.value.trim() !== '') {
+        rsTimeout = rsTimeoutInput.value.trim();
+        
+        // Validate timeout value
+        if (isNaN(Number(rsTimeout)) || Number(rsTimeout) < 0) {
+            hidePreloader();
+            showNotification('Please enter a valid RS Timeout value (in seconds)', true);
+            return;
+        }
+    }
+
+    const data = {
+        rs_timeout: parseInt(rsTimeout),
+    };
+
+    fetch('/save-rs-timeout', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(result => {
+            hidePreloader();
+            if (result.success) {
+                showNotification('Sensors options saved successfully!');
             } else {
                 showNotification('ERROR: ' + result.error, true);
             }
@@ -271,17 +310,13 @@ function showSettingsTab(tabId) {
 
 // Initialize configuration functionality
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize write mode settings
     const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
     toggleModeSettings(initialMode);
     
-    // Update IMEI on page load
     updateImei();
     
-    // Update IMEI every 10 seconds
     setInterval(updateImei, 10000);
     
-    // Add settings tab click handlers
     document.getElementById('general-settings-tab').addEventListener('click', () => showSettingsTab('general-settings-content'));
     document.getElementById('reed-switch-tab').addEventListener('click', () => showSettingsTab('reed-switch-settings-content'));
     document.getElementById('ftp-settings-tab').addEventListener('click', () => showSettingsTab('ftp-settings-content'));
@@ -290,10 +325,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Validate car name input - allow only numbers and uppercase letters
 function validateCarname(input) {
-    // Replace any characters that are not uppercase letters or numbers
     input.value = input.value.replace(/[^A-Z0-9]/g, '');
     
-    // Ensure maximum length of 6 characters (also set in HTML)
     if (input.value.length > 6) {
         input.value = input.value.substring(0, 6);
     }

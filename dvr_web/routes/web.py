@@ -61,7 +61,7 @@ def save_rs_timeout():
     try:
         value = int(data.get('rs_timeout', 0))
         config = load_config()
-        config['rs_timeout'] = value
+        config['reed_switch']['rs_timeout'] = value
         with open(get_config_path(), 'w') as file:
             json.dump(config, file, indent=4)
         return jsonify({"success": True, "message": "RS Timeout saved"})

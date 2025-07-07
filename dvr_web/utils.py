@@ -112,7 +112,12 @@ def read_reed_switch_state():
             print("[DEBUG] Не вдалося створити об'єкт геркона")
             return "unknown"
         pressed = global_reed_switch.pressed()
-        return "opened" if pressed else "closed"
+        if pressed is True:
+            return "opened"
+        elif pressed is False:
+            return "closed"
+        else:
+            return "unknown"
     except Exception as e:
         print(f"[DEBUG] Помилка при читанні стану геркона через RSFactory: {str(e)}")
         return "unknown"
@@ -182,35 +187,33 @@ def load_config():
                     config = json.load(default_file)
         
         # Ensure required sections exist
+        changed = False
         if "rtsp_options" not in config:
             config["rtsp_options"] = {"rtsp_x": 640, "rtsp_y": 480}
-        
+            changed = True
         if "program_options" not in config:
             config["program_options"] = {"photo_mode": 0, "size_folder_limit_gb": 10, "imei": 0}
-        
-        # Ensure FTP section exists
+            changed = True
         if "ftp" not in config:
             config["ftp"] = {"server": "", "port": 21, "user": "", "password": "", "car_name": ""}
-        
-        # Ensure camera_list exists
+            changed = True
         if "camera_list" not in config:
             config["camera_list"] = []
-        
+            changed = True
         # Handle rs_timeout - ensure it's only at the root level
-        # If it exists in program_options, move it to root level if not already there
         if "rs_timeout" in config.get("program_options", {}):
             if "rs_timeout" not in config:
                 config["rs_timeout"] = config["program_options"]["rs_timeout"]
-            # Remove from program_options to avoid duplication
+                changed = True
             del config["program_options"]["rs_timeout"]
+            changed = True
         elif "rs_timeout" not in config:
-            # Set default if not present anywhere
             config["rs_timeout"] = 2
-        
-        # Save changes back to the config file
-        with open(config_path, 'w') as write_file:
-            json.dump(config, write_file, indent=4)
-        
+            changed = True
+        # Save changes back to the config file only if changed
+        if changed:
+            with open(config_path, 'w') as write_file:
+                json.dump(config, write_file, indent=4)
         return config
     except Exception as e:
         print(f"Critical error in load_config: {str(e)}")
