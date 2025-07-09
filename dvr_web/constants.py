@@ -1,7 +1,5 @@
 import os
 
-CONFIG_PATH = '/opt/mdvr/dvr_video'
-CONFIG_FULL_PATH = os.path.join(CONFIG_PATH, 'data_config.json')
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), '../dvr_video/default.json')
 SERVICE_PATH = "/etc/systemd/system/mdvr.service"
 VPN_CONFIG_PATH = "/etc/wireguard/wg0.conf"

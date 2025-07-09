@@ -840,11 +840,7 @@ def serve_stream_file(stream_id, filename):
 def get_rs_timeout():
     try:
         config = load_config()
-        if "reed_switch" in config and "rs_timeout" in config["reed_switch"]:
-            timeout = config["reed_switch"]["rs_timeout"]
-        else:
-            timeout = config.get("rs_timeout", 2)
-        return jsonify({"timeout": timeout})
+        return jsonify({"timeout": config["reed_switch"]["rs_timeout"]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

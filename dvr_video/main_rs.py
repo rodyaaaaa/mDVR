@@ -92,7 +92,7 @@ async def main():
                     links_names.append(str(current_link + 1) + "24" + file_name)
                     video_status = True
         elif door_state is False and video_status is True:
-            time.sleep(config["rs_timeout"])
+            time.sleep(config["reed_switch"]["rs_timeout"])
             door_state = rs.pressed()
             if door_state is False:
                 loop = asyncio.get_running_loop()

@@ -59,9 +59,10 @@ def save_write_mode():
 def save_rs_timeout():
     data = request.get_json()
     try:
-        value = int(data.get('rs_timeout', 0))
+        value = data.get('rs_timeout', 0)
         config = load_config()
-        config['reed_switch']['rs_timeout'] = value
+        print(config["reed_switch"]["rs_timeout"])
+        config["reed_switch"]["rs_timeout"] = value
         with open(get_config_path(), 'w') as file:
             json.dump(config, file, indent=4)
         return jsonify({"success": True, "message": "RS Timeout saved"})
@@ -121,15 +122,6 @@ def save_video_options():
             "rtsp_resolution_y": data.get('rtsp_resolution_y', 480)
         }
 
-        # Обробка RS Timeout, якщо він присутній
-        if 'rs_timeout' in data and data['rs_timeout'] is not None:
-            try:
-                rs_timeout = int(data.get('rs_timeout', 0))
-                config['rs_timeout'] = rs_timeout
-            except (TypeError, ValueError):
-                config['rs_timeout'] = 0
-                print(f"Invalid RS Timeout value: {data.get('rs_timeout')}, using default 0")
-
         video_duration = data.get('video_duration')
         if video_duration:
             video_duration = video_duration.strip().lower()
@@ -184,17 +176,6 @@ def save_video_options():
         return jsonify({"success": False, "error": str(ve)}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
-
-@web_bp.route('/api/get-rs-timeout')
-def get_rs_timeout():
-    try:
-        config = load_config()
-        timeout = config.get('rs_timeout', 0)
-        return jsonify({"timeout": timeout})
-    except Exception as e:
-        print(f"Error getting RS timeout: {str(e)}")
-        return jsonify({"timeout": 0, "error": str(e)})
 
 
 @web_bp.route('/save-vpn-config', methods=['POST'])

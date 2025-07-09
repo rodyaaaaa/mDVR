@@ -170,61 +170,22 @@ def load_config():
     if not os.path.exists(config_path):
         shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
     
-    try:
-        # Check if file is empty
-        if os.path.getsize(config_path) == 0:
-            print(f"Config file {config_path} is empty, copying default config")
+    # Check if file is empty
+    if os.path.getsize(config_path) == 0:
+        print(f"Config file {config_path} is empty, copying default config")
+        shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
+        
+    with open(config_path, 'r') as file:
+        try:
+            config = json.load(file)
+        except json.JSONDecodeError as e:
+            # If JSON is corrupted, use the default config
+            print(f"Error decoding JSON: {str(e)}. Using default config instead.")
             shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
-        
-        with open(config_path, 'r') as file:
-            try:
-                config = json.load(file)
-            except json.JSONDecodeError as e:
-                # If JSON is corrupted, use the default config
-                print(f"Error decoding JSON: {str(e)}. Using default config instead.")
-                shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
-                with open(config_path, 'r') as default_file:
-                    config = json.load(default_file)
-        
-        # Ensure required sections exist
-        changed = False
-        if "rtsp_options" not in config:
-            config["rtsp_options"] = {"rtsp_x": 640, "rtsp_y": 480}
-            changed = True
-        if "program_options" not in config:
-            config["program_options"] = {"photo_mode": 0, "size_folder_limit_gb": 10, "imei": 0}
-            changed = True
-        if "ftp" not in config:
-            config["ftp"] = {"server": "", "port": 21, "user": "", "password": "", "car_name": ""}
-            changed = True
-        if "camera_list" not in config:
-            config["camera_list"] = []
-            changed = True
-        # Handle rs_timeout - ensure it's only at the root level
-        if "rs_timeout" in config.get("program_options", {}):
-            if "rs_timeout" not in config:
-                config["rs_timeout"] = config["program_options"]["rs_timeout"]
-                changed = True
-            del config["program_options"]["rs_timeout"]
-            changed = True
-        elif "rs_timeout" not in config:
-            config["rs_timeout"] = 2
-            changed = True
-        # Save changes back to the config file only if changed
-        if changed:
-            with open(config_path, 'w') as write_file:
-                json.dump(config, write_file, indent=4)
-        return config
-    except Exception as e:
-        print(f"Critical error in load_config: {str(e)}")
-        # In case of any other error, return a minimal valid config
-        return {
-            "camera_list": [],
-            "program_options": {"photo_mode": 0, "size_folder_limit_gb": 10, "imei": 0},
-            "rtsp_options": {"rtsp_x": 640, "rtsp_y": 480},
-            "ftp": {"server": "", "port": 21, "user": "", "password": "", "car_name": ""},
-            "rs_timeout": 2
-        }
+            with open(config_path, 'r') as default_file:
+                config = json.load(default_file)
+                
+    return config
 
 
 def generate_nginx_configs(camera_list):

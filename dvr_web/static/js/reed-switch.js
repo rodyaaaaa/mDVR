@@ -103,42 +103,25 @@ function updateReedSwitchState() {
             
             if (data.state === "on") {
                 reedOnRadio.checked = true;
-                
-                // Get timeout value regardless of state
-                if (rsTimeoutInput) {
-                    fetch('/api/get-rs-timeout')
-                        .then(response => response.json())
-                        .then(timeoutData => {
-                            if (timeoutData && typeof timeoutData.timeout !== 'undefined') {
-                                rsTimeoutInput.value = timeoutData.timeout;
-                            } else {
-                                rsTimeoutInput.value = "0";
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching RS timeout:', error);
-                            rsTimeoutInput.value = "0";
-                        });
-                }
             } else {
-                reedOffRadio.checked = true;
+                reedOnRadio.checked = false;
+            }
                 
-                // Still get the timeout value when reed switch is off
-                if (rsTimeoutInput) {
-                    fetch('/api/get-rs-timeout')
-                        .then(response => response.json())
-                        .then(timeoutData => {
-                            if (timeoutData && typeof timeoutData.timeout !== 'undefined') {
-                                rsTimeoutInput.value = timeoutData.timeout;
-                            } else {
-                                rsTimeoutInput.value = "0";
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching RS timeout:', error);
+            // Get timeout value regardless of state
+            if (rsTimeoutInput) {
+                fetch('/api/get-rs-timeout')
+                    .then(response => response.json())
+                    .then(timeoutData => {
+                        if (timeoutData && typeof timeoutData.timeout !== 'undefined') {
+                            rsTimeoutInput.value = timeoutData.timeout;
+                        } else {
                             rsTimeoutInput.value = "0";
-                        });
-                }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching RS timeout:', error);
+                        rsTimeoutInput.value = "0";
+                    });
             }
             
             // Get reed switch mode

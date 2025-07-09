@@ -9,19 +9,6 @@ function saveVideoOptions() {
     const fps = document.getElementById('video-fps').value;
     const folderSize = document.getElementById('size-folder-limit-gb').value;
     const photoTimeout = document.getElementById('photo-timeout').value;
-    
-    let rsTimeout = null;
-    const rsTimeoutInput = document.getElementById('rs-timeout-input');
-    if (rsTimeoutInput && rsTimeoutInput.value.trim() !== '') {
-        rsTimeout = rsTimeoutInput.value.trim();
-        
-        // Validate timeout value
-        if (isNaN(Number(rsTimeout)) || Number(rsTimeout) < 0) {
-            hidePreloader();
-            showNotification('Please enter a valid RS Timeout value (in seconds)', true);
-            return;
-        }
-    }
 
     const data = {
         rtsp_transport: transport,
@@ -32,11 +19,6 @@ function saveVideoOptions() {
         size_folder_limit_gb: parseInt(folderSize) || 10,
         photo_timeout: parseInt(photoTimeout) || 10,
     };
-    
-    // Add RS Timeout value if it exists
-    if (rsTimeout !== null) {
-        data.rs_timeout = parseInt(rsTimeout);
-    }
 
     fetch('/save-video-options', {
         method: 'POST',
