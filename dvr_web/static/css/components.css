@@ -86,7 +86,7 @@
 }
 
 .cam-field .view-cam {
-    display: none;
+    display: inline-block;
 }
 
 /* Modal */

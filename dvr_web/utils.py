@@ -1,12 +1,9 @@
 import os
 import shutil
-import signal
 import json
 import re
-import sys
 import threading
 import time
-import dvr_web.routes.api
 import RPi.GPIO as GPIO
 
 from pathlib import Path
@@ -14,24 +11,20 @@ from flask import request
 
 from dvr_web.constants import BASE_PORT, DEFAULT_CONFIG_PATH, NGINX_CONF_DIR, REED_SWITCH_AUTOSTOP_SECONDS, REED_SWITCH_PIN, REGULAR_SEARCH_IP, SERVICE_PATH, VPN_CONFIG_PATH, CONFIG_FILENAME
 
-# Define our own config path function for the web interface
 def get_config_path():
     config_dir = '/etc/mdvr'
     os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, CONFIG_FILENAME)
 
-# Initialize GPIO at module level
-GPIO.setwarnings(False)  # Disable warnings
-GPIO.setmode(GPIO.BCM)  # Use BCM numbering like in main_rs.py
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
 
 # Global variables for reed switch state
 reed_switch_initialized = False
 reed_switch_monitor_active = False
 reed_switch_state = {"status": "unknown", "timestamp": 0}
 reed_switch_autostop_time = None
-
-# Forward reference to the monitor_reed_switch function from reed_switch.py
-# This will be resolved at runtime
+global_reed_switch = None
 monitor_reed_switch = None
 
 def get_camera_ports():
@@ -51,8 +44,6 @@ def get_camera_ports():
 
 # Функція для ініціалізації геркона через єдиний інтерфейс
 from dvr_web.reed_switch_interface import RSFactory
-
-global_reed_switch = None  # Глобальний об'єкт геркона
 
 def initialize_reed_switch():
     global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time, reed_switch_monitor_active, global_reed_switch
@@ -184,7 +175,7 @@ def load_config():
             shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
             with open(config_path, 'r') as default_file:
                 config = json.load(default_file)
-                
+
     return config
 
 
@@ -198,10 +189,10 @@ def generate_nginx_configs(camera_list):
         config_counter = 1
 
         for i, rtsp_url in enumerate(camera_list, 1):
-            match = re.search(r'@([\d.]+)(:|/)', rtsp_url)
+            match = re.search(r"rtsp://(?:[^@]+@)?([0-9]{1,3}(?:\.[0-9]{1,3}){3})", rtsp_url)
             if not match:
                 continue
-
+            
             cam_ip = match.group(1)
 
             if cam_ip in unique_ips:
@@ -291,24 +282,6 @@ def update_imei():
     except Exception as e:
         print(f"Critical error in update_imei: {str(e)}")
         return False
-
-
-# Функція для очищення ресурсів GPIO при завершенні програми
-def cleanup_gpio(signum=None, frame=None):
-    """
-    Функція для звільнення ресурсів GPIO при завершенні програми.
-    """
-    try:
-        # Зупиняємо моніторинг CPU
-        try:
-            dvr_web.routes.api.cpu_monitor_active = False
-        except:
-            pass
-            
-        GPIO.cleanup()
-        print("GPIO ресурси звільнено")
-    except:
-        pass
 
 
 # Функція для надсилання WebSocket повідомлення

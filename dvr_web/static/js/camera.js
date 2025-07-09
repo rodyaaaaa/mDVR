@@ -9,27 +9,11 @@ function extractCameraIp(rtspUrl) {
     return match ? match[1] : null;
 }
 
-function updateViewButtons() {
-    const camFields = document.querySelectorAll('#cam-fields .cam-field');
-    camFields.forEach(field => {
-        const input = field.querySelector('input');
-        const viewButton = field.querySelector('.view-cam');
-        const camIp = extractCameraIp(input.value);
-
-        if (camIp && cameraPorts[camIp]) {
-            viewButton.style.display = 'inline-block';
-        } else {
-            viewButton.style.display = 'none';
-        }
-    });
-}
-
 function updateCameraPorts() {
     fetch('/get-camera-ports')
         .then(response => response.json())
         .then(data => {
             cameraPorts = data;
-            updateViewButtons();
         })
         .catch(error => console.error('Error fetching camera ports:', error));
 }

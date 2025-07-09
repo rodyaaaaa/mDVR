@@ -166,12 +166,12 @@ def monitor_reed_switch():
                     prev_state = current_state
                     last_update_time = current_time
             else:
-                debounce_count = 0  # Скидаємо лічильник, якщо стан не змінюється
+                debounce_count = 0
             
             # Періодичне оновлення для таймеру зворотнього відліку та стану геркона
             # навіть якщо стан не змінився
             seconds_left = int(reed_switch_autostop_time - current_time) if reed_switch_autostop_time else 0
-            update_interval = 0.5 if seconds_left <= 10 else 1  # Частіше оновлюємо в останні 10 секунд
+            update_interval = 0.5 if seconds_left <= 10 else 1
             
             # Надсилаємо оновлення, якщо пройшов певний інтервал часу з моменту останнього оновлення
             # або якщо стан змінився

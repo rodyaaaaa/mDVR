@@ -1,10 +1,11 @@
 import time
 import threading
+
 from flask import request
 from flask_socketio import SocketIO, emit
+
 from dvr_web.routes.api import monitor_reed_switch, reed_switch_initialized, reed_switch_autostop_time, reed_switch_state
 
-# Змінна для зберігання екземпляру SocketIO
 socketio = None
 
 def init_socketio(app):
