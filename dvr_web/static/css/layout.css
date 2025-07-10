@@ -28,7 +28,8 @@ header p {
 }
 
 .sidebar {
-    width: 20%;
+    min-width: 20%;
+    max-width: 30%;
     background: #1b263b;
     padding: 20px;
     display: flex;
@@ -57,12 +58,13 @@ header p {
 .sidebar button::after {
     content: '';
     position: absolute;
-    bottom: 0;
-    left: 0;
+    top: 0; left: 0;
     width: 0;
-    height: 2px;
-    background-color: #fff;
+    height: 100%;
+    background: transparent;
+    color: white; 
     transition: width 0.3s ease;
+    z-index: -1;
 }
 
 .sidebar button:hover {

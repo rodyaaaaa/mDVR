@@ -271,4 +271,11 @@
 #auto-stop-time {
     font-weight: bold;
     color: #ff9800;
-} 
+}
+
+#ext5v-v-output {
+    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+    width: 100%;
+}

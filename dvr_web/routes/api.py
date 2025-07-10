@@ -207,9 +207,9 @@ def api_ext5v_v():
         for line in result.stdout.splitlines():
             if 'EXT5V_V' in line:
                 # Extract just the value part from the line (assuming format like "EXT5V_V: 4.97V")
-                value_part = line.strip().split(': ')
-                if len(value_part) > 1:
-                    return jsonify({'value': value_part[1]})
+                voltage = line.split('=', 1)
+                if len(voltage) > 1:
+                    return jsonify({'value': voltage[1]})
                 else:
                     return jsonify({'value': line.strip()})
         return jsonify({'value': 'N/A'})

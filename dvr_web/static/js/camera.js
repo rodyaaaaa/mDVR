@@ -5,7 +5,9 @@ let camCounter = document.querySelectorAll('#cam-fields .cam-field').length;
 
 // Camera port and view functions
 function extractCameraIp(rtspUrl) {
-    const match = rtspUrl.match(/@([\d.]+)(:|$|\/)/);
+    console.log(rtspUrl)
+    const match = rtspUrl.match(/@(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?(?:\/|$)/);
+    console.log(match)
     return match ? match[1] : null;
 }
 
@@ -22,6 +24,7 @@ function viewCamera(button) {
     const field = button.closest('.cam-field');
     const input = field.querySelector('input');
     const camIp = extractCameraIp(input.value);
+    console.log(camIp)
 
     if (camIp && cameraPorts[camIp]) {
         const port = cameraPorts[camIp];
