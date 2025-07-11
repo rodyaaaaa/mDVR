@@ -136,7 +136,7 @@
             <div id="cam-fields">
                 {% for url in camera_list %}
                     <div class="cam-field">
-                        <label>Cam {{ loop.index }}:</label>
+                        <label>{{ loop.index }}.</label>
                         <input type="text" value="{{ url }}" placeholder="Select RTSP url://" disabled>
                         <button class="edit-cam" onclick="enableEdit(this)">Edit</button>
                         <button class="view-cam" onclick="viewCamera(this)">View</button>
