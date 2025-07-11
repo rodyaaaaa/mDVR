@@ -5,9 +5,10 @@ body {
     padding: 0;
     background: #1b263b;
     color: #ffffff;
+    height: 100vh;
+    overflow: hidden;
 }
 
-/* Base form elements */
 input, textarea, select {
     width: 100%;
     padding: 12px;
@@ -59,7 +60,6 @@ h2 {
     margin-top: 20px;
 }
 
-/* Utility classes */
 .highlight {
     animation: pulse 2s infinite;
 } 
