@@ -208,24 +208,17 @@ def api_initialize_reed_switch():
 def api_stop_reed_switch():
     global reed_switch_initialized, reed_switch_monitor_active, reed_switch_autostop_time
 
-    try:
-        reed_switch_monitor_active = False
+    reed_switch_monitor_active = False
+    reed_switch_autostop_time = None
+    reed_switch_initialized = False
 
-        reed_switch_autostop_time = None
-
-        if reed_switch_initialized:
-            try:
-                GPIO.cleanup(REED_SWITCH_PIN)
-            except Exception as e:
-                print(f"Помилка при звільненні GPIO: {str(e)}")
-
-            reed_switch_initialized = False
-
-        return jsonify({"success": True, "message": "Моніторинг геркона зупинено"})
-    except Exception as e:
-        error_msg = f"Помилка при зупинці моніторингу геркона: {str(e)}"
-        print(error_msg)
-        return jsonify({"success": False, "error": error_msg})
+    sync_reed_switch_state(
+        initialized=reed_switch_initialized,
+        monitor_active=reed_switch_monitor_active,
+        autostop_time=reed_switch_autostop_time
+    )
+    GPIO.cleanup()
+    return jsonify({"success": True, "message": "Моніторинг геркона зупинено"})
 
 
 @reed_switch_bp.route('/get-reed-switch-status')

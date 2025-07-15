@@ -101,7 +101,6 @@ function updateReedSwitchState() {
         reedOnRadio.checked = false;
       }
 
-      // Get timeout value regardless of state
       if (rsTimeoutInput) {
         fetch("/reed-switch/get-rs-timeout")
           .then((response) => response.json())
@@ -195,7 +194,6 @@ function toggleReedSwitch() {
       hidePreloader();
       if (result.success) {
         showNotification("Reed Switch updated successfully!");
-        // Update state after successful toggle
         setTimeout(updateReedSwitchState, 500);
       } else {
         showNotification("ERROR: " + result.error, true);
@@ -352,7 +350,7 @@ function stopReedSwitchMonitoring() {
     connectionStatus.classList.remove("connected");
   }
 
-  fetch("/api/stop-reed-switch", {
+  fetch("/reed-switch/stop-reed-switch", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -400,19 +398,6 @@ function stopReedSwitchMonitoring() {
         "Error stopping reed switch monitoring: " + error.message,
         true,
       );
-    });
-}
-
-// Reed Switch WebSocket functions
-function checkReedSwitchInitialized() {
-  fetch("/api/reed-switch-status")
-    .then((response) => response.json())
-    .then((data) => {
-      updateReedSwitchUI(data);
-    })
-    .catch((error) => {
-      console.error("Error checking reed switch status:", error);
-      showNotification("Error checking reed switch status", true);
     });
 }
 
