@@ -182,16 +182,6 @@ def api_stop_reed_switch():
         return jsonify({"success": False, "error": error_msg})
 
 
-@api_bp.route('/get-reed-switch-status')
-def get_reed_switch_status():
-    try:
-        output = subprocess.check_output(["systemctl", "is-enabled", "mdvr_rs.timer"]).decode().strip()
-        state = "on" if output == "enabled" else "off"
-        return jsonify({"state": state})
-    except Exception as e:
-        return jsonify({"state": "off", "error": str(e)})
-
-
 @api_bp.route('/toggle-reed-switch', methods=['POST'])
 def toggle_reed_switch():
     data = request.get_json()
@@ -560,19 +550,6 @@ def get_rs_timeout():
     try:
         config = load_config()
         return jsonify({"timeout": config["reed_switch"]["rs_timeout"]})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@api_bp.route('/get-reed-switch-mode')
-def get_reed_switch_mode():
-    try:
-        config = load_config()
-        if "reed_switch" in config and "impulse" in config["reed_switch"]:
-            impulse = config["reed_switch"]["impulse"]
-        else:
-            impulse = 0  # Default to mechanical (0) if not found
-        return jsonify({"impulse": impulse})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

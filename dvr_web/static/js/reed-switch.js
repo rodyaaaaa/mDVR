@@ -39,8 +39,6 @@ function updateReedSwitchUI(data) {
     }
   }
 
-  console.log("Received update via WebSocket:", data);
-
   if (data.hasOwnProperty("status") && statusIndicator && statusText) {
     statusIndicator.classList.remove("closed");
     statusIndicator.classList.remove("opened");
@@ -85,7 +83,7 @@ function updateReedSwitchUI(data) {
 
 // Reed Switch state functions
 function updateReedSwitchState() {
-  fetch("/api/get-reed-switch-status")
+  fetch("/reed-switch/get-reed-switch-status")
     .then((response) => response.json())
     .then((data) => {
       const reedOnRadio = document.getElementById("reed-switch-on");
@@ -129,7 +127,7 @@ function updateReedSwitchState() {
 
 // Function to update reed switch mode from server
 function updateReedSwitchMode() {
-  fetch("/api/get-reed-switch-mode")
+  fetch("/reed-switch/get-reed-switch-mode")
     .then((response) => response.json())
     .then((data) => {
       const mechanicalModeRadio = document.getElementById(

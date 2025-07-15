@@ -103,18 +103,13 @@ function showTab(tabId) {
     startCpuChartUpdates();
     startMemChartUpdates();
   } else if (tabId === "video-options") {
-    // For settings tab, handle Reed Switch separately in showSettingsTab
     updateReedSwitchState();
-    // Set the first settings tab as active by default
     showSettingsTab("general-settings-content");
-    // Stop updates when not on home tab
     stopExt5vVUpdates();
     clearInterval(cpuChartInterval);
     clearInterval(memChartInterval);
   } else {
-    // Close WebSocket connection when switching to tabs that don't need Reed Switch data
     closeReedSwitchWebSocket();
-    // Stop updates when not on home tab
     stopExt5vVUpdates();
     clearInterval(cpuChartInterval);
     clearInterval(memChartInterval);
