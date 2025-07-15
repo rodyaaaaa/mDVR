@@ -1,6 +1,5 @@
 // Reed Switch functionality
 
-// Global variables for WebSocket connection
 let reedSwitchSocket = null;
 let reedSwitchReconnectTimer = null;
 let reedSwitchCountdownInterval = null;
@@ -432,7 +431,6 @@ function createReedSwitchWebSocket() {
   });
 
   reedSwitchSocket.on("reed_switch_update", function (data) {
-    console.log("Received reed_switch_update:", data);
     updateReedSwitchUI(data);
   });
 
@@ -445,7 +443,6 @@ function createReedSwitchWebSocket() {
       connectionStatus.classList.remove("connected");
     }
 
-    // Try to reconnect after 2 seconds
     reedSwitchReconnectTimer = setTimeout(() => {
       console.log("Attempting to reconnect WebSocket...");
       createReedSwitchWebSocket();
@@ -473,41 +470,4 @@ function closeReedSwitchWebSocket() {
     reedSwitchSocket.disconnect();
     reedSwitchSocket = null;
   }
-}
-
-function setupReedSwitchPolling() {
-  const pollingInterval = 2000;
-
-  // Function to perform polling
-  function pollReedSwitchStatus() {
-    const homeTab = document.getElementById("home");
-    const settingsTab = document.getElementById("video-options");
-    const reedSwitchSettingsContent = document.getElementById(
-      "reed-switch-settings-content",
-    );
-
-    if (!homeTab || !settingsTab || !reedSwitchSettingsContent) return;
-
-    const homeTabActive = homeTab.classList.contains("active");
-    const settingsTabActive = settingsTab.classList.contains("active");
-    const reedSwitchSettingsActive =
-      reedSwitchSettingsContent.classList.contains("active");
-
-    if (!homeTabActive && !(settingsTabActive && reedSwitchSettingsActive)) {
-      return;
-    }
-
-    // Send request to server
-    fetch("/api/reed-switch-status")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Received data via HTTP polling:", data);
-        updateReedSwitchUI(data);
-      })
-      .catch((error) => {
-        console.error("Error getting reed switch status via HTTP:", error);
-      });
-  }
-
-  return setInterval(pollReedSwitchStatus, pollingInterval);
 }
