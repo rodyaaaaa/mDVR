@@ -10,14 +10,12 @@ from pathlib import Path
 from flask import request
 
 from dvr_web.constants import BASE_PORT, DEFAULT_CONFIG_PATH, NGINX_CONF_DIR, REED_SWITCH_AUTOSTOP_SECONDS, REED_SWITCH_PIN, REGULAR_SEARCH_IP, SERVICE_PATH, VPN_CONFIG_PATH, CONFIG_FILENAME
+from dvr_web.reed_switch_interface import RSFactory
 
 def get_config_path():
     config_dir = '/etc/mdvr'
     os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, CONFIG_FILENAME)
-
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
 
 # Global variables for reed switch state
 reed_switch_initialized = False
@@ -42,9 +40,6 @@ def get_camera_ports():
     return ports
 
 
-# Функція для ініціалізації геркона через єдиний інтерфейс
-from dvr_web.reed_switch_interface import RSFactory
-
 def initialize_reed_switch():
     global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time, reed_switch_monitor_active, global_reed_switch
     try:
@@ -55,7 +50,6 @@ def initialize_reed_switch():
             impulse = config["reed_switch"]["impulse"]
         # Створюємо об'єкт геркона через фабрику лише один раз
         if global_reed_switch is not None:
-            # Якщо вже був створений, спробуємо його "перезібрати" (можливо, додати .close() у майбутньому)
             try:
                 if hasattr(global_reed_switch, 'btn_a') and global_reed_switch.btn_a:
                     global_reed_switch.btn_a.close()
@@ -305,27 +299,22 @@ def sync_reed_switch_state(initialized=None, monitor_active=None, state=None, au
     """
     global reed_switch_initialized, reed_switch_monitor_active, reed_switch_state, reed_switch_autostop_time
     
-    # Якщо передано параметр initialized, оновлюємо стан ініціалізації
     if initialized is not None:
         reed_switch_initialized = initialized
         print(f"[DEBUG SYNC] Оновлено reed_switch_initialized = {initialized}")
     
-    # Якщо передано параметр monitor_active, оновлюємо стан активності моніторингу
     if monitor_active is not None:
         reed_switch_monitor_active = monitor_active
         print(f"[DEBUG SYNC] Оновлено reed_switch_monitor_active = {monitor_active}")
     
-    # Якщо передано параметр state, оновлюємо стан геркона
     if state is not None:
         reed_switch_state = state
         print(f"[DEBUG SYNC] Оновлено reed_switch_state = {state}")
     
-    # Якщо передано параметр autostop_time, оновлюємо час автоматичної зупинки
     if autostop_time is not None:
         reed_switch_autostop_time = autostop_time
         print(f"[DEBUG SYNC] Оновлено reed_switch_autostop_time = {autostop_time}")
 
-    # Також оновлюємо відповідні змінні в socketio
     try:
         from dvr_web.sockets import socketio
         if socketio:
@@ -340,7 +329,6 @@ def sync_reed_switch_state(initialized=None, monitor_active=None, state=None, au
     except ImportError:
         pass
 
-    # Також оновлюємо відповідні змінні в api модулі
     try:
         from dvr_web.routes import api
         if initialized is not None:

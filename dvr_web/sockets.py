@@ -4,7 +4,8 @@ import threading
 from flask import request
 from flask_socketio import SocketIO, emit
 
-from dvr_web.routes.api import monitor_reed_switch, reed_switch_initialized, reed_switch_autostop_time, reed_switch_state
+from dvr_web.routes.api import reed_switch_initialized, reed_switch_autostop_time, reed_switch_state
+from dvr_web.routes.reed_switch import monitor_reed_switch
 
 socketio = None
 
@@ -38,7 +39,6 @@ def init_socketio(app):
     def ws_connect(auth):
         print(f"[DEBUG SOCKET] WebSocket клієнт підключився: {request.sid}")
         
-        # Запускаємо моніторинг геркона, якщо він ще не запущений
         if not socketio.reed_switch_monitor_active:
             socketio.reed_switch_monitor_active = True
             reed_switch_monitor_thread = threading.Thread(target=monitor_reed_switch)

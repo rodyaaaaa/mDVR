@@ -381,18 +381,18 @@ function updateDiskUsageText() {
     `;
 }
 
-// Initialize monitoring functionality
-document.addEventListener('DOMContentLoaded', () => {
-    // Start EXT5V_V updates
+// Monitoring control functions
+function startMonitoring() {
     startExt5vVUpdates();
-    
-    // Start CPU chart updates
     startCpuChartUpdates();
-    
-    // Start memory chart updates
     startMemChartUpdates();
-    
-    // Start disk usage text updates
     updateDiskUsageInfo();
-    diskTextInterval = setInterval(updateDiskUsageInfo, 1000);
-}); 
+    if (!diskTextInterval) diskTextInterval = setInterval(updateDiskUsageInfo, 1000);
+}
+
+function stopMonitoring() {
+    stopExt5vVUpdates();
+    if (cpuChartInterval) { clearInterval(cpuChartInterval); cpuChartInterval = null; }
+    if (memChartInterval) { clearInterval(memChartInterval); memChartInterval = null; }
+    if (diskTextInterval) { clearInterval(diskTextInterval); diskTextInterval = null; }
+}
