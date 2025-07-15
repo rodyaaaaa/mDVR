@@ -3,7 +3,7 @@
 // Global variables for WebSocket connection
 let reedSwitchSocket = null;
 let reedSwitchReconnectTimer = null;
-let reedSwitchCountdownInterval = null; // Interval for updating time display
+let reedSwitchCountdownInterval = null;
 
 // Reed Switch UI update function
 function updateReedSwitchUI(data) {
@@ -520,10 +520,6 @@ function setupReedSwitchPolling() {
       .then((data) => {
         console.log("Received data via HTTP polling:", data);
         updateReedSwitchUI(data);
-
-        if (Math.random() < 0.25) {
-          forceSyncReedSwitch();
-        }
       })
       .catch((error) => {
         console.error("Error getting reed switch status via HTTP:", error);
@@ -532,40 +528,3 @@ function setupReedSwitchPolling() {
 
   return setInterval(pollReedSwitchStatus, pollingInterval);
 }
-
-// Initialization function that runs when the page loads
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("Reed Switch JS loaded");
-
-  initReedSwitchWebSocket();
-
-  const reedSwitchPollingInterval = setupReedSwitchPolling();
-
-  window.addEventListener("beforeunload", () => {
-    clearInterval(reedSwitchPollingInterval);
-  });
-
-  updateReedSwitchState();
-
-  updateReedSwitchMode();
-
-  const videoOptionsBtn = document.querySelector(
-    ".sidebar button[onclick=\"showTab('video-options')\"]",
-  );
-  if (videoOptionsBtn) {
-    videoOptionsBtn.addEventListener("click", () => {
-      updateReedSwitchState();
-      updateReedSwitchMode();
-    });
-  }
-
-  const reedSwitchSettingsBtn = document.querySelector("#reed-switch-tab");
-  if (reedSwitchSettingsBtn) {
-    reedSwitchSettingsBtn.addEventListener("click", () => {
-      forceSyncReedSwitch();
-      updateReedSwitchMode();
-    });
-  }
-
-  checkReedSwitchInitialized();
-});

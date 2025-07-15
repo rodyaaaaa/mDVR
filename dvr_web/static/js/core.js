@@ -99,9 +99,7 @@ function showTab(tabId) {
 
   // Initialize WebSocket connection for Reed Switch
   if (tabId === "home") {
-    // Start EXT5V_V updates
     startExt5vVUpdates();
-    // Start CPU and Memory chart updates
     startCpuChartUpdates();
     startMemChartUpdates();
   } else if (tabId === "video-options") {
@@ -189,12 +187,6 @@ function showSettingsTab(contentId) {
     if (tabId) {
       document.getElementById(tabId).classList.add("active");
     }
-  }
-
-  // Initialize Reed Switch WebSocket when switching to Reed Switch tab
-  if (contentId === "reed-switch-settings-content") {
-    initReedSwitchWebSocket();
-    forceSyncReedSwitch();
   }
 }
 
