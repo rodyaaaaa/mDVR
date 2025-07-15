@@ -103,7 +103,7 @@ function updateReedSwitchState() {
 
       // Get timeout value regardless of state
       if (rsTimeoutInput) {
-        fetch("/api/get-rs-timeout")
+        fetch("/reed-switch/get-rs-timeout")
           .then((response) => response.json())
           .then((timeoutData) => {
             if (timeoutData && typeof timeoutData.timeout !== "undefined") {

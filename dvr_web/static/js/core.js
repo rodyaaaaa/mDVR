@@ -35,87 +35,6 @@ function changeLog(select) {
   showNotification(`You a select: ${select.value}`);
 }
 
-// Tab switching function
-function showTab(tabId) {
-  // Get the currently active tab
-  const currentTab = document.querySelector(".tab.active");
-  const newTab = document.getElementById(tabId);
-
-  if (currentTab && currentTab !== newTab) {
-    // Apply exit animation to current tab
-    currentTab.style.animation = "fadeOutLeft 0.3s ease-out forwards";
-
-    // Wait for exit animation to finish before showing new tab
-    setTimeout(() => {
-      // Hide all tabs
-      document.querySelectorAll(".tab").forEach((tab) => {
-        tab.classList.remove("active");
-        tab.style.animation = "";
-      });
-
-      // Show new tab with entry animation
-      newTab.classList.add("active");
-
-      // Update sidebar buttons
-      document
-        .querySelectorAll(".sidebar button")
-        .forEach((button) => button.classList.remove("active"));
-      const activeButton = document.querySelector(
-        `.sidebar button[onclick="showTab('${tabId}')"]`,
-      );
-      activeButton.classList.add("active");
-
-      // Optimize dashboard layout when switching to home tab
-      if (tabId === "home") {
-        setTimeout(optimizeDashboardLayout, 300);
-      }
-    }, 250);
-  } else {
-    // No current active tab or same tab clicked
-    document
-      .querySelectorAll(".tab")
-      .forEach((tab) => tab.classList.remove("active"));
-    newTab.classList.add("active");
-
-    document
-      .querySelectorAll(".sidebar button")
-      .forEach((button) => button.classList.remove("active"));
-    const activeButton = document.querySelector(
-      `.sidebar button[onclick="showTab('${tabId}')"]`,
-    );
-    activeButton.classList.add("active");
-
-    // Optimize dashboard layout when home tab is active
-    if (tabId === "home") {
-      setTimeout(optimizeDashboardLayout, 300);
-    }
-  }
-
-  if (tabId === "services") {
-    startServiceStatusUpdates();
-  } else {
-    stopServiceStatusUpdates();
-  }
-
-  // Initialize WebSocket connection for Reed Switch
-  if (tabId === "home") {
-    startExt5vVUpdates();
-    startCpuChartUpdates();
-    startMemChartUpdates();
-  } else if (tabId === "video-options") {
-    updateReedSwitchState();
-    showSettingsTab("general-settings-content");
-    stopExt5vVUpdates();
-    clearInterval(cpuChartInterval);
-    clearInterval(memChartInterval);
-  } else {
-    closeReedSwitchWebSocket();
-    stopExt5vVUpdates();
-    clearInterval(cpuChartInterval);
-    clearInterval(memChartInterval);
-  }
-}
-
 // Settings subtab switching function
 function showSettingsTab(contentId) {
   // Get the currently active settings tab
@@ -281,9 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     if (activeButton) activeButton.classList.add("active");
   }
-
-  // Load Reed Switch state for settings
-  updateReedSwitchState();
 
   // Call when page loads
   setTimeout(optimizeDashboardLayout, 500);

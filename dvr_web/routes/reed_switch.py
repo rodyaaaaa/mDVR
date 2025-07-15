@@ -271,3 +271,12 @@ def toggle_reed_switch():
         return jsonify({"success": True, "message": "Reed Switch toggled successfully"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@reed_switch_bp.route('/get-rs-timeout')
+def get_rs_timeout():
+    try:
+        config = load_config()
+        return jsonify({"timeout": config["reed_switch"]["rs_timeout"]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

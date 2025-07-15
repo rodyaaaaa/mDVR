@@ -545,14 +545,6 @@ def serve_stream_file(stream_id, filename):
         print(f"Error serving stream file: {str(e)}")
         return jsonify({'error': str(e)}), 404
 
-@api_bp.route('/get-rs-timeout')
-def get_rs_timeout():
-    try:
-        config = load_config()
-        return jsonify({"timeout": config["reed_switch"]["rs_timeout"]})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 
 @api_bp.route('/toggle-reed-switch-mode', methods=['POST'])
 def toggle_reed_switch_mode():
