@@ -158,7 +158,7 @@ function toggleReedSwitchMode() {
   ).value;
   const impulse = mode === "impulse" ? 1 : 0;
 
-  fetch("/api/toggle-reed-switch-mode", {
+  fetch("/reed-switch/toggle-reed-switch-mode", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ impulse: impulse }),

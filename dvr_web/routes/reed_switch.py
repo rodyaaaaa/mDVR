@@ -1,5 +1,6 @@
 import os
 import time
+import json
 import threading
 import subprocess
 import RPi.GPIO as GPIO
@@ -7,7 +8,7 @@ import RPi.GPIO as GPIO
 from flask import Blueprint, jsonify, request
 
 from dvr_web.constants import REED_SWITCH_AUTOSTOP_SECONDS, REED_SWITCH_PIN
-from dvr_web.utils import check_reed_switch_status, read_reed_switch_state, emit_reed_switch_update, sync_reed_switch_state, load_config
+from dvr_web.utils import check_reed_switch_status, read_reed_switch_state, emit_reed_switch_update, sync_reed_switch_state, load_config, get_config_path
 import dvr_web.utils as utils
 
 
@@ -273,3 +274,31 @@ def get_rs_timeout():
         return jsonify({"timeout": config["reed_switch"]["rs_timeout"]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@reed_switch_bp.route('/toggle-reed-switch-mode', methods=['POST'])
+def toggle_reed_switch_mode():
+    try:
+        data = request.json
+        impulse = data.get('impulse', 0)
+
+        config = load_config()
+
+        # Ensure reed_switch section exists
+        if "reed_switch" not in config:
+            config["reed_switch"] = {}
+
+        # Update impulse value
+        config["reed_switch"]["impulse"] = impulse
+
+        # Save updated config
+        with open(get_config_path(), 'w') as file:
+            json.dump(config, file, indent=4)
+
+        # If the reed switch service is running, restart it to apply changes
+        if check_reed_switch_status():
+            os.system("systemctl restart mdvr_rs")
+
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
