@@ -48,7 +48,6 @@ def initialize_reed_switch():
         impulse = 0
         if "reed_switch" in config and "impulse" in config["reed_switch"]:
             impulse = config["reed_switch"]["impulse"]
-        # Створюємо об'єкт геркона через фабрику лише один раз
         if global_reed_switch is not None:
             try:
                 if hasattr(global_reed_switch, 'btn_a') and global_reed_switch.btn_a:
@@ -82,12 +81,6 @@ def initialize_reed_switch():
 
 # Функція для читання стану геркона через єдиний інтерфейс
 def read_reed_switch_state():
-    """
-    Зчитує стан геркона через глобальний об'єкт (RSFactory singleton).
-    Повертає "closed" якщо геркон замкнутий (магніт присутній),
-    "opened" якщо геркон розімкнутий,
-    "unknown" якщо стан не вдалося визначити.
-    """
     global global_reed_switch
     try:
         if global_reed_switch is None:
@@ -106,12 +99,6 @@ def read_reed_switch_state():
     except Exception as e:
         print(f"[DEBUG] Помилка при читанні стану геркона через RSFactory: {str(e)}")
         return "unknown"
-
-
-# Функцію reed_switch_callback більше не використовуємо, але залишаємо
-# порожню для сумісності з існуючим кодом
-def reed_switch_callback(channel):
-    pass
 
 
 def check_reed_switch_status() -> bool:
@@ -154,17 +141,15 @@ def load_config():
     config_path = get_config_path()
     if not os.path.exists(config_path):
         shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
-    
-    # Check if file is empty
+
     if os.path.getsize(config_path) == 0:
         print(f"Config file {config_path} is empty, copying default config")
         shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
-        
+
     with open(config_path, 'r') as file:
         try:
             config = json.load(file)
         except json.JSONDecodeError as e:
-            # If JSON is corrupted, use the default config
             print(f"Error decoding JSON: {str(e)}. Using default config instead.")
             shutil.copyfile(DEFAULT_CONFIG_PATH, config_path)
             with open(config_path, 'r') as default_file:
@@ -186,7 +171,7 @@ def generate_nginx_configs(camera_list):
             match = re.search(r"rtsp://(?:[^@]+@)?([0-9]{1,3}(?:\.[0-9]{1,3}){3})", rtsp_url)
             if not match:
                 continue
-            
+
             cam_ip = match.group(1)
 
             if cam_ip in unique_ips:
@@ -228,15 +213,13 @@ def update_imei():
     try:
         config = load_config()
         car_name = None
-        
-        # Only get car_name from the ftp section
+
         if 'ftp' in config and 'car_name' in config['ftp']:
             car_name = config['ftp']['car_name']
-        
-        # If car_name is not found, use a default value
+
         if not car_name:
-            car_name = "000"  # Default car name if not specified in FTP settings
-        
+            car_name = "000"
+
         vpn_ip = ''
 
         try:
@@ -261,10 +244,10 @@ def update_imei():
                 if 'program_options' not in config:
                     config['program_options'] = {}
                 config['program_options']['imei'] = imei
-                
+
                 with open(get_config_path(), 'w') as file:
                     json.dump(config, file, indent=4)
-                
+
                 print(f"IMEI updated to: {imei}")
                 return True
             except Exception as e:
@@ -280,7 +263,6 @@ def update_imei():
 
 # Функція для надсилання WebSocket повідомлення
 def emit_reed_switch_update(status_data):
-    # Імпортуємо socketio локально, щоб уникнути циклічних імпортів
     try:
         from dvr_web.sockets import socketio
         if socketio:
@@ -289,62 +271,3 @@ def emit_reed_switch_update(status_data):
         print("Помилка: не вдалося імпортувати socketio")
     except Exception as e:
         print(f"Помилка при відправці WebSocket повідомлення: {str(e)}")
-
-
-# Функція для синхронізації стану геркона між різними модулями
-def sync_reed_switch_state(initialized=None, monitor_active=None, state=None, autostop_time=None):
-    """
-    Синхронізує стан геркона між різними модулями.
-    Функція оновлює глобальні змінні в поточному модулі та socketio атрибути
-    """
-    global reed_switch_initialized, reed_switch_monitor_active, reed_switch_state, reed_switch_autostop_time
-    
-    if initialized is not None:
-        reed_switch_initialized = initialized
-        print(f"[DEBUG SYNC] Оновлено reed_switch_initialized = {initialized}")
-    
-    if monitor_active is not None:
-        reed_switch_monitor_active = monitor_active
-        print(f"[DEBUG SYNC] Оновлено reed_switch_monitor_active = {monitor_active}")
-    
-    if state is not None:
-        reed_switch_state = state
-        print(f"[DEBUG SYNC] Оновлено reed_switch_state = {state}")
-    
-    if autostop_time is not None:
-        reed_switch_autostop_time = autostop_time
-        print(f"[DEBUG SYNC] Оновлено reed_switch_autostop_time = {autostop_time}")
-
-    try:
-        from dvr_web.sockets import socketio
-        if socketio:
-            if initialized is not None:
-                socketio.reed_switch_initialized = initialized
-            if monitor_active is not None:
-                socketio.reed_switch_monitor_active = monitor_active
-            if state is not None:
-                socketio.reed_switch_state = state
-            if autostop_time is not None:
-                socketio.reed_switch_autostop_time = autostop_time
-    except ImportError:
-        pass
-
-    try:
-        from dvr_web.routes import api
-        if initialized is not None:
-            api.reed_switch_initialized = initialized
-        if monitor_active is not None:
-            api.reed_switch_monitor_active = monitor_active
-        if state is not None:
-            api.reed_switch_state = state
-        if autostop_time is not None:
-            api.reed_switch_autostop_time = autostop_time
-    except ImportError:
-        pass
-
-    return {
-        "initialized": reed_switch_initialized,
-        "monitor_active": reed_switch_monitor_active,
-        "state": reed_switch_state,
-        "autostop_time": reed_switch_autostop_time
-    }

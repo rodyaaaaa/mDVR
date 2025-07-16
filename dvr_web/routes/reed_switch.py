@@ -8,7 +8,7 @@ import RPi.GPIO as GPIO
 from flask import Blueprint, jsonify, request
 
 from dvr_web.constants import REED_SWITCH_AUTOSTOP_SECONDS, REED_SWITCH_PIN
-from dvr_web.utils import check_reed_switch_status, read_reed_switch_state, emit_reed_switch_update, sync_reed_switch_state, load_config, get_config_path
+from dvr_web.utils import check_reed_switch_status, read_reed_switch_state, emit_reed_switch_update, load_config, get_config_path
 import dvr_web.utils as utils
 
 
@@ -181,13 +181,6 @@ def api_initialize_reed_switch():
             reed_switch_monitor_thread.daemon = True
             reed_switch_monitor_thread.start()
 
-        sync_reed_switch_state(
-            initialized=reed_switch_initialized,
-            monitor_active=reed_switch_monitor_active,
-            state=reed_switch_state,
-            autostop_time=reed_switch_autostop_time
-        )
-
         return jsonify({
             "success": True,
             "status": "Unknown",
@@ -213,12 +206,6 @@ def api_stop_reed_switch():
     reed_switch_autostop_time = None
     reed_switch_initialized = False
 
-    sync_reed_switch_state(
-        initialized=reed_switch_initialized,
-        monitor_active=reed_switch_monitor_active,
-        autostop_time=reed_switch_autostop_time
-    )
-    GPIO.cleanup()
     return jsonify({"success": True, "message": "Моніторинг геркона зупинено"})
 
 

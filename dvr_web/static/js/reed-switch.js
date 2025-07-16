@@ -15,7 +15,6 @@ function updateReedSwitchUI(data) {
   const reedOnRadio = document.getElementById("reed-switch-on");
   const reedOffRadio = document.getElementById("reed-switch-off");
 
-  // Block or unblock Reed Switch toggle in Settings
   if (data.hasOwnProperty("initialized")) {
     if (data.initialized) {
       if (reedOnRadio) reedOnRadio.disabled = true;

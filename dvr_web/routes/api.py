@@ -8,7 +8,7 @@ import json
 
 from flask import Blueprint, jsonify, request, send_from_directory
 from dvr_web.utils import (
-    load_config, sync_reed_switch_state, read_reed_switch_state,
+    load_config, read_reed_switch_state,
     emit_reed_switch_update, check_reed_switch_status, get_config_path
 )
 from dvr_web.constants import REED_SWITCH_PIN, REED_SWITCH_AUTOSTOP_SECONDS
@@ -85,69 +85,6 @@ def get_imei():
         return jsonify({"imei": config['program_options']['imei']})
     except Exception as e:
         return jsonify({"imei": "", "error": str(e)})
-
-
-@api_bp.route('/reed-switch-status')
-def api_reed_switch_status():
-    global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time
-
-    print(f"[DEBUG API] /reed-switch-status – reed_switch_initialized = {reed_switch_initialized}")
-
-    try:
-        current_time = int(time.time())
-
-        if not reed_switch_initialized:
-            print("[DEBUG API] Геркон не ініціалізовано, повертаємо unknown статус")
-            return jsonify({
-                "status": "unknown",
-                "timestamp": current_time,
-                "initialized": False,
-                "autostop": False,
-                "seconds_left": 0
-            })
-
-        # Зчитуємо поточний стан
-        current_status = read_reed_switch_state()
-
-        # Валідуємо та коректуємо значення стану
-        if current_status not in ["closed", "opened", "unknown"]:
-            if current_status == "open":
-                current_status = "opened"
-            else:
-                current_status = "unknown"
-
-        state = {
-            "status": current_status,
-            "timestamp": current_time
-        }
-
-        # Синхронізуємо стан між модулями
-        sync_reed_switch_state(state=state)
-
-        print(f"[DEBUG API] Зчитано статус геркона: {current_status}")
-
-        # Готуємо відповідь
-        response = {
-            "status": current_status,
-            "timestamp": current_time,
-            "initialized": reed_switch_initialized,
-            "autostop": reed_switch_autostop_time is not None,
-            "seconds_left": max(0, int(reed_switch_autostop_time - current_time)) if reed_switch_autostop_time else 0
-        }
-
-        print(f"[DEBUG API] Відправляємо відповідь: {response}")
-        return jsonify(response)
-
-    except Exception as e:
-        print(f"[DEBUG API] Помилка при зчитуванні стану геркона: {str(e)}")
-        return jsonify({
-            "status": "unknown",
-            "timestamp": int(time.time()),
-            "initialized": reed_switch_initialized,
-            "autostop": False,
-            "seconds_left": 0,
-            "error": str(e)
-        })
 
 
 @api_bp.route('/toggle-reed-switch', methods=['POST'])
@@ -454,7 +391,6 @@ def start_rtsp_stream():
 
         # Check if the process is still running and the playlist file exists
         if process.poll() is not None:
-            # Process has already terminated, get error output
             _, stderr = process.communicate()
             error_msg = stderr.decode()
             return jsonify({

@@ -1,6 +1,3 @@
-"""
-Уніфікований інтерфейс та фабрика для роботи з різними типами герконів (reed switch).
-"""
 import RPi.GPIO as GPIO
 from gpiozero import Button
 from dvr_web.constants import BTN_A_PIN, BTN_B_PIN, DOOR_SENSOR_PIN
