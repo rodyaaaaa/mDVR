@@ -4,22 +4,15 @@ import time
 import os
 import threading
 import RPi.GPIO as GPIO
-import json
 
 from flask import Blueprint, jsonify, request, send_from_directory
-from dvr_web.utils import (
-    load_config, read_reed_switch_state,
-    emit_reed_switch_update, check_reed_switch_status, get_config_path
-)
+from dvr_web.utils import load_config
 from dvr_web.constants import REED_SWITCH_PIN, REED_SWITCH_AUTOSTOP_SECONDS
 
 api_bp = Blueprint('api', __name__)
 
-# Оголошуємо глобальні змінні для стеження за станом геркона
-reed_switch_initialized = False
 reed_switch_monitor_active = False
 reed_switch_state = {"status": "unknown", "timestamp": 0}
-reed_switch_autostop_time = None
 
 cpu_load_history = []
 cpu_monitor_active = False

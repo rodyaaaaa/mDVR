@@ -14,37 +14,19 @@ function updateReedSwitchUI(data) {
   const autoStopTime = document.getElementById("auto-stop-time");
   const reedOnRadio = document.getElementById("reed-switch-on");
   const reedOffRadio = document.getElementById("reed-switch-off");
+  const stopButton = document.getElementById("stop-reed-switch-btn");
 
-  if (data.hasOwnProperty("initialized")) {
-    if (data.initialized) {
-      if (reedOnRadio) reedOnRadio.disabled = true;
-      if (reedOffRadio) reedOffRadio.disabled = true;
+  statusIndicator.classList.remove("closed");
+  statusIndicator.classList.remove("opened");
+  statusIndicator.classList.remove("unknown");
 
-      if (initStatus) {
-        initStatus.textContent = "Initialized";
-        initStatus.classList.add("initialized");
-        initStatus.classList.remove("not-initialized");
-      }
-    } else {
-      if (reedOnRadio) reedOnRadio.disabled = false;
-      if (reedOffRadio) reedOffRadio.disabled = false;
+  if (data.initialized) {
+    reedOnRadio.disabled = true;
+    reedOffRadio.disabled = true;
 
-      if (initStatus) {
-        initStatus.textContent = "Not initialized";
-        initStatus.classList.add("not-initialized");
-        initStatus.classList.remove("initialized");
-      }
-    }
-  }
-
-  if (data.hasOwnProperty("status") && statusIndicator && statusText) {
-    statusIndicator.classList.remove("closed");
-    statusIndicator.classList.remove("opened");
-    statusIndicator.classList.remove("unknown");
-
-    console.log(
-      `Current reed switch status: ${data.status}, type: ${typeof data.status}`,
-    );
+    initStatus.textContent = "Initialized";
+    initStatus.classList.add("initialized");
+    initStatus.classList.remove("not-initialized");
 
     if (data.status === "closed") {
       statusIndicator.classList.add("closed");
@@ -57,14 +39,10 @@ function updateReedSwitchUI(data) {
       statusText.textContent = `Unknown (${data.status})`;
     }
 
-    if (data.hasOwnProperty("timestamp") && lastUpdated) {
-      const date = new Date(data.timestamp * 1000);
-      lastUpdated.textContent = date.toLocaleTimeString();
-    }
-  }
+    const date = new Date(data.timestamp * 1000);
+    lastUpdated.textContent = date.toLocaleTimeString();
 
-  if (data.hasOwnProperty("autostop") && autoStopTimer && autoStopTime) {
-    if (data.autostop && data.hasOwnProperty("seconds_left")) {
+    if (data.autostop) {
       autoStopTimer.style.display = "block";
       autoStopTime.textContent = formatTime(data.seconds_left);
 
@@ -76,6 +54,21 @@ function updateReedSwitchUI(data) {
     } else {
       autoStopTimer.style.display = "none";
     }
+  } else {
+    reedOnRadio.disabled = false;
+    reedOffRadio.disabled = false;
+
+    initStatus.textContent = "Not initialized";
+    initStatus.classList.add("not-initialized");
+    initStatus.classList.remove("initialized");
+
+    statusIndicator.classList.add("unknown");
+    statusText.textContent = `Unknown (Not initialized)`;
+    stopButton.textContent = "Stop Monitoring";
+
+    const date = new Date(data.timestamp * 1000);
+    lastUpdated.textContent = date.toLocaleTimeString();
+    autoStopTimer.style.display = "none";
   }
 }
 
@@ -357,31 +350,38 @@ function stopReedSwitchMonitoring() {
     .then((response) => response.json())
     .then((data) => {
       hidePreloader();
-      if (stopButton) stopButton.disabled = false;
-      if (initButton) initButton.disabled = false;
+      const statusData = {
+        status: data.success,
+        timestamp: Math.floor(Date.now() / 1000),
+        initialized: false,
+      };
 
-      if (data.success) {
-        if (initStatus) {
-          initStatus.textContent = "Not initialized";
-          initStatus.classList.add("not-initialized");
-          initStatus.classList.remove("initialized");
-        }
-        if (initButton) initButton.textContent = "Initialize Reed Switch";
-        if (stopButton) stopButton.textContent = "Stop Monitoring";
+      updateReedSwitchUI(statusData);
+      // if (stopButton) stopButton.disabled = false;
+      // if (initButton) initButton.disabled = false;
 
-        if (statusIndicator) statusIndicator.classList.remove("open", "closed");
-        if (statusText)
-          statusText.textContent = "Unavailable (monitoring stopped)";
+      // if (data.success) {
+      //   if (initStatus) {
+      //     initStatus.textContent = "Not initialized";
+      //     initStatus.classList.add("not-initialized");
+      //     initStatus.classList.remove("initialized");
+      //   }
+      //   if (initButton) initButton.textContent = "Initialize Reed Switch";
+      //   if (stopButton) stopButton.textContent = "Stop Monitoring";
 
-        showNotification("Reed switch monitoring stopped successfully!");
-      } else {
-        if (stopButton) stopButton.textContent = "Stop Monitoring";
-        showNotification(
-          "Failed to stop reed switch monitoring: " +
-            (data.error || "Unknown error"),
-          true,
-        );
-      }
+      //   if (statusIndicator) statusIndicator.classList.remove("open", "closed");
+      //   if (statusText)
+      //     statusText.textContent = "Unavailable (monitoring stopped)";
+
+      //   showNotification("Reed switch monitoring stopped successfully!");
+      // } else {
+      //   if (stopButton) stopButton.textContent = "Stop Monitoring";
+      //   showNotification(
+      //     "Failed to stop reed switch monitoring: " +
+      //       (data.error || "Unknown error"),
+      //     true,
+      //   );
+      // }
     })
     .catch((error) => {
       hidePreloader();
@@ -400,8 +400,6 @@ function stopReedSwitchMonitoring() {
 }
 
 function createReedSwitchWebSocket() {
-  closeReedSwitchWebSocket();
-
   console.log("Creating new WebSocket connection...");
 
   reedSwitchSocket = io("/ws", {
@@ -422,11 +420,6 @@ function createReedSwitchWebSocket() {
     }
 
     reedSwitchSocket.emit("get_status");
-    console.log("Sent get_status request");
-  });
-
-  reedSwitchSocket.on("connection_established", function (data) {
-    console.log("Received connection establishment confirmation:", data);
   });
 
   reedSwitchSocket.on("reed_switch_update", function (data) {

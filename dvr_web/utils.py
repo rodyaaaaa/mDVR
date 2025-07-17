@@ -2,15 +2,10 @@ import os
 import shutil
 import json
 import re
-import threading
-import time
-import RPi.GPIO as GPIO
 
 from pathlib import Path
-from flask import request
 
-from dvr_web.constants import BASE_PORT, DEFAULT_CONFIG_PATH, NGINX_CONF_DIR, REED_SWITCH_AUTOSTOP_SECONDS, REED_SWITCH_PIN, REGULAR_SEARCH_IP, SERVICE_PATH, VPN_CONFIG_PATH, CONFIG_FILENAME
-from dvr_web.reed_switch_interface import RSFactory
+from dvr_web.constants import BASE_PORT, DEFAULT_CONFIG_PATH, NGINX_CONF_DIR, REGULAR_SEARCH_IP, SERVICE_PATH, VPN_CONFIG_PATH, CONFIG_FILENAME
 
 def get_config_path():
     config_dir = '/etc/mdvr'
@@ -23,7 +18,6 @@ reed_switch_monitor_active = False
 reed_switch_state = {"status": "unknown", "timestamp": 0}
 reed_switch_autostop_time = None
 global_reed_switch = None
-monitor_reed_switch = None
 
 def get_camera_ports():
     ports = {}
@@ -38,67 +32,6 @@ def get_camera_ports():
     except Exception as e:
         print(f"Error reading nginx configs: {str(e)}")
     return ports
-
-
-def initialize_reed_switch():
-    global reed_switch_state, reed_switch_initialized, reed_switch_autostop_time, reed_switch_monitor_active, global_reed_switch
-    try:
-        print(f"[DEBUG] Початок ініціалізації геркона через RSFactory")
-        config = load_config()
-        impulse = 0
-        if "reed_switch" in config and "impulse" in config["reed_switch"]:
-            impulse = config["reed_switch"]["impulse"]
-        if global_reed_switch is not None:
-            try:
-                if hasattr(global_reed_switch, 'btn_a') and global_reed_switch.btn_a:
-                    global_reed_switch.btn_a.close()
-                if hasattr(global_reed_switch, 'btn_b') and global_reed_switch.btn_b:
-                    global_reed_switch.btn_b.close()
-            except Exception as e:
-                print(f"[DEBUG] Не вдалося закрити попередні Button: {e}")
-        global_reed_switch = RSFactory.create(bool(impulse))
-        global_reed_switch.setup()
-        initial_status = "opened" if global_reed_switch.pressed() else "closed"
-        print(f"[DEBUG] Початковий стан геркона (RSFactory): {initial_status}")
-        reed_switch_state = {
-            "status": initial_status,
-            "timestamp": int(time.time())
-        }
-        reed_switch_initialized = True
-        reed_switch_autostop_time = time.time() + REED_SWITCH_AUTOSTOP_SECONDS
-        if not reed_switch_monitor_active and monitor_reed_switch is not None:
-            reed_switch_monitor_active = True
-            reed_switch_monitor_thread = threading.Thread(target=monitor_reed_switch)
-            reed_switch_monitor_thread.daemon = True
-            reed_switch_monitor_thread.start()
-            print(f"[DEBUG] Запущено потік моніторингу геркона через RSFactory")
-        return {"success": True, "status": initial_status}
-    except Exception as e:
-        error_msg = f"Помилка при ініціалізації геркона: {str(e)}"
-        print(f"[DEBUG] {error_msg}")
-        return {"success": False, "error": error_msg}
-
-
-# Функція для читання стану геркона через єдиний інтерфейс
-def read_reed_switch_state():
-    global global_reed_switch
-    try:
-        if global_reed_switch is None:
-            print("[DEBUG] Глобальний об'єкт геркона не створено, ініціалізую...")
-            initialize_reed_switch()
-        if global_reed_switch is None:
-            print("[DEBUG] Не вдалося створити об'єкт геркона")
-            return "unknown"
-        pressed = global_reed_switch.pressed()
-        if pressed is True:
-            return "opened"
-        elif pressed is False:
-            return "closed"
-        else:
-            return "unknown"
-    except Exception as e:
-        print(f"[DEBUG] Помилка при читанні стану геркона через RSFactory: {str(e)}")
-        return "unknown"
 
 
 def check_reed_switch_status() -> bool:
@@ -259,15 +192,3 @@ def update_imei():
     except Exception as e:
         print(f"Critical error in update_imei: {str(e)}")
         return False
-
-
-# Функція для надсилання WebSocket повідомлення
-def emit_reed_switch_update(status_data):
-    try:
-        from dvr_web.sockets import socketio
-        if socketio:
-            socketio.emit('reed_switch_update', status_data, namespace='/ws')
-    except ImportError:
-        print("Помилка: не вдалося імпортувати socketio")
-    except Exception as e:
-        print(f"Помилка при відправці WebSocket повідомлення: {str(e)}")

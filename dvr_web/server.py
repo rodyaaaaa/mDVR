@@ -17,28 +17,28 @@ def create_app():
     Створює та налаштовує екземпляр Flask додатку.
     """
     app = Flask(__name__)
-    
+
     CORS(app, resources={r"/*": {"origins": "*"}})
-    
+
     app.config['SECRET_KEY'] = 'mdvr-secret-key'
     app.config['JSON_AS_ASCII'] = False
     app.config['CORS_HEADERS'] = 'Content-Type'
-    
+
     app.config['SOCKETIO_CORS_ALLOWED_ORIGINS'] = '*'
     app.config['SOCKETIO_ASYNC_MODE'] = 'threading'
-    
+
     app.register_blueprint(web_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(reed_switch_bp, url_prefix='/reed-switch')
-    
+
     @app.route('/')
     def index():
         try:
             update_imei()
-            
+
             config = load_config()
             camera_list = config.get('camera_list', [])
-            
+
             vpn_config = ""
             try:
                 if os.path.exists(VPN_CONFIG_PATH):
@@ -46,11 +46,11 @@ def create_app():
                         vpn_config = f.read()
             except Exception as e:
                 print(f"Error reading VPN config: {str(e)}")
-            
+
             if camera_list:
                 if not generate_nginx_configs(camera_list):
                     print("Warning: Failed to generate Nginx configs")
-            
+
             return render_template('index.html',
                                 vpn_config=vpn_config,
                                 camera_list=config.get('camera_list', []),
@@ -72,17 +72,17 @@ def create_app():
                                 photo_timeout=10,
                                 error_message=f"Error loading configuration: {str(e)}"
                                 )
-        
+
     return app
 
 
 def start_server(debug=False, host='0.0.0.0', port=8080):
     app = create_app()
-    
+
     socketio = init_socketio(app)
-    
+
     start_cpu_monitoring()
-    
+
     socketio.run(app, debug=debug, host=host, port=port, allow_unsafe_werkzeug=True)
 
 if __name__ == '__main__':
