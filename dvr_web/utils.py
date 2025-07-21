@@ -12,12 +12,6 @@ def get_config_path():
     os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, CONFIG_FILENAME)
 
-# Global variables for reed switch state
-reed_switch_initialized = False
-reed_switch_monitor_active = False
-reed_switch_state = {"status": "unknown", "timestamp": 0}
-reed_switch_autostop_time = None
-global_reed_switch = None
 
 def get_camera_ports():
     ports = {}

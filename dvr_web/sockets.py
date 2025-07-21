@@ -73,43 +73,26 @@ def init_socketio(app):
 
 
 def monitor_reed_switch():
-    global reed_switch_monitor_active, reed_switch_state
+    global reed_switch_monitor_active, reed_switch_state, socketio
     reed_switch_monitor_active = True
-    prev_state = None
 
     while reed_switch_monitor_active:
+        print(reed_switch_monitor_active)
         current_time = time.time()
         current_state = read_reed_switch_state()
 
-        if current_state != prev_state:
-            time.sleep(0.05)
-            current_state = read_reed_switch_state()
+        timestamp = int(current_time)
+        reed_switch_state = {
+            "status": current_state,
+            "timestamp": timestamp
+        }
 
-            if current_state != prev_state:
-                timestamp = int(current_time)
-                reed_switch_state = {
-                    "status": current_state,
-                    "timestamp": timestamp
-                }
-
-                status_with_init = reed_switch_state.copy()
-
-                seconds_left = int(reed_switch_autostop_time - current_time) if reed_switch_autostop_time else 0
-                status_with_init["autostop"] = reed_switch_autostop_time is not None
-                status_with_init["seconds_left"] = max(0, seconds_left)
-
-                emit('reed_switch_update', status_with_init, namespace='/ws')
-
-                prev_state = current_state
+        status_with_init = reed_switch_state.copy()
 
         seconds_left = int(reed_switch_autostop_time - current_time) if reed_switch_autostop_time else 0
-        update_interval = 1 if seconds_left <= 10 else 10
+        status_with_init["autostop"] = reed_switch_autostop_time is not None
+        status_with_init["seconds_left"] = max(0, seconds_left)
 
-        if current_time - reed_switch_state.get("timestamp", 0) >= update_interval:
-            status_with_init = reed_switch_state.copy()
-            status_with_init["autostop"] = reed_switch_autostop_time is not None
-            status_with_init["seconds_left"] = max(0, seconds_left)
-
-            emit('reed_switch_update', status_with_init, namespace='/ws')
+        socketio.emit('reed_switch_update', status_with_init, namespace='/ws')
 
         time.sleep(0.01)

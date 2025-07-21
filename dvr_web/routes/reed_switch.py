@@ -50,7 +50,6 @@ def api_initialize_reed_switch():
 
     return jsonify({
         "success": True,
-        "status": "Unknown",
         "autostop": True,
         "seconds_left": REED_SWITCH_AUTOSTOP_SECONDS
     })

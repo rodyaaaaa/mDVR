@@ -3,11 +3,9 @@ import subprocess
 import time
 import os
 import threading
-import RPi.GPIO as GPIO
 
 from flask import Blueprint, jsonify, request, send_from_directory
 from dvr_web.utils import load_config
-from dvr_web.constants import REED_SWITCH_PIN, REED_SWITCH_AUTOSTOP_SECONDS
 
 api_bp = Blueprint('api', __name__)
 
@@ -23,17 +21,13 @@ def monitor_cpu_load():
 
     while cpu_monitor_active:
         try:
-            # Отримуємо поточне навантаження CPU
             cpu_percent = psutil.cpu_percent(interval=1)
 
-            # Додаємо значення до історії
             cpu_load_history.append(cpu_percent)
 
-            # Обмежуємо розмір історії до 60 значень
             if len(cpu_load_history) > 60:
                 cpu_load_history = cpu_load_history[-60:]
 
-            # Пауза між вимірами
             time.sleep(1)
         except Exception as e:
             print(f"[DEBUG CPU] Помилка в моніторингу CPU: {str(e)}")
@@ -222,8 +216,7 @@ def api_system_temperature():
         gpu_temp_output = subprocess.check_output(['vcgencmd', 'measure_temp']).decode('utf-8')
         gpu_temp = float(gpu_temp_output.replace('temp=', '').replace('\'C', ''))
 
-        # Get system temperature - for now using the CPU temp as base
-        system_temp = cpu_temp  # Simplified, could be calculated as average of multiple sensors
+        system_temp = cpu_temp
 
         return jsonify({
             "cpu_temp": f"{cpu_temp}°C",
@@ -254,14 +247,13 @@ def check_rtsp_connection():
         })
 
     try:
-        # Execute ffprobe to check the connection
         command = [
             'ffprobe',
             '-v', 'error',
             '-show_entries', 'stream=codec_type,width,height',
-            '-of', 'default',  # Changed from json to default to avoid JSON parsing issues
-            '-analyzeduration', '3000000',  # 3 seconds analysis
-            '-timeout', '5000000',  # 5 seconds timeout
+            '-of', 'default',
+            '-analyzeduration', '3000000',
+            '-timeout', '5000000',
             rtsp_url
         ]
 
@@ -272,17 +264,15 @@ def check_rtsp_connection():
             text=True
         )
 
-        stdout, stderr = process.communicate(timeout=10)  # 10 seconds overall timeout
+        stdout, stderr = process.communicate(timeout=10)
 
         if process.returncode == 0:
-            # Process successful output
             return jsonify({
                 'success': True,
                 'message': 'Connection successful',
                 'details': stdout or "Connection established successfully, but no stream details returned."
             })
         else:
-            # Process error output
             error_details = stderr
             if not error_details:
                 error_details = "Unknown error occurred"
