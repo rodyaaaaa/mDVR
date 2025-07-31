@@ -74,28 +74,6 @@ def get_imei():
         return jsonify({"imei": "", "error": str(e)})
 
 
-@api_bp.route('/toggle-reed-switch', methods=['POST'])
-def toggle_reed_switch():
-    data = request.get_json()
-    state = data.get("reed_switch", "off")
-    try:
-        if state == "on":
-            os.system("systemctl stop mdvr.service")
-            os.system("systemctl disable mdvr.timer")
-            os.system("systemctl stop mdvr.timer")
-            os.system("systemctl enable mdvr_rs.timer")
-            os.system("systemctl start mdvr_rs.timer")
-        else:
-            os.system("systemctl stop mdvr_rs.service")
-            os.system("systemctl disable mdvr_rs.timer")
-            os.system("systemctl stop mdvr_rs.timer")
-            os.system("systemctl enable mdvr.timer")
-            os.system("systemctl start mdvr.timer")
-        return jsonify({"success": True, "message": "Reed Switch toggled successfully"})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
 @api_bp.route('/cpu-load')
 def api_cpu_load():
     if not psutil:

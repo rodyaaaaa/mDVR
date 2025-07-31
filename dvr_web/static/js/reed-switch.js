@@ -146,7 +146,7 @@ function toggleReedSwitch() {
   const state = document.querySelector(
     'input[name="reed_switch"]:checked',
   ).value;
-  fetch("/api/toggle-reed-switch", {
+  fetch("/reed-switch/toggle-reed-switch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reed_switch: state }),

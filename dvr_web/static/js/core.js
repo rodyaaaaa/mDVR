@@ -216,9 +216,3 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 });
-
-// Clean up before page unload
-window.addEventListener("beforeunload", () => {
-  stopExt5vVUpdates();
-  closeReedSwitchWebSocket();
-});

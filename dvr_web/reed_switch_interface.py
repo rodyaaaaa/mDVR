@@ -12,6 +12,10 @@ class ReedSwitchInterface(ABC):
     def pressed(self):
         pass
 
+    @abstractmethod
+    def clean(self):
+        pass
+
 class ImpulseRS(ReedSwitchInterface):
     def __init__(self, pin_a=None, pin_b=None):
         self.pin_a = pin_a or BTN_A_PIN
@@ -37,6 +41,11 @@ class ImpulseRS(ReedSwitchInterface):
         print("B pressed")
         self.event = False
 
+    def clean(self):
+        print("clean resourses")
+        self.btn_a = None
+        self.btn_b = None
+
 class MexaRS(ReedSwitchInterface):
     def __init__(self, pin=None):
         self.pin = pin or DOOR_SENSOR_PIN
@@ -56,6 +65,10 @@ class MexaRS(ReedSwitchInterface):
         else:
             print("Closed")
             return False
+        
+    def clean(self):
+        print("clean resourses")
+        GPIO.cleanup()
 
 class RSFactory:
     @staticmethod

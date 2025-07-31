@@ -57,10 +57,13 @@ def api_initialize_reed_switch():
 
 @reed_switch_bp.route('/stop-reed-switch', methods=['POST'])
 def api_stop_reed_switch():
-    global reed_switch_initialized, reed_switch_autostop_time
+    global reed_switch_initialized, reed_switch_autostop_time, reed_switch_object
 
     reed_switch_autostop_time = None
     reed_switch_initialized = False
+    print(reed_switch_object)
+    reed_switch_object.clean()
+    print(reed_switch_object)
 
     return jsonify({"success": True, "message": "Моніторинг геркона зупинено"})
 

@@ -35,9 +35,7 @@ def init_socketio(app):
     @socketio.on('disconnect', namespace='/ws')
     def ws_disconnect():
         global reed_switch_monitor_active
-
-        if not socketio.server.manager.rooms.get('/ws', {}):
-            reed_switch_monitor_active = False
+        reed_switch_monitor_active = False
 
     @socketio.on('get_status', namespace='/ws')
     def ws_get_status():
@@ -96,3 +94,4 @@ def monitor_reed_switch():
         socketio.emit('reed_switch_update', status_with_init, namespace='/ws')
 
         time.sleep(0.01)
+    

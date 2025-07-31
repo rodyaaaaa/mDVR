@@ -64,7 +64,6 @@ function showTab(tabId) {
     clearInterval(cpuChartInterval);
     clearInterval(memChartInterval);
   } else {
-    closeReedSwitchWebSocket();
     stopExt5vVUpdates();
     clearInterval(cpuChartInterval);
     clearInterval(memChartInterval);
