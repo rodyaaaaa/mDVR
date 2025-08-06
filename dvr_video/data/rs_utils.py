@@ -1,7 +1,5 @@
 import RPi.GPIO as GPIO
 
-from gpiozero import Button
-
 from .constants import BTN_A_PIN, BTN_B_PIN, DOOR_SENSOR_PIN
     
 
@@ -15,25 +13,23 @@ class BaseGpio:
 
 class ImpulseRS(BaseGpio):
     def __init__(self):
-        self.pin_a = None
-        self.pin_b = None
         self.event = None
 
     def setup(self):
-        self.pin_a = Button(BTN_A_PIN, pull_up=True, bounce_time=0.001)
-        self.pin_b = Button(BTN_B_PIN, pull_up=True, bounce_time=0.001)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(BTN_A_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BTN_B_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(BTN_A_PIN, GPIO.FALLING, callback=self.setup_a, bouncetime=75)
+        GPIO.add_event_detect(BTN_B_PIN, GPIO.FALLING, callback=self.setup_b, bouncetime=75)
 
     def pressed(self):
-        self.pin_a.when_pressed = self.setup_a
-        self.pin_b.when_pressed = self.setup_b
-
         return self.event
 
-    def setup_a(self):
+    def setup_a(self, channel):
         print("A pressed")
         self.event = True
 
-    def setup_b(self):
+    def setup_b(self, channel):
         print("B pressed")
         self.event = False
 

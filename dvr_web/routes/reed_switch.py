@@ -1,5 +1,4 @@
 import os
-import time
 import json
 import subprocess
 
@@ -13,7 +12,6 @@ from dvr_web.reed_switch_interface import RSFactory
 # Глобальні змінні для стеження за станом геркона
 reed_switch_initialized = False
 reed_switch_state = {"status": "unknown", "timestamp": 0}
-reed_switch_autostop_time = None
 reed_switch_object = None
 
 reed_switch_bp = Blueprint('reed_switch', __name__)
@@ -30,7 +28,7 @@ def api_reed_switch_status():
 
 @reed_switch_bp.route('/initialize-reed-switch', methods=['POST'])
 def api_initialize_reed_switch():
-    global reed_switch_initialized, reed_switch_autostop_time, reed_switch_object
+    global reed_switch_initialized, reed_switch_object
 
     config = load_config()
     impulse=config["reed_switch"]["impulse"]
@@ -46,7 +44,7 @@ def api_initialize_reed_switch():
     reed_switch_object = RSFactory.create(bool(impulse))
     reed_switch_object.setup()
     reed_switch_initialized = True
-    reed_switch_autostop_time = time.time() + REED_SWITCH_AUTOSTOP_SECONDS
+    print("REED_SWITCH_AUTOSTOP_SECONDS", REED_SWITCH_AUTOSTOP_SECONDS)
 
     return jsonify({
         "success": True,
@@ -57,15 +55,21 @@ def api_initialize_reed_switch():
 
 @reed_switch_bp.route('/stop-reed-switch', methods=['POST'])
 def api_stop_reed_switch():
-    global reed_switch_initialized, reed_switch_autostop_time, reed_switch_object
+    global reed_switch_initialized, reed_switch_object
 
-    reed_switch_autostop_time = None
     reed_switch_initialized = False
     print(reed_switch_object)
     reed_switch_object.clean()
     print(reed_switch_object)
+    reed_switch_object = None
+    test_r()
 
     return jsonify({"success": True, "message": "Моніторинг геркона зупинено"})
+
+
+def test_r():
+    global reed_switch_object
+    print(reed_switch_object)
 
 
 @reed_switch_bp.route('/get-reed-switch-status')

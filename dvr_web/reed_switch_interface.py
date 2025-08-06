@@ -1,5 +1,4 @@
 import RPi.GPIO as GPIO
-from gpiozero import Button
 from dvr_web.constants import BTN_A_PIN, BTN_B_PIN, DOOR_SENSOR_PIN
 from abc import ABC, abstractmethod
 
@@ -17,34 +16,30 @@ class ReedSwitchInterface(ABC):
         pass
 
 class ImpulseRS(ReedSwitchInterface):
-    def __init__(self, pin_a=None, pin_b=None):
-        self.pin_a = pin_a or BTN_A_PIN
-        self.pin_b = pin_b or BTN_B_PIN
-        self.btn_a = None
-        self.btn_b = None
+    def __init__(self):
         self.event = None
 
     def setup(self):
-        self.btn_a = Button(self.pin_a, pull_up=True, bounce_time=0.001)
-        self.btn_b = Button(self.pin_b, pull_up=True, bounce_time=0.001)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(BTN_A_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BTN_B_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(BTN_A_PIN, GPIO.FALLING, callback=self.setup_a, bouncetime=75)
+        GPIO.add_event_detect(BTN_B_PIN, GPIO.FALLING, callback=self.setup_b, bouncetime=75)
 
     def pressed(self):
-        self.btn_a.when_pressed = self.setup_a
-        self.btn_b.when_pressed = self.setup_b
         return self.event
 
-    def setup_a(self):
+    def setup_a(self, channel):
         print("A pressed")
         self.event = True
 
-    def setup_b(self):
+    def setup_b(self, channel):
         print("B pressed")
         self.event = False
 
     def clean(self):
-        print("clean resourses")
-        self.btn_a = None
-        self.btn_b = None
+        print("Impulse clean resourses")
+        GPIO.cleanup()
 
 class MexaRS(ReedSwitchInterface):
     def __init__(self, pin=None):
@@ -67,7 +62,7 @@ class MexaRS(ReedSwitchInterface):
             return False
         
     def clean(self):
-        print("clean resourses")
+        print("Mexa clean resourses")
         GPIO.cleanup()
 
 class RSFactory:

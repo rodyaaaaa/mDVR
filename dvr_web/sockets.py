@@ -1,9 +1,11 @@
 import time
 import threading
+import datetime
 
 from flask_socketio import SocketIO, emit
 
-from dvr_web.routes.reed_switch import read_reed_switch_state, reed_switch_autostop_time
+from dvr_web.routes.reed_switch import read_reed_switch_state
+from dvr_web.constants import REED_SWITCH_AUTOSTOP_SECONDS
 
 socketio = None
 reed_switch_monitor_active = False
@@ -59,11 +61,6 @@ def init_socketio(app):
             else:
                 status_data["status"] = "unknown"
 
-        if reed_switch_autostop_time:
-            seconds_left = max(0, int(reed_switch_autostop_time - time.time()))
-            status_data["autostop"] = True
-            status_data["seconds_left"] = seconds_left
-
         print(f"[DEBUG SOCKET] Відправляємо відповідь: {status_data}")
         emit('reed_switch_update', status_data)
 
@@ -87,8 +84,12 @@ def monitor_reed_switch():
 
         status_with_init = reed_switch_state.copy()
 
-        seconds_left = int(reed_switch_autostop_time - current_time) if reed_switch_autostop_time else 0
-        status_with_init["autostop"] = reed_switch_autostop_time is not None
+        seconds_left = datetime.datetime.now() - datetime.timedelta(seconds=REED_SWITCH_AUTOSTOP_SECONDS)
+        print("SECONDS LEFT BEFORE", seconds_left)
+        seconds_left = seconds_left.timestamp()
+        status_with_init["autostop"] = True
+        print("current_time", current_time)
+        print("SECONDS LEFT", seconds_left)
         status_with_init["seconds_left"] = max(0, seconds_left)
 
         socketio.emit('reed_switch_update', status_with_init, namespace='/ws')

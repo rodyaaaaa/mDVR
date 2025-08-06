@@ -13,6 +13,8 @@ function updateReedSwitchUI(data) {
   const autoStopTimer = document.getElementById("auto-stop-timer");
   const autoStopTime = document.getElementById("auto-stop-time");
 
+  console.log(data);
+
   if ("status" in data) {
     statusIndicator.classList.remove("closed");
     statusIndicator.classList.remove("opened");
@@ -32,7 +34,9 @@ function updateReedSwitchUI(data) {
       autoStopTimer.style.display = "block";
       autoStopTime.textContent = formatTime(data.seconds_left);
 
+      console.log("SECONDS LEFT IN DATA", data.seconds_left);
       if (data.seconds_left <= 0) {
+        console.log("updateReedSwitchUI TEST");
         initStatus.textContent = "Not initialized";
         initStatus.classList.add("not-initialized");
         initStatus.classList.remove("initialized");
