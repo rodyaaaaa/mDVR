@@ -39,37 +39,13 @@ def init_socketio(app):
         global reed_switch_monitor_active
         reed_switch_monitor_active = False
 
-    @socketio.on('get_status', namespace='/ws')
-    def ws_get_status():
-        current_time = int(time.time())
-        status_data = {
-            "status": "unknown",
-            "timestamp": current_time,
-            "initialized": True,
-            "autostop": False,
-            "seconds_left": 0
-        }
-
-        if reed_switch_state and "status" in reed_switch_state:
-            status_data["status"] = reed_switch_state["status"]
-        if reed_switch_state and "timestamp" in reed_switch_state:
-            status_data["timestamp"] = reed_switch_state["timestamp"]
-
-        if status_data["status"] not in ["closed", "opened", "unknown"]:
-            if status_data["status"] == "open":
-                status_data["status"] = "opened"
-            else:
-                status_data["status"] = "unknown"
-
-        print(f"[DEBUG SOCKET] Відправляємо відповідь: {status_data}")
-        emit('reed_switch_update', status_data)
-
     return socketio
 
 
 def monitor_reed_switch():
     global reed_switch_monitor_active, reed_switch_state, socketio
     reed_switch_monitor_active = True
+    prev_state = None
 
     while reed_switch_monitor_active:
         print(reed_switch_monitor_active)
@@ -87,12 +63,12 @@ def monitor_reed_switch():
         seconds_left = datetime.datetime.now() - datetime.timedelta(seconds=REED_SWITCH_AUTOSTOP_SECONDS)
         print("SECONDS LEFT BEFORE", seconds_left)
         seconds_left = seconds_left.timestamp()
-        status_with_init["autostop"] = True
         print("current_time", current_time)
         print("SECONDS LEFT", seconds_left)
-        status_with_init["seconds_left"] = max(0, seconds_left)
 
-        socketio.emit('reed_switch_update', status_with_init, namespace='/ws')
+        if current_state != prev_state:
+            socketio.emit('reed_switch_update', status_with_init, namespace='/ws')
+            prev_state = current_state
 
         time.sleep(0.01)
     

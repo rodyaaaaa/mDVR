@@ -4,7 +4,6 @@ import subprocess
 
 from flask import Blueprint, jsonify, request
 
-from dvr_web.constants import REED_SWITCH_AUTOSTOP_SECONDS
 from dvr_web.utils import check_reed_switch_status, load_config, get_config_path
 from dvr_web.reed_switch_interface import RSFactory
 
@@ -44,13 +43,8 @@ def api_initialize_reed_switch():
     reed_switch_object = RSFactory.create(bool(impulse))
     reed_switch_object.setup()
     reed_switch_initialized = True
-    print("REED_SWITCH_AUTOSTOP_SECONDS", REED_SWITCH_AUTOSTOP_SECONDS)
 
-    return jsonify({
-        "success": True,
-        "autostop": True,
-        "seconds_left": REED_SWITCH_AUTOSTOP_SECONDS
-    })
+    return jsonify({"success": True})
 
 
 @reed_switch_bp.route('/stop-reed-switch', methods=['POST'])
@@ -62,14 +56,8 @@ def api_stop_reed_switch():
     reed_switch_object.clean()
     print(reed_switch_object)
     reed_switch_object = None
-    test_r()
 
-    return jsonify({"success": True, "message": "Моніторинг геркона зупинено"})
-
-
-def test_r():
-    global reed_switch_object
-    print(reed_switch_object)
+    return jsonify({"success": True})
 
 
 @reed_switch_bp.route('/get-reed-switch-status')
@@ -150,7 +138,6 @@ def toggle_reed_switch_mode():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# Функція для читання стану геркона через єдиний інтерфейс
 def read_reed_switch_state():
     global reed_switch_object
 

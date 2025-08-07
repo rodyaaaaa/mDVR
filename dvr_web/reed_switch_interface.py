@@ -1,6 +1,8 @@
 import RPi.GPIO as GPIO
-from dvr_web.constants import BTN_A_PIN, BTN_B_PIN, DOOR_SENSOR_PIN
+
 from abc import ABC, abstractmethod
+
+from dvr_web.constants import BTN_A_PIN, BTN_B_PIN, DOOR_SENSOR_PIN
 
 class ReedSwitchInterface(ABC):
     @abstractmethod

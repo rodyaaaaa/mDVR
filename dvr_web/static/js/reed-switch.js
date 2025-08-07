@@ -9,9 +9,6 @@ function updateReedSwitchUI(data) {
   const statusIndicator = document.getElementById("reed-status-indicator");
   const statusText = document.getElementById("reed-status-text");
   const lastUpdated = document.getElementById("reed-last-updated");
-  const initStatus = document.getElementById("reed-init-status");
-  const autoStopTimer = document.getElementById("auto-stop-timer");
-  const autoStopTime = document.getElementById("auto-stop-time");
 
   console.log(data);
 
@@ -22,28 +19,8 @@ function updateReedSwitchUI(data) {
 
     statusIndicator.classList.add(data.status);
     statusText.textContent = data.status;
-  }
 
-  if ("timestamp" in data) {
-    const date = new Date(data.timestamp * 1000);
-    lastUpdated.textContent = date.toLocaleTimeString();
-  }
-
-  if ("autostop" in data) {
-    if ("seconds_left" in data) {
-      autoStopTimer.style.display = "block";
-      autoStopTime.textContent = formatTime(data.seconds_left);
-
-      console.log("SECONDS LEFT IN DATA", data.seconds_left);
-      if (data.seconds_left <= 0) {
-        console.log("updateReedSwitchUI TEST");
-        initStatus.textContent = "Not initialized";
-        initStatus.classList.add("not-initialized");
-        initStatus.classList.remove("initialized");
-      }
-    } else {
-      autoStopTimer.style.display = "none";
-    }
+    lastUpdated.textContent = getLocalFormattedDateTime();
   }
 }
 
@@ -102,11 +79,6 @@ function updateReedSwitchMode() {
         "reed-switch-mode-impulse",
       );
 
-      if (!mechanicalModeRadio || !impulseModeRadio) {
-        console.error("Reed switch mode radio buttons not found");
-        return;
-      }
-
       if (data.impulse === 1) {
         impulseModeRadio.checked = true;
         mechanicalModeRadio.checked = false;
@@ -146,7 +118,15 @@ function toggleReedSwitchMode() {
 }
 
 function toggleReedSwitch() {
+  const initStatus = document.getElementById("reed-init-status");
+
   showPreloader();
+
+  if (initStatus.textContent === "Initialized") {
+    showNotification("First disable sensors checker!", true);
+    return;
+  };
+
   const state = document.querySelector(
     'input[name="reed_switch"]:checked',
   ).value;
@@ -202,17 +182,6 @@ function initializeReedSwitch() {
         initStatus.classList.add("initialized");
         initStatus.classList.remove("not-initialized");
         initButton.textContent = "Re-initialize Reed Switch";
-
-        if (data.status) {
-          const statusData = {
-            status: "unknown",
-            timestamp: Math.floor(Date.now() / 1000),
-            autostop: data.autostop || false,
-            seconds_left: data.seconds_left || 0,
-          };
-
-          updateReedSwitchUI(statusData);
-        }
 
         createReedSwitchWebSocket();
 
@@ -355,8 +324,6 @@ function createReedSwitchWebSocket() {
     connectionStatus.textContent = "Connected";
     connectionStatus.classList.add("connected");
     connectionStatus.classList.remove("disconnected");
-
-    reedSwitchSocket.emit("get_status");
   });
 
   reedSwitchSocket.on("reed_switch_update", function (data) {

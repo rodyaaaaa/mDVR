@@ -88,3 +88,18 @@ document.addEventListener("DOMContentLoaded", () => {
     fixedSaveButton.style.display = "block";
   }
 });
+
+function getLocalFormattedDateTime() {
+  const now = new Date();
+  const pad = num => num.toString().padStart(2, '0');
+
+  const year = now.getFullYear();
+  const month = pad(now.getMonth() + 1);
+  const day = pad(now.getDate());
+
+  const hrs = pad(now.getHours());
+  const mins = pad(now.getMinutes());
+  const secs = pad(now.getSeconds());
+
+  return `${year}/${month}/${day} ${hrs}:${mins}:${secs}`;
+}
