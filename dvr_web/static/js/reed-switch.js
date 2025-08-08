@@ -124,6 +124,8 @@ function toggleReedSwitch() {
 
   if (initStatus.textContent === "Initialized") {
     showNotification("First disable sensors checker!", true);
+    document.getElementById('reed-switch-off').checked = true;
+    hidePreloader();
     return;
   };
 
