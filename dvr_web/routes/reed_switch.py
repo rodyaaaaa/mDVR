@@ -5,13 +5,11 @@ import subprocess
 from flask import Blueprint, jsonify, request
 
 from dvr_web.utils import check_reed_switch_status, load_config, get_config_path
-from dvr_web.reed_switch_interface import RSFactory
 
 
 # Глобальні змінні для стеження за станом геркона
 reed_switch_initialized = False
 reed_switch_state = {"status": "unknown", "timestamp": 0}
-reed_switch_object = None
 
 reed_switch_bp = Blueprint('reed_switch', __name__)
 
@@ -27,10 +25,8 @@ def api_reed_switch_status():
 
 @reed_switch_bp.route('/initialize-reed-switch', methods=['POST'])
 def api_initialize_reed_switch():
-    global reed_switch_initialized, reed_switch_object
+    global reed_switch_initialized
 
-    config = load_config()
-    impulse=config["reed_switch"]["impulse"]
     rs_status = check_reed_switch_status()
     if rs_status:
         error_msg = "Error: The Reed Switch in the settings must be in the OFF position before initializing the reed sensor."
@@ -39,9 +35,7 @@ def api_initialize_reed_switch():
             "error": error_msg,
             "reed_switch_enabled": True
         })
-
-    reed_switch_object = RSFactory.create(bool(impulse))
-    reed_switch_object.setup()
+    
     reed_switch_initialized = True
 
     return jsonify({"success": True})
@@ -136,24 +130,3 @@ def toggle_reed_switch_mode():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
-
-def read_reed_switch_state():
-    global reed_switch_object
-
-    pressed = reed_switch_object.pressed()
-
-    if pressed is True:
-        return "opened"
-    elif pressed is False:
-        return "closed"
-    else:
-        return "unknown"
-    
-
-def stop_reed_switch():
-    global reed_switch_object
-
-    if reed_switch_object:
-        reed_switch_object.clean()
-    reed_switch_object = None

@@ -186,3 +186,14 @@ def update_imei():
     except Exception as e:
         print(f"Critical error in update_imei: {str(e)}")
         return False
+
+
+def read_reed_switch_state(reed_switch_object):
+    pressed = reed_switch_object.pressed()
+
+    if pressed is True:
+        return "opened"
+    elif pressed is False:
+        return "closed"
+    else:
+        return "unknown"

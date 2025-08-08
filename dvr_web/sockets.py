@@ -1,15 +1,14 @@
 import time
 import threading
-import datetime
 
 from flask_socketio import SocketIO, emit
 
-from dvr_web.routes.reed_switch import read_reed_switch_state, stop_reed_switch
+from dvr_web.utils import load_config, read_reed_switch_state
 from dvr_web.constants import REED_SWITCH_AUTOSTOP_SECONDS
+from dvr_web.reed_switch_interface import RSFactory
 
 socketio = None
 reed_switch_monitor_active = False
-reed_switch_state = None
 
 def init_socketio(app):
     global socketio
@@ -28,7 +27,10 @@ def init_socketio(app):
     def ws_connect(auth):
         global reed_switch_monitor_active
 
-        reed_switch_monitor_thread = threading.Thread(target=monitor_reed_switch)
+        config = load_config()
+        impulse=config["reed_switch"]["impulse"]
+
+        reed_switch_monitor_thread = threading.Thread(target=monitor_reed_switch, args=(impulse,))
         reed_switch_monitor_thread.daemon = True
         reed_switch_monitor_thread.start()
 
@@ -42,8 +44,12 @@ def init_socketio(app):
     return socketio
 
 
-def monitor_reed_switch():
-    global reed_switch_monitor_active, reed_switch_state, socketio
+def monitor_reed_switch(impulse):
+    global reed_switch_monitor_active, socketio
+    
+    reed_switch_object = RSFactory.create(bool(impulse))
+    reed_switch_object.setup()
+    
     reed_switch_monitor_active = True
     prev_state = None
     start_time = time.time()
@@ -56,10 +62,9 @@ def monitor_reed_switch():
             print(f"Таймаут {REED_SWITCH_AUTOSTOP_SECONDS} с сплив — зупинка моніторингу")
             socketio.emit('disconnect', namespace='/ws')
             reed_switch_monitor_active = False
-            stop_reed_switch()
             break
     
-        current_state = read_reed_switch_state()
+        current_state = read_reed_switch_state(reed_switch_object)
         reed_switch_state = {"status": current_state}
         print("current_time", current_time)
 
@@ -69,4 +74,6 @@ def monitor_reed_switch():
             start_time = time.time()
 
         time.sleep(0.01)
+
+    reed_switch_object.clean()
     
