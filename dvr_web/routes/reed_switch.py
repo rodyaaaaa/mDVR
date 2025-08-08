@@ -149,3 +149,11 @@ def read_reed_switch_state():
         return "closed"
     else:
         return "unknown"
+    
+
+def stop_reed_switch():
+    global reed_switch_object
+
+    if reed_switch_object:
+        reed_switch_object.clean()
+    reed_switch_object = None

@@ -7,7 +7,7 @@ from flask_cors import CORS
 
 from dvr_web.routes.api import api_bp, start_cpu_monitoring
 from dvr_web.routes.web import web_bp
-from dvr_web.routes.reed_switch import reed_switch_bp
+from dvr_web.routes.reed_switch import reed_switch_bp, stop_reed_switch
 from dvr_web.utils import generate_nginx_configs, load_config, update_imei
 from dvr_web.constants import VPN_CONFIG_PATH
 from dvr_web.sockets import init_socketio
@@ -35,6 +35,7 @@ def create_app():
     def index():
         try:
             update_imei()
+            stop_reed_switch()
 
             config = load_config()
             camera_list = config.get('camera_list', [])
