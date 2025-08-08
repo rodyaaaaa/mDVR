@@ -25,46 +25,22 @@ function updateReedSwitchUI(data) {
 }
 
 // Reed Switch state functions
-function updateReedSwitchState() {
-  fetch("/reed-switch/get-reed-switch-status")
+function updateReedSwitchTimeout() {
+  const rsTimeoutInput = document.getElementById("rs-timeout-input");
+  
+  fetch("/reed-switch/get-rs-timeout")
     .then((response) => response.json())
-    .then((data) => {
-      const reedOnRadio = document.getElementById("reed-switch-on");
-      const reedOffRadio = document.getElementById("reed-switch-off");
-      const rsTimeoutInput = document.getElementById("rs-timeout-input");
-
-      if (!reedOnRadio || !reedOffRadio) {
-        console.error("Reed switch radio buttons not found");
-        return;
-      }
-
-      if (data.state === "on") {
-        reedOnRadio.checked = true;
+    .then((timeoutData) => {
+      if (timeoutData && typeof timeoutData.timeout !== "undefined") {
+        rsTimeoutInput.value = timeoutData.timeout;
       } else {
-        reedOnRadio.checked = false;
+        rsTimeoutInput.value = "0";
       }
-
-      if (rsTimeoutInput) {
-        fetch("/reed-switch/get-rs-timeout")
-          .then((response) => response.json())
-          .then((timeoutData) => {
-            if (timeoutData && typeof timeoutData.timeout !== "undefined") {
-              rsTimeoutInput.value = timeoutData.timeout;
-            } else {
-              rsTimeoutInput.value = "0";
-            }
-          })
-          .catch((error) => {
-            console.error("Error fetching RS timeout:", error);
-            rsTimeoutInput.value = "0";
-          });
-      }
-
-      updateReedSwitchMode();
-    })
-    .catch((error) =>
-      console.error("Error fetching reed switch status:", error),
-    );
+    }).catch((error) => {
+        console.error("Error fetching RS timeout:", error);
+        rsTimeoutInput.value = "0";
+    });
+    updateReedSwitchMode();
 }
 
 // Function to update reed switch mode from server
@@ -142,7 +118,7 @@ function toggleReedSwitch() {
       hidePreloader();
       if (result.success) {
         showNotification("Reed Switch updated successfully!");
-        setTimeout(updateReedSwitchState, 500);
+        setTimeout(updateReedSwitchTimeout, 500);
       } else {
         showNotification("ERROR: " + result.error, true);
       }

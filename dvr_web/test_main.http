@@ -28,10 +28,6 @@ Accept: application/json
 
 ###
 
-# Reed switch status (api)
-GET http://localhost:80/api/reed-switch-status
-Accept: application/json
-
 ###
 
 # CPU load (api)

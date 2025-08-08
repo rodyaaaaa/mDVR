@@ -58,7 +58,7 @@ function showTab(tabId) {
     startCpuChartUpdates();
     startMemChartUpdates();
   } else if (tabId === "video-options") {
-    updateReedSwitchState();
+    updateReedSwitchTimeout();
     showSettingsTab("general-settings-content");
     stopExt5vVUpdates();
     clearInterval(cpuChartInterval);

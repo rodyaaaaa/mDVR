@@ -14,15 +14,6 @@ reed_switch_state = {"status": "unknown", "timestamp": 0}
 reed_switch_bp = Blueprint('reed_switch', __name__)
 
 
-@reed_switch_bp.route('/reed-switch-status')
-def api_reed_switch_status():
-    global reed_switch_state
-
-    reed_switch_state = { "status": read_reed_switch_state() }
-
-    return jsonify(reed_switch_state)
-
-
 @reed_switch_bp.route('/initialize-reed-switch', methods=['POST'])
 def api_initialize_reed_switch():
     global reed_switch_initialized
