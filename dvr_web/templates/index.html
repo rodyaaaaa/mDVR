@@ -147,7 +147,9 @@
 
             <!-- Загальні налаштування камери -->
             <div id="general-settings-content" class="settings-content active">
-                <h2>Camera Settings</h2>
+                <div class="settings-top-label">
+                    <h2>Camera Settings</h2>
+                </div>
                 <div class="input-row">
                     <label for="rtsp-transport">RTSP Transport:</label>
                     <select id="rtsp-transport">
@@ -199,9 +201,12 @@
                 <button onclick="saveVideoOptions()">Save</button>
             </div>
 
-            <!-- Reed Switch налаштування -->
+            <!-- Reed Switch Settings -->
             <div id="reed-switch-settings-content" class="settings-content">
-                <h2>Sensors Settings</h2>
+                <div class="settings-top-label">
+                    <h2>Sensors Settings</h2>
+                    <button onclick="saveRSConfig()">Save</button>
+                </div>
                 <div class="input-row">
                     <label>Sensors:</label>
                     <div class="reed-switch-options">
@@ -245,13 +250,13 @@
                         </div>
                     </div>
                 </div>
-
-                <button onclick="saveRSConfig()">Save</button>
             </div>
 
             <!-- FTP налаштування -->
             <div id="ftp-settings-content" class="settings-content">
-                <h2>FTP settings</h2>
+                <div class="settings-top-label">
+                    <h2>FTP settings</h2>
+                </div>
                 <div>
                     <div class="input-row">
                         <label for="ftp-server-ip">IP: </label>
@@ -282,7 +287,9 @@
 
             <!-- VPN налаштування -->
             <div id="vpn-settings-content" class="settings-content">
-                <h2>VPN config</h2>
+                <div class="settings-top-label">
+                    <h2>VPN config</h2>
+                </div>
                 <div class="vpn-config-options">
                     <div class="vpn-config-textarea">
                         <label>Manual configuration:</label>

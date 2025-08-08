@@ -112,17 +112,6 @@ header p {
     animation: fadeInRight 0.4s ease-out forwards;
 }
 
-/* Add animation classes for settings tabs too */
-.settings-content {
-    display: none;
-    position: relative;
-}
-
-.settings-content.active {
-    display: block;
-    animation: scaleUp 0.3s ease-out forwards;
-}
-
 /* Home page layout */
 .home-flex-row {
     display: flex;
@@ -323,6 +312,18 @@ header p {
 
 #video-options button:hover {
     background: #778da9;
+}
+
+.settings-top-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 2px solid #ffffff
+}
+
+.settings-top-label h2 {
+    border-style: none;
 }
 
 /* RS Timeout Block */
