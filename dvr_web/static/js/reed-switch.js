@@ -27,20 +27,14 @@ function updateReedSwitchUI(data) {
 // Reed Switch state functions
 function updateReedSwitchTimeout() {
   const rsTimeoutInput = document.getElementById("rs-timeout-input");
-  
+
   fetch("/reed-switch/get-rs-timeout")
     .then((response) => response.json())
     .then((timeoutData) => {
-      if (timeoutData && typeof timeoutData.timeout !== "undefined") {
         rsTimeoutInput.value = timeoutData.timeout;
-      } else {
-        rsTimeoutInput.value = "0";
-      }
     }).catch((error) => {
         console.error("Error fetching RS timeout:", error);
-        rsTimeoutInput.value = "0";
     });
-    updateReedSwitchMode();
 }
 
 // Function to update reed switch mode from server
