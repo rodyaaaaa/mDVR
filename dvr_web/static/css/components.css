@@ -919,3 +919,102 @@
         min-height: 120px;
     }
 }
+
+/* Services: Engine grouped layout */
+.engine-grid {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.engine-col {
+    flex: 1 1 0;
+    background-color: #1b263b;
+    border: 1px solid #415a77;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.engine-col h3 {
+    margin: 0 0 10px 0;
+    color: #e6e6e6;
+    border-bottom: 1px solid #415a77;
+    padding-bottom: 6px;
+}
+
+.service-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.service-row:last-child {
+    border-bottom: none;
+}
+
+/* Responsive: stack columns on small screens */
+@media screen and (max-width: 900px) {
+    .engine-grid {
+        flex-direction: column;
+    }
+}
+
+/* Service logs UI */
+.logs-toggle {
+    margin-top: 8px;
+    align-self: flex-start;
+    padding: 6px 10px;
+    background: #415a77;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.logs-toggle:hover {
+    background: #536a8a;
+}
+
+.logs-panel {
+    display: none;
+    margin-top: 8px;
+    max-height: 240px;
+    overflow: auto;
+    background: #0f1727;
+    border: 1px solid #415a77;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.logs-panel.open { display: block; }
+
+.logs-content {
+    margin: 0;
+    color: #e6e6e6;
+    font-family: monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+}
+
+/* Services tab sizing */
+.services-container {
+    width: 100%;
+    max-width: 1200px;
+}
+
+.services-controls {
+    margin: auto;
+    width: 400px;
+}
+
+.services-controls #service-selector {
+    width: 100%;
+    max-width: 520px;
+}
+
+.services-display {
+    width: 100%;
+}

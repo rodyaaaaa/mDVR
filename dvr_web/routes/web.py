@@ -30,9 +30,48 @@ def get_service_status(service_name):
     try:
         status = os.popen(f"systemctl is-active {service_name}").read().strip()
         enabled = os.popen(f"systemctl is-enabled {service_name}").read().strip()
+        description = os.popen(f"systemctl show {service_name} --property=Description --value").read().strip()
         return jsonify({
             "status": status,
-            "enabled": enabled == "enabled"
+            "enabled": enabled == "enabled",
+            "description": description
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@web_bp.route('/get-service-logs/<service_name>')
+def get_service_logs(service_name):
+    """
+    Return recent logs for a systemd unit using a simple offset-based pagination.
+    Query params:
+      - limit: number of lines to return (default 200, max 1000)
+      - offset: how many most-recent lines to skip (default 0)
+    """
+    try:
+        limit = int(request.args.get('limit', 200))
+        offset = int(request.args.get('offset', 0))
+        limit = max(1, min(limit, 1000))
+        offset = max(0, offset)
+
+        # Fetch offset+limit most recent lines, then slice the last `limit` lines
+        total = offset + limit
+        cmd = f"journalctl -u {service_name} -n {total} --no-pager -o short-iso"
+        raw = os.popen(cmd).read()
+        lines = [ln for ln in raw.splitlines() if ln.strip()]
+        # Take the slice from the end accounting for offset and limit
+        total_len = len(lines)
+        end_idx = max(0, total_len - offset)
+        start_idx = max(0, end_idx - limit)
+        page = lines[start_idx:end_idx]
+
+        return jsonify({
+            "unit": service_name,
+            "offset": offset,
+            "limit": limit,
+            "count": len(page),
+            "next_offset": offset + len(page),
+            "logs": page
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

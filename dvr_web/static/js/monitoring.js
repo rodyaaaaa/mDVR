@@ -2,29 +2,207 @@
 
 // Service status monitoring
 let serviceStatusInterval;
+// Logs pagination state
+let logsOffsets = {};
+let logsLoading = {};
+
+function attachLogsHandlers(container, unitKey) {
+    const btn = container.querySelector('.logs-toggle');
+    const panel = container.querySelector('.logs-panel');
+    const pre = container.querySelector('.logs-content');
+    if (!btn || !panel || !pre) return;
+
+    // Initialize
+    logsOffsets[unitKey] = 0;
+    logsLoading[unitKey] = false;
+
+    const loadMore = (opts = { prepend: false, initial: false }) => {
+        if (logsLoading[unitKey]) return;
+        logsLoading[unitKey] = true;
+        const offset = logsOffsets[unitKey] || 0;
+        const prevScrollHeight = panel.scrollHeight;
+        const prevScrollTop = panel.scrollTop;
+        fetch(`/get-service-logs/${unitKey}?limit=200&offset=${offset}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data && Array.isArray(data.logs)) {
+                    const text = data.logs.join('\n');
+                    if (opts.prepend && pre.textContent) {
+                        pre.textContent = text + '\n' + pre.textContent;
+                    } else {
+                        pre.textContent += (pre.textContent ? '\n' : '') + text;
+                    }
+                    logsOffsets[unitKey] = data.next_offset || (offset + data.logs.length);
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                logsLoading[unitKey] = false;
+                // After content changes
+                if (opts.initial) {
+                    // Start from bottom (newest at bottom)
+                    panel.scrollTop = panel.scrollHeight;
+                } else if (opts.prepend) {
+                    // Preserve viewport when prepending
+                    const delta = panel.scrollHeight - prevScrollHeight;
+                    panel.scrollTop = prevScrollTop + delta;
+                }
+            });
+    };
+
+    btn.addEventListener('click', () => {
+        const isOpen = panel.classList.toggle('open');
+        if (isOpen && !pre.textContent.trim()) {
+            loadMore({ initial: true });
+        }
+    });
+
+    panel.addEventListener('scroll', () => {
+        const nearTop = panel.scrollTop <= 30;
+        if (nearTop) {
+            loadMore({ prepend: true });
+        }
+    });
+}
 
 function updateServiceStatus() {
     const serviceSelector = document.getElementById('service-selector');
-    if (serviceSelector.value === "") {
+    const value = serviceSelector.value;
+    const statusContainer = document.getElementById('service-status');
+
+    if (value === "") {
         return;
     }
-    
-    fetch(`/get-service-status/${serviceSelector.value}`)
+
+    // If any logs panel is open, avoid re-rendering to prevent closing it while the user scrolls
+    if (statusContainer && statusContainer.querySelector('.logs-panel.open')) {
+        return;
+    }
+
+    // Engine: show combined mdvr and reed-switch service + timer
+    if (value === 'engine') {
+        const units = [
+            { key: 'mdvr.service', label: 'mDVR Service', group: 'mdvr' },
+            { key: 'mdvr.timer', label: 'mDVR Timer', group: 'mdvr' },
+            { key: 'mdvr_rs.service', label: 'Reed Switch Service', group: 'rs' },
+            { key: 'mdvr_rs.timer', label: 'Reed Switch Timer', group: 'rs' },
+        ];
+
+        Promise.all(
+            units.map(u => fetch(`/get-service-status/${u.key}`)
+                .then(r => r.json())
+                .then(d => ({ u, d }))
+                .catch(e => ({ u, d: { error: String(e) } })))
+        ).then(results => {
+            const renderRow = (label, d, key) => {
+                if (d && d.error) {
+                    return `
+                        <div class="service-row" data-unit="${key}">
+                            <p>${label}: <span class="error">Error</span></p>
+                            <p class="error">${d.error}</p>
+                            <button type="button" class="logs-toggle">Show logs</button>
+                            <div class="logs-panel"><pre class="logs-content"></pre></div>
+                        </div>
+                    `;
+                }
+                const activeClass = d.status === 'active' ? '' : 'error';
+                const enabledClass = d.enabled ? '' : 'error';
+                const enabledText = d.enabled ? 'Yes' : 'No';
+                return `
+                    <div class="service-row" data-unit="${key}">
+                        <p>${label} — Active: <span class="${activeClass}">${d.status}</span></p>
+                        <p>Enabled: <span class="${enabledClass}">${enabledText}</span></p>
+                        <p class="service-desc">Description: <span>${d.description || '-'} </span></p>
+                        <button type="button" class="logs-toggle">Show logs</button>
+                        <div class="logs-panel"><pre class="logs-content"></pre></div>
+                    </div>
+                `;
+            };
+
+            const mdvrRows = results
+                .filter(r => r.u.group === 'mdvr')
+                .map(({ u, d }) => renderRow(u.label, d, u.key))
+                .join('');
+
+            const rsRows = results
+                .filter(r => r.u.group === 'rs')
+                .map(({ u, d }) => renderRow(u.label, d, u.key))
+                .join('');
+
+            statusContainer.innerHTML = `
+                <div class="engine-grid">
+                    <div class="engine-col">
+                        <h3>mDVR</h3>
+                        ${mdvrRows}
+                    </div>
+                    <div class="engine-col">
+                        <h3>Reed Switch</h3>
+                        ${rsRows}
+                    </div>
+                </div>
+            `;
+
+            // Attach logs handlers for all engine rows
+            statusContainer.querySelectorAll('.service-row').forEach(row => {
+                const unitKey = row.getAttribute('data-unit');
+                if (unitKey) attachLogsHandlers(row, unitKey);
+            });
+        }).catch(error => {
+            showNotification('Error fetching engine statuses', true);
+            console.error('Engine fetch error:', error);
+        });
+        return;
+    }
+
+    // Default: single unit view
+    // Ensure default layout exists if it was replaced by engine view
+    if (!document.getElementById('service-active') || !document.getElementById('service-enabled')) {
+        statusContainer.innerHTML = `
+            <p>Status: <span id="service-active">-</span></p>
+            <p>Enabled: <span id="service-enabled">-</span></p>
+            <p class="service-desc">Description: <span id="service-description">-</span></p>
+            <div class="service-row" data-unit="${value}">
+                <button type="button" class="logs-toggle">Show logs</button>
+                <div class="logs-panel"><pre class="logs-content"></pre></div>
+            </div>
+        `;
+        const singleRow = statusContainer.querySelector('.service-row');
+        if (singleRow) attachLogsHandlers(singleRow, value);
+    }
+
+    fetch(`/get-service-status/${value}`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
                 showNotification(data.error, true);
                 return;
             }
-            
+
             const serviceActive = document.getElementById('service-active');
             const serviceEnabled = document.getElementById('service-enabled');
-            
+            let serviceDescription = document.getElementById('service-description');
+
             serviceActive.textContent = data.status;
             serviceActive.className = data.status === 'active' ? '' : 'error';
-            
+
             serviceEnabled.textContent = data.enabled ? 'Yes' : 'No';
             serviceEnabled.className = data.enabled ? '' : 'error';
+
+            if (!serviceDescription) {
+                const p = document.createElement('p');
+                p.className = 'service-desc';
+                p.innerHTML = 'Description: <span id="service-description">-</span>';
+                statusContainer.appendChild(p);
+                serviceDescription = document.getElementById('service-description');
+            }
+            serviceDescription.textContent = data.description || '-';
+
+            // Make sure logs handlers are attached for single-service view
+            const singleRow = statusContainer.querySelector('.service-row');
+            if (singleRow && !singleRow.getAttribute('data-unit')) {
+                singleRow.setAttribute('data-unit', value);
+                attachLogsHandlers(singleRow, value);
+            }
         })
         .catch(error => {
             showNotification('Error fetching service status', true);

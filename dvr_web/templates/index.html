@@ -314,21 +314,24 @@
         <div id="services" class="tab">
             <h2>Services Status</h2>
             <div class="services-container">
-                <select id="service-selector" onchange="updateServiceStatus()">
-                    <option value="" disabled selected hidden>Select a service...</option>
-                    <option value="mdvr.service">mDVR Service</option>
-                    <option value="mdvr_rs.service">mDVR Reed Switch Service</option>
-                    <option value="mdvr_web.service">mDVR Web Service</option>
-                    <option value="mdvr_upload.timer">mDVR Upload Timer</option>
-                    <option value="mdvr_space_check.timer">mDVR Space Check Timer</option>
-                    <option value="mdvr_system_guard.timer">mDVR System Guard Timer</option>
-                    <option value="mdvr_vpn_check.timer">mDVR VPN Check Timer</option>
-                    <option value="wg-quick@wg0.service">WireGuard VPN Service</option>
-                    <option value="nginx.service">Nginx Service</option>
-                </select>
-                <div id="service-status" class="service-status">
-                    <p>Status: <span id="service-active">-</span></p>
-                    <p>Enabled: <span id="service-enabled">-</span></p>
+                <div class="services-controls">
+                    <select id="service-selector" onchange="updateServiceStatus()">
+                        <option value="" disabled selected hidden>Select a service...</option>
+                        <option value="engine">mDVR Engine</option>
+                        <option value="mdvr_web.service">mDVR Web Service</option>
+                        <option value="mdvr_upload.timer">mDVR Upload Timer</option>
+                        <option value="mdvr_space_check.timer">mDVR Space Check Timer</option>
+                        <option value="mdvr_system_guard.timer">mDVR System Guard Timer</option>
+                        <option value="mdvr_vpn_check.timer">mDVR VPN Check Timer</option>
+                        <option value="wg-quick@wg0.service">WireGuard VPN Service</option>
+                        <option value="nginx.service">Nginx Service</option>
+                    </select>
+                </div>
+                <div class="services-display">
+                    <div id="service-status" class="service-status">
+                        <p>Status: <span id="service-active">-</span></p>
+                        <p>Enabled: <span id="service-enabled">-</span></p>
+                    </div>
                 </div>
             </div>
         </div>
