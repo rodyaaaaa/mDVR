@@ -262,7 +262,7 @@
     box-shadow: 0 5px 15px rgba(0,0,0,0.15);
 }
 
-#reed-switch-settings-content .reed-switch-full-width {
+#sensors-settings-content .reed-switch-full-width {
     margin-bottom: 30px;
 }
 
@@ -488,8 +488,7 @@
 .settings-tab {
     background-color: #1b263b;
     border: 1px solid #3a4453;
-    border-bottom: none;
-    padding: 15px 20px;
+    padding: 8px 16px;
     font-size: 16px;
     color: #d8dee9;
     cursor: pointer;
@@ -499,7 +498,7 @@
     text-align: center;
     font-weight: 500;
     margin-top: 0;
-    border-radius: 8px 8px 0 0;
+    border-radius: 8px;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
@@ -518,7 +517,6 @@
 
 .settings-tab:hover {
     background-color: #2e3440;
-    transform: translateY(-3px);
 }
 
 .settings-tab:hover::before {
@@ -531,7 +529,6 @@
     background-color: #242f44;
     box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.2);
     z-index: 2;
-    transform: translateY(-3px);
 }
 
 .settings-tab.active::after {

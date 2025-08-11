@@ -29,22 +29,6 @@ select {
     margin-top: 15px;
 }
 
-button {
-    padding: 12px 20px;
-    background: #415a77;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.3s ease;
-    font-size: 16px;
-    margin-top: 20px;
-}
-
-button:hover {
-    background: #778da9;
-}
-
 h2 {
     text-align: center;
     font-size: 24px;

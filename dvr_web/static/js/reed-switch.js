@@ -181,7 +181,7 @@ function initializeReedSwitch() {
           setTimeout(() => {
             switchTabBtn.classList.remove("highlight");
             setTimeout(() => {
-              showSettingsTab("reed-switch-settings-content");
+              showSettingsTab("sensors-settings-content");
             }, 500);
           }, 3000);
         } else {

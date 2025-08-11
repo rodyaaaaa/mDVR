@@ -259,23 +259,19 @@ function updateImei() {
 
 // Show Settings Tab function - додамо код для відображення фіксованої кнопки
 function showSettingsTab(tabId) {
-    // Hide all settings content
     const allSettingsContent = document.querySelectorAll('.settings-content');
     allSettingsContent.forEach(content => {
         content.classList.remove('active');
     });
     
-    // Remove active class from all tabs
     const allTabs = document.querySelectorAll('.settings-tab');
     allTabs.forEach(tab => {
         tab.classList.remove('active');
     });
     
-    // Show the selected tab content
     const selectedContent = document.getElementById(tabId);
     selectedContent.classList.add('active');
     
-    // Add active class to clicked tab
     const activeTabId = tabId.replace('-content', '-tab');
     const activeTab = document.getElementById(activeTabId);
     if (activeTab) {
@@ -293,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateImei, 10000);
     
     document.getElementById('general-settings-tab').addEventListener('click', () => showSettingsTab('general-settings-content'));
-    document.getElementById('reed-switch-tab').addEventListener('click', () => showSettingsTab('reed-switch-settings-content'));
+    document.getElementById('sensors-settings-tab').addEventListener('click', () => showSettingsTab('sensors-settings-content'));
     document.getElementById('ftp-settings-tab').addEventListener('click', () => showSettingsTab('ftp-settings-content'));
     document.getElementById('vpn-settings-tab').addEventListener('click', () => showSettingsTab('vpn-settings-content'));
 });
