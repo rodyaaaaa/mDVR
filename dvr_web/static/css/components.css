@@ -525,7 +525,6 @@
 
 .settings-tab.active {
     color: #81a1c1;
-    font-weight: 600;
     background-color: #242f44;
     box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.2);
     z-index: 2;
