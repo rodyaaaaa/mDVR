@@ -76,17 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("dashboard-grid")) {
     console.log("Dashboard grid layout initialized");
   }
-
-  const videoOptionsTab = document.getElementById("video-options");
-  const fixedSaveButton = document.querySelector(".fixed-save-button");
-
-  if (
-    fixedSaveButton &&
-    videoOptionsTab &&
-    videoOptionsTab.classList.contains("active")
-  ) {
-    fixedSaveButton.style.display = "block";
-  }
 });
 
 function getLocalFormattedDateTime() {

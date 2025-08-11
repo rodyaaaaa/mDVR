@@ -147,8 +147,9 @@
 
             <!-- Загальні налаштування камери -->
             <div id="general-settings-content" class="settings-content active">
-                <div class="settings-top-label">
-                    <h2>Camera Settings</h2>
+                <div class="settings-section-header">
+                    <h2>General Settings</h2>
+                    <button onclick="saveVideoOptions()">Save</button>
                 </div>
                 <div class="input-row">
                     <label for="rtsp-transport">RTSP Transport:</label>
@@ -183,27 +184,30 @@
                     <input type="number" id="size-folder-limit-gb" value="{{ program_options.size_folder_limit_gb }}"
                            placeholder="Size in gb (example: 10)">
                 </div>
-                <h2 class="video-mode">Video Settings</h2>
+                <div class="settings-section-header video-mode">
+                    <h2 class="video-mode">Video Settings</h2>
+                </div>
                 <div class="input-row video-mode">
                     <label for="video-duration">Video duration:</label>
                     <input type="text" id="video-duration" value="{{ video_options.video_duration }}"
-                           placeholder="HH:MM:SS or minutes (e.g., '10' or '10 min')">
+                            placeholder="HH:MM:SS or minutes (e.g., '10' or '10 min')">
                 </div>
                 <div class="input-row video-mode">
                     <label for="video-fps">Frames Per Second (FPS):</label>
                     <input type="number" id="video-fps" value="{{ video_options.fps }}" placeholder="15">
                 </div>
-                <h2 class="photo-mode">Photo Settings</h2>
+                <div class="settings-section-header photo-mode">
+                    <h2 class="photo-mode">Photo Settings</h2>
+                </div>
                 <div class="input-row photo-mode" style="display: none;">
                     <label for="photo-timeout">Photo Timeout (seconds):</label>
                     <input type="number" id="photo-timeout" value="{{ photo_timeout }}" placeholder="10">
                 </div>
-                <button onclick="saveVideoOptions()">Save</button>
             </div>
 
             <!-- Reed Switch Settings -->
             <div id="reed-switch-settings-content" class="settings-content">
-                <div class="settings-top-label">
+                <div class="settings-section-header">
                     <h2>Sensors Settings</h2>
                     <button onclick="saveRSConfig()">Save</button>
                 </div>
@@ -231,7 +235,9 @@
                 </div>
 
                 <!-- Reed Switch Status Card -->
-                <h2>Sensors Status</h2>
+                <div class="settings-section-header">
+                    <h2>Sensors Status</h2>
+                </div>
                 <div class="reed-switch-full-width">
                     <div class="reed-switch-status">
                         <div class="status-circle" id="reed-status-indicator"></div>
@@ -254,8 +260,9 @@
 
             <!-- FTP налаштування -->
             <div id="ftp-settings-content" class="settings-content">
-                <div class="settings-top-label">
+                <div class="settings-section-header">
                     <h2>FTP settings</h2>
+                    <button onclick="saveFtpConfig()">Save</button>
                 </div>
                 <div>
                     <div class="input-row">
@@ -282,13 +289,13 @@
                     <input type="text" id="ftp-server-carname" value="{{ ftp.car_name }}" maxlength="6"
                            placeholder="000" oninput="validateCarname(this)">
                 </div>
-                <button onclick="saveFtpConfig()">Save</button>
             </div>
 
             <!-- VPN налаштування -->
             <div id="vpn-settings-content" class="settings-content">
-                <div class="settings-top-label">
+                <div class="settings-section-header">
                     <h2>VPN config</h2>
+                    <button onclick="saveVpnConfig()">Save</button>
                 </div>
                 <div class="vpn-config-options">
                     <div class="vpn-config-textarea">
@@ -301,13 +308,9 @@
                         <button id="upload-vpn-file-btn" onclick="uploadVpnConfigFile()">Upload File</button>
                     </div>
                 </div>
-                <!-- Regular save button (will be hidden via CSS) -->
-                <button onclick="saveVpnConfig()">Save</button>
             </div>
         </div>
 
-        <!-- Fixed position save button for VPN (always visible) -->
-        <button class="fixed-save-button" onclick="saveVpnConfig()">💾 Save</button>
         <div id="services" class="tab">
             <h2>Services Status</h2>
             <div class="services-container">

@@ -292,8 +292,24 @@ header p {
     flex-grow: 1;
 }
 
-#video-options button {
-    padding: 12px 20px;
+.settings-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 2px solid #ffffff;
+    margin-bottom: 7px;
+}
+
+.settings-section-header h2 {
+    text-align: left;
+    border: none;
+    padding: 0 0 5px 0;
+    margin-bottom: 0;
+}
+
+.settings-section-header button {
+    padding: 4px 45px;
     background: #415a77;
     color: white;
     border: none;
@@ -301,29 +317,11 @@ header p {
     cursor: pointer;
     transition: 0.3s ease;
     font-size: 16px;
-    margin-top: 20px;
-}
-
-#video-options h2 {
-    text-align: left;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #ffffff;
+    margin-top: 17px;
 }
 
 #video-options button:hover {
     background: #778da9;
-}
-
-.settings-top-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    border-bottom: 2px solid #ffffff
-}
-
-.settings-top-label h2 {
-    border-style: none;
 }
 
 /* RS Timeout Block */

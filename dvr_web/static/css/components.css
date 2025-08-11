@@ -923,37 +923,3 @@
         min-height: 120px;
     }
 }
-
-/* Fixed position save button for VPN tab */
-.fixed-save-button {
-    position: fixed;
-    bottom: 20px;
-    right: 30px;
-    padding: 15px 30px;
-    background: #4caf50; /* Green color for better visibility */
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: 500;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    z-index: 1000; /* Higher z-index to ensure visibility */
-    display: none; /* Hidden by default */
-}
-
-#vpn-settings-content.active .fixed-save-button {
-    display: block; /* Show only when parent is active */
-}
-
-.fixed-save-button:hover {
-    background: #45a049; /* Darker green on hover */
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
-}
-
-/* Hide the regular save button in VPN tab */
-#vpn-settings-content > button:not(.fixed-save-button) {
-    display: none;
-} 

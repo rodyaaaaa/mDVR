@@ -281,13 +281,6 @@ function showSettingsTab(tabId) {
     if (activeTab) {
         activeTab.classList.add('active');
     }
-    
-    // Контроль видимості фіксованої кнопки збереження VPN
-    const fixedSaveButton = document.querySelector('.fixed-save-button');
-    if (fixedSaveButton) {
-        // Показуємо кнопку, тільки якщо відкрита вкладка VPN
-        fixedSaveButton.style.display = (tabId === 'vpn-settings-content') ? 'block' : 'none';
-    }
 }
 
 // Initialize configuration functionality
