@@ -400,6 +400,12 @@
     z-index: 1000;
     text-align: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    /* Ensure true centering and avoid shifts when fonts/content load */
+    transform: translateX(-50%);
+    will-change: transform;
+    pointer-events: none; /* avoid blocking clicks under it */
+    white-space: nowrap; /* prevent width changes from wrapping */
+    max-width: calc(100vw - 40px);
 }
 
 .notification.success {
@@ -408,6 +414,11 @@
 
 .notification.error {
     background-color: #e63946;
+}
+
+/* Play fadeOut when we're dismissing */
+.notification.hiding {
+    animation: fadeOut 0.5s ease-in-out forwards;
 }
 
 /* Preloader */

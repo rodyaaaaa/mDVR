@@ -25,8 +25,17 @@ function showNotification(message, isError = false) {
   notification.textContent = message;
   document.body.appendChild(notification);
 
+  // Start fade-out after display duration, then remove on animation end
   setTimeout(() => {
-    notification.remove();
+    // In case it was already removed
+    if (!notification.isConnected) return;
+    notification.classList.add("hiding");
+    const removeSafely = () => notification.remove();
+    notification.addEventListener("animationend", removeSafely, { once: true });
+    // Fallback removal in case animationend doesn't fire
+    setTimeout(() => {
+      if (notification.isConnected) notification.remove();
+    }, 800);
   }, 3000);
 }
 
