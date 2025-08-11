@@ -5,7 +5,7 @@ let serviceStatusInterval;
 
 function updateServiceStatus() {
     const serviceSelector = document.getElementById('service-selector');
-    if (!serviceSelector) {
+    if (serviceSelector.value === "") {
         return;
     }
     
