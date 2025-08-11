@@ -11,6 +11,64 @@ function extractCameraIp(rtspUrl) {
     return match ? match[1] : null;
 }
 
+// Inline Add Camera flow
+function addCamInline() {
+    const camFieldsContainer = document.getElementById('cam-fields');
+    if (!camFieldsContainer) return;
+
+    // Prevent multiple inline editors
+    const existingTemp = camFieldsContainer.querySelector('.cam-field.temp');
+    if (existingTemp) {
+        existingTemp.querySelector('input')?.focus();
+        return;
+    }
+
+    const index = camFieldsContainer.querySelectorAll('.cam-field').length + 1;
+    const tempField = document.createElement('div');
+    tempField.className = 'cam-field temp';
+    tempField.innerHTML = `
+        <label>${index}.</label>
+        <input type="text" placeholder="Select RTSP url://">
+        <button class="save-cam" onclick="saveNewCam(this)">Save</button>
+        <button class="cancel-cam" onclick="cancelNewCam(this)">Cancel</button>
+    `;
+    camFieldsContainer.appendChild(tempField);
+    const input = tempField.querySelector('input');
+    if (input) input.focus();
+}
+
+function saveNewCam(button) {
+    const field = button.closest('.cam-field');
+    const input = field.querySelector('input');
+    const value = (input.value || '').trim();
+    if (!value) {
+        showNotification('Input rtsp-link, please', true);
+        input.focus();
+        return;
+    }
+
+    // Convert temp row into normal row
+    input.disabled = true;
+    field.classList.remove('temp');
+    field.innerHTML = `
+        <label></label>
+        <input type="text" value="${value.replace(/"/g, '&quot;')}" placeholder="Select RTSP url://" disabled>
+        <button class="edit-cam" onclick="enableEdit(this)">Edit</button>
+        <button class="view-cam" onclick="viewCamera(this)">View</button>
+        <button class="check-cam" onclick="checkCamera(this)">Check</button>
+        <button class="delete-cam" onclick="deleteCam(this)">×</button>
+    `;
+    // Recalculate labels and persist
+    updateCamLabels();
+    saveVideoLinks();
+}
+
+function cancelNewCam(button) {
+    const field = button.closest('.cam-field');
+    field.remove();
+    updateCamLabels();
+}
+
 function updateCameraPorts() {
     fetch('/get-camera-ports')
         .then(response => response.json())
@@ -151,7 +209,7 @@ function deleteCam(button) {
 function updateCamLabels() {
     const camFields = document.querySelectorAll('#cam-fields .cam-field');
     camFields.forEach((field, index) => {
-        field.querySelector('label').textContent = `Cam ${index + 1}:`;
+        field.querySelector('label').textContent = `${index + 1}.`;
     });
     camCounter = camFields.length;
 }
@@ -162,7 +220,7 @@ function addCam() {
     const newCamField = document.createElement('div');
     newCamField.classList.add('cam-field');
     newCamField.innerHTML = `
-        <label>Cam ${camCounter}:</label>
+        <label>${camCounter}.</label>
         <input type="text" placeholder="Select RTSP url://">
         <button class="edit-cam" onclick="enableEdit(this)">Edit</button>
         <button class="view-cam" onclick="viewCamera(this)">View</button>
@@ -366,9 +424,9 @@ function startRtspStream() {
 // Initialize camera functionality
 document.addEventListener('DOMContentLoaded', () => {
     // Setup Add Camera button
-    const addCamBtn = document.querySelector('.cam-config-header button');
+    const addCamBtn = document.querySelector('.settings-section-header button');
     if (addCamBtn) {
-        addCamBtn.addEventListener('click', openModal);
+        addCamBtn.addEventListener('click', addCamInline);
     }
     
     // Setup close button for check modal

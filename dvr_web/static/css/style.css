@@ -9,16 +9,6 @@ body {
     overflow: hidden;
 }
 
-input, textarea, select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #415a77;
-    border-radius: 5px;
-    background: #1b263b;
-    color: #ffffff;
-    font-size: 16px;
-}
-
 textarea {
     height: 200px;
     resize: none;

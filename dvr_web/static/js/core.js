@@ -11,11 +11,13 @@ function hidePreloader() {
 
 // Modal functions
 function openModal() {
-  document.getElementById("addCamModal").style.display = "block";
+  const modal = document.getElementById("addCamModal");
+  if (modal) modal.style.display = "block";
 }
 
 function closeModal() {
-  document.getElementById("addCamModal").style.display = "none";
+  const modal = document.getElementById("addCamModal");
+  if (modal) modal.style.display = "none";
 }
 
 // Notification function
@@ -116,16 +118,17 @@ function optimizeDashboardLayout() {
 
 // Initialize event listeners
 document.addEventListener("DOMContentLoaded", () => {
-  // Setup modal close button
-  const closeBtn = document.querySelector(".close");
-  closeBtn.addEventListener("click", closeModal);
-
-  // Setup modal background click to close
-  window.addEventListener("click", (event) => {
-    if (event.target === document.getElementById("addCamModal")) {
-      closeModal();
-    }
-  });
+  // Setup Add RTSP modal events only if present
+  const addModal = document.getElementById("addCamModal");
+  if (addModal) {
+    const closeBtn = addModal.querySelector(".close");
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    window.addEventListener("click", (event) => {
+      if (event.target === addModal) {
+        closeModal();
+      }
+    });
+  }
 
   // Set active tab on load
   let activeTab = document.querySelector(".tab.active");

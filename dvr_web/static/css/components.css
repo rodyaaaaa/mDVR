@@ -35,6 +35,30 @@
     transform: scale(1.1);
 }
 
+.save-cam {
+    background: #4caf50 !important;
+    padding: 5px 12px !important;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+.save-cam:hover {
+    background: #45a049 !important;
+    transform: scale(1.1);
+}
+
+.cancel-cam {
+    background: #6c757d !important;
+    padding: 5px 12px !important;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+.cancel-cam:hover {
+    background: #5a6268 !important;
+    transform: scale(1.1);
+}
+
 .delete-cam {
     background: #e63946 !important;
     padding: 5px 12px !important;
@@ -59,12 +83,11 @@
 .cam-field label {
     font-size: 18px;
     margin: auto 0;
-    width: 80px;
 }
 
 .cam-field input {
     flex-grow: 1;
-    padding: 12px;
+    padding: 5px;
     border: 1px solid #415a77;
     border-radius: 5px;
     background: #1b263b;
@@ -450,38 +473,6 @@
     border-top: 5px solid #778da9;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-}
-
-.cam-config-header {
-    display: flex;
-    justify-content: space-between;
-    font-size: 24px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #ffffff;
-    height: 55px;
-}
-
-.cam-config-header h2 {
-    display: inline-block;
-    text-align: left;
-}
-
-.cam-config-header button {
-    height: 35px;
-    width: 150px;
-    padding: 0;
-    background: #415a77;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.3s ease;
-    font-size: 16px;
-    margin: 15px 0 0;
-}
-
-.cam-config-header button:hover {
-    background: #778da9;
 }
 
 /* Settings tabs */

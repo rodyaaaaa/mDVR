@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mDVR</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/monitoring.css') }}">
@@ -119,9 +119,9 @@
         </div>
         <div id="cam-config" class="tab">
             <div>
-                <div class="cam-config-header">
+                <div class="settings-section-header">
                     <h2>List of RTSP links</h2>
-                    <button onclick="openModal()">Add rtsp-link</button>
+                    <button onclick="addCamInline()">Add rtsp-link</button>
                 </div>
             </div>
             <div id="cam-fields">
@@ -337,16 +337,7 @@
         </div>
     </main>
 </div>
-<div id="addCamModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Add rtsp-link</h2>
-        <div class="modal-body">
-            <input type="text" id="rtspUrlInput" placeholder="Input RTSP-link">
-            <button onclick="confirmAddCam()">Add</button>
-        </div>
-    </div>
-</div>
+
 
 <div id="checkCamModal" class="modal">
     <div class="modal-content">
