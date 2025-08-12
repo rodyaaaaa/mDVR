@@ -152,11 +152,13 @@
                     <button onclick="saveVideoOptions()">Save</button>
                 </div>
                 <div class="input-row">
-                    <label for="rtsp-transport">RTSP Transport:</label>
-                    <select id="rtsp-transport">
-                        <option value="tcp" {% if rtsp_options.rtsp_transport == 'tcp' %}selected{% endif %}>TCP</option>
-                        <option value="udp" {% if rtsp_options.rtsp_transport == 'udp' %}selected{% endif %}>UDP</option>
-                    </select>
+                    <label>RTSP Transport:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="rtsp-transport-tcp" name="rtsp_transport" value="tcp" {% if rtsp_options.rtsp_transport == 'tcp' %}checked{% endif %}>
+                        <label for="rtsp-transport-tcp">TCP</label>
+                        <input type="radio" id="rtsp-transport-udp" name="rtsp_transport" value="udp" {% if rtsp_options.rtsp_transport == 'udp' %}checked{% endif %}>
+                        <label for="rtsp-transport-udp">UDP</label>
+                    </div>
                 </div>
                 <div class="input-row video-mode">
                     <label for="rtsp-resolution">RTSP Resolution:</label>
@@ -213,7 +215,7 @@
                 </div>
                 <div class="input-row">
                     <label>Sensors:</label>
-                    <div class="reed-switch-options">
+                    <div class="reed-switch-options radio-group">
                         <input type="radio" id="reed-switch-on" name="reed_switch" value="on" onchange="toggleReedSwitch()">
                         <label for="reed-switch-on">ON</label>
                         <input type="radio" id="reed-switch-off" name="reed_switch" value="off" onchange="toggleReedSwitch()" checked>

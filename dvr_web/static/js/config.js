@@ -4,7 +4,8 @@
 function saveVideoOptions() {
     showPreloader();
     const resolution = document.getElementById('rtsp-resolution').value.split('x');
-    const transport = document.getElementById('rtsp-transport').value;
+    const transportEl = document.querySelector('input[name="rtsp_transport"]:checked');
+    const transport = transportEl ? transportEl.value : 'tcp';
     const duration = document.getElementById('video-duration').value;
     const fps = document.getElementById('video-fps').value;
     const folderSize = document.getElementById('size-folder-limit-gb').value;

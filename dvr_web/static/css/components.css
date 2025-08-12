@@ -215,7 +215,7 @@
 .radio-group label {
     cursor: pointer;
     font-size: 18px;
-    padding: 10px 20px;
+    padding: 4px 30px;
     background: #415a77;
     border-radius: 20px;
     transition: all 0.3s ease;
@@ -237,23 +237,9 @@
     display: none;
 }
 
-.reed-switch-options label {
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    background-color: #415a77;
-    color: #ffffff;
-}
-
 .reed-switch-options input[type="radio"]:checked + label {
     background-color: #778da9;
     color: #fff;
-}
-
-.reed-switch-options label:hover {
-    background: #778da9;
 }
 
 .reed-switch-options input[disabled] + label {
