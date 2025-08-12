@@ -469,7 +469,9 @@
     width: 100%;
     gap: 10px;
     padding: 0 10px;
-    position: relative;
+    position: sticky;
+    top: 0; /* keep tabs visible within the scrollable container */
+    z-index: 10; /* ensure tabs stay above content */
     overflow: hidden;
 }
 
