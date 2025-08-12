@@ -1,10 +1,10 @@
 import json
 import os
 
-from flask import Blueprint, jsonify, request
-from datetime import timedelta
+from flask import Blueprint, jsonify, request, send_from_directory
+from datetime import timedelta, datetime
 
-from dvr_web.constants import VPN_CONFIG_PATH
+from dvr_web.constants import VPN_CONFIG_PATH, MATERIALS_DIR
 from dvr_web.utils import generate_nginx_configs, get_camera_ports, load_config, restart_mdvr_engine, update_imei, update_watchdog, get_config_path
 
 
@@ -257,3 +257,106 @@ def save_video_links():
         return jsonify({"success": True, "message": "Video links saved successfully"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+# Materials endpoints
+@web_bp.route('/materials/list')
+def list_materials():
+    try:
+        if not os.path.isdir(MATERIALS_DIR):
+            return jsonify({"files": [], "message": f"Directory not found: {MATERIALS_DIR}"})
+
+        # Parse optional date filters
+        def parse_date(d: str | None):
+            if not d:
+                return None
+            d = d.strip()
+            for fmt in ("%Y-%m-%d", "%d.%m.%Y"):
+                try:
+                    return datetime.strptime(d, fmt)
+                except ValueError:
+                    continue
+            return None
+
+        date_from_raw = request.args.get('date_from')
+        date_to_raw = request.args.get('date_to')
+        date_from = parse_date(date_from_raw)
+        date_to = parse_date(date_to_raw)
+        if date_from:
+            # start of day
+            date_from = datetime(year=date_from.year, month=date_from.month, day=date_from.day, hour=0, minute=0, second=0)
+        if date_to:
+            # end of day
+            date_to = datetime(year=date_to.year, month=date_to.month, day=date_to.day, hour=23, minute=59, second=59)
+
+        video_exts = {'.mp4', '.mkv', '.avi', '.mov', '.m3u8', '.ts'}
+        items = []
+        for name in sorted(os.listdir(MATERIALS_DIR)):
+            path = os.path.join(MATERIALS_DIR, name)
+            if not os.path.isfile(path):
+                continue
+            ext = os.path.splitext(name)[1].lower()
+            if ext not in video_exts:
+                continue
+            stat = os.stat(path)
+
+            # Parse filename according to dvr_video convention: c + '24' + yymmdd + [hhmmss]
+            base = os.path.splitext(name)[0]
+            display_name = name
+            cam = None
+            date_str = None
+            time_str = None
+            recorded_dt = None
+            try:
+                if len(base) >= 9 and base[1:3] == '24':
+                    cam = int(base[0])
+                    yymmdd = base[3:9]
+                    # Convert to DD.MM.YYYY
+                    yy = int(yymmdd[0:2])
+                    mm = int(yymmdd[2:4])
+                    dd = int(yymmdd[4:6])
+                    yyyy = 2000 + yy
+                    date_str = f"{dd:02d}.{mm:02d}.{yyyy}"
+                    if len(base) >= 15:
+                        hh = int(base[9:11])
+                        mi = int(base[11:13])
+                        ss = int(base[13:15])
+                        time_str = f"{hh:02d}:{mi:02d}:{ss:02d}"
+                        recorded_dt = datetime(year=yyyy, month=mm, day=dd, hour=hh, minute=mi, second=ss)
+                    else:
+                        recorded_dt = datetime(year=yyyy, month=mm, day=dd, hour=0, minute=0, second=0)
+                    if cam and date_str:
+                        display_name = f"Камера {cam} — {date_str}" + (f" {time_str}" if time_str else "")
+            except Exception:
+                # Fallback to original name on any parsing error
+                pass
+
+            if recorded_dt is None:
+                recorded_dt = datetime.fromtimestamp(int(stat.st_mtime))
+
+            # Apply filters
+            if date_from and recorded_dt < date_from:
+                continue
+            if date_to and recorded_dt > date_to:
+                continue
+
+            items.append({
+                "name": name,
+                "size": stat.st_size,
+                "mtime": int(stat.st_mtime),
+                "url": f"/materials/file/{name}",
+                "display_name": display_name,
+                "camera": cam,
+                "recorded_date": date_str,
+                "recorded_time": time_str,
+                "recorded_ts": int(recorded_dt.timestamp())
+            })
+        return jsonify({"files": items})
+    except Exception as e:
+        return jsonify({"files": [], "error": str(e)}), 500
+
+
+@web_bp.route('/materials/file/<path:filename>')
+def get_material_file(filename):
+    # Serve file directly from materials directory
+    return send_from_directory(MATERIALS_DIR, filename, as_attachment=False)

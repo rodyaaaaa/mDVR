@@ -1011,3 +1011,15 @@
 .services-display {
     width: 100%;
 }
+
+#materials-apply,
+#materials-clear {
+    padding: 4px 45px;
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 16px;
+}

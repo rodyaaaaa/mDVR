@@ -16,3 +16,6 @@ DOOR_SENSOR_PIN = 24
 
 # Configuration constants
 CONFIG_FILENAME = 'data_config.json'
+ 
+# Path to recorded materials (videos)
+MATERIALS_DIR = "/etc/mdvr/materials/"

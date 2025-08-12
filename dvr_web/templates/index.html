@@ -36,6 +36,7 @@
         <button onclick="showTab('cam-config')">RTSP</button>
         <button onclick="showTab('video-options')">Settings</button>
         <button onclick="showTab('services')">Services</button>
+        <button onclick="showTab('materials')">Materials</button>
     </aside>
     <main class="content">
         <div id="home" class="tab active">
@@ -337,6 +338,29 @@
                 </div>
             </div>
         </div>
+
+        <div id="materials" class="tab">
+            <h2>Materials</h2>
+            <div class="materials-filters" style="display:flex; gap:12px; align-items:center; margin:8px 0 12px;">
+                <label for="materials-date-from" style="color:#bfc9da;">From:</label>
+                <input type="date" id="materials-date-from" style="background:#14202c; color:#dbe7ff; border:1px solid #2e3a4a; border-radius:6px; padding:6px;" />
+                <label for="materials-date-to" style="color:#bfc9da;">To:</label>
+                <input type="date" id="materials-date-to" style="background:#14202c; color:#dbe7ff; border:1px solid #2e3a4a; border-radius:6px; padding:6px;" />
+                <button id="materials-apply" onclick="applyMaterialsFilter()">Apply</button>
+                <button id="materials-clear" onclick="clearMaterialsFilter()">Clear</button>
+            </div>
+            <div class="materials-container" style="display:flex; gap:16px; align-items:flex-start;">
+                <div class="materials-list" style="min-width:320px; max-height:60vh; overflow:auto; border:1px solid #2e3a4a; border-radius:8px; padding:8px;">
+                    <ul id="materials-files" style="list-style:none; padding:0; margin:0;"></ul>
+                </div>
+                <div class="materials-player" style="flex:1;">
+                    <div class="video-container">
+                        <video id="materials-video" controls style="width:100%; max-height:60vh; background:#000;" playsinline></video>
+                    </div>
+                    <div id="materials-meta" style="margin-top:8px; color:#bfc9da;"></div>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -388,5 +412,6 @@
 <script src="{{ url_for('static', filename='js/temperature.js') }}"></script>
 <script src="{{ url_for('static', filename='js/grid-layout.js') }}"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/materials.js') }}"></script>
 </body>
 </html>

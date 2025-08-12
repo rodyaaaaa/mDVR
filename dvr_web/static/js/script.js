@@ -27,6 +27,9 @@ function showTab(tabId) {
       if (tabId === "home") {
         setTimeout(optimizeDashboardLayout, 300);
       }
+      if (tabId === "materials" && window.loadMaterials) {
+        window.loadMaterials();
+      }
     }, 250);
   } else {
     document
@@ -44,6 +47,9 @@ function showTab(tabId) {
 
     if (tabId === "home") {
       setTimeout(optimizeDashboardLayout, 300);
+    }
+    if (tabId === "materials" && window.loadMaterials) {
+      window.loadMaterials();
     }
   }
 
