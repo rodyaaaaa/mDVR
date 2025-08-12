@@ -116,6 +116,12 @@ document.addEventListener("DOMContentLoaded", () => {
       `.sidebar button[onclick="showTab('${tabId}')"]`,
     );
     if (activeButton) activeButton.classList.add("active");
+
+    // Ensure initial tab logic runs (e.g., start Home data fetchers)
+    // so indicators load on first visit without requiring a tab switch
+    if (typeof showTab === "function") {
+      showTab(tabId);
+    }
   }
 
   // Call when page loads
@@ -201,7 +207,7 @@ function showTab(tabId) {
     // Leaving System tab -> stop services polling
     if (typeof stopServiceStatusUpdates === "function") stopServiceStatusUpdates();
   }
-
+  
   if (tabId === "home") {
     startExt5vVUpdates();
     startCpuChartUpdates();
