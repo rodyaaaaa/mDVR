@@ -52,6 +52,9 @@ def get_network_info():
         arr = json.loads(raw)
         interfaces = []
         for itf in arr:
+            # Skip loopback interface
+            if (itf.get('ifname') or '').lower() == 'lo':
+                continue
             addrs = []
             for ai in itf.get('addr_info', []):
                 addrs.append({
@@ -90,6 +93,26 @@ def get_network_info():
             'ipv4': [ip for ip in ips.split() if ip],
             'error': str(e)
         })
+
+
+@web_bp.route('/get-iptables-rules')
+def get_iptables_rules():
+    """Return only raw filter rules from iptables (-S)."""
+    try:
+        output = subprocess.check_output(["iptables", "-S"], text=True, stderr=subprocess.STDOUT)
+        return jsonify({
+            "filter_rules": output.splitlines()
+        })
+    except subprocess.CalledProcessError as e:
+        return jsonify({
+            "filter_rules": [],
+            "error": e.output.strip() or str(e)
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "filter_rules": [],
+            "error": str(e)
+        }), 500
 
 
 @web_bp.route('/get-service-logs/<service_name>')

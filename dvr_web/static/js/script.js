@@ -184,6 +184,21 @@ async function fetchNetworkInfo() {
     if (data.error) {
       console.warn('Network info error:', data.error);
     }
+
+    // Fetch iptables raw filter rules and render
+    const filtRawEl = document.getElementById('ipt-filter-rules');
+    if (filtRawEl) filtRawEl.textContent = 'Loading...';
+    try {
+      const iptResp = await fetch('/get-iptables-rules');
+      const ipt = await iptResp.json();
+      if (filtRawEl) {
+        filtRawEl.textContent = (Array.isArray(ipt.filter_rules) ? ipt.filter_rules : []).join('\n');
+      }
+      if (ipt.error) console.warn('iptables fetch error:', ipt.error);
+    } catch (e) {
+      console.error('Failed to fetch iptables rules', e);
+      if (filtRawEl) filtRawEl.textContent = 'Error';
+    }
   } catch (e) {
     console.error('Failed to fetch network info', e);
     const ipv4El = document.getElementById('net-ipv4-list');
