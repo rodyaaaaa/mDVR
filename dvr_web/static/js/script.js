@@ -27,6 +27,7 @@ function showTab(tabId) {
       if (tabId === "home") {
         setTimeout(optimizeDashboardLayout, 300);
       }
+
       if (tabId === "materials" && window.loadMaterials) {
         window.loadMaterials();
       }
@@ -53,10 +54,18 @@ function showTab(tabId) {
     }
   }
 
-  if (tabId === "services") {
-    startServiceStatusUpdates();
+  // System tab specific handling
+  if (tabId === "system") {
+    // Default to Services sub-tab when opening System
+    if (!document.getElementById("system-services-content").classList.contains("active")) {
+      window.showSystemTab("system-services-content");
+    } else {
+      // Ensure services polling runs when returning to System with Services active
+      startServiceStatusUpdates();
+    }
   } else {
-    stopServiceStatusUpdates();
+    // Leaving System tab -> stop services polling
+    if (typeof stopServiceStatusUpdates === "function") stopServiceStatusUpdates();
   }
 
   if (tabId === "home") {
@@ -75,6 +84,115 @@ function showTab(tabId) {
     clearInterval(memChartInterval);
   }
 }
+
+// Show System Tab (sub-tabs: Services, Network)
+function showSystemTab(tabId) {
+  const contents = document.querySelectorAll('#system .settings-content');
+  contents.forEach((c) => c.classList.remove('active'));
+
+  const tabs = document.querySelectorAll('#system .settings-tab');
+  tabs.forEach((t) => t.classList.remove('active'));
+
+  const selected = document.getElementById(tabId);
+  if (selected) selected.classList.add('active');
+
+  const activeTabId = tabId.replace('-content', '-tab');
+  const activeBtn = document.getElementById(activeTabId);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // Start/stop services polling depending on selected sub-tab
+  if (tabId === 'system-services-content') {
+    if (typeof startServiceStatusUpdates === 'function') startServiceStatusUpdates();
+  } else {
+    if (typeof stopServiceStatusUpdates === 'function') stopServiceStatusUpdates();
+  }
+
+  // Load network info when opening Network tab
+  if (tabId === 'system-network-content') {
+    window.fetchNetworkInfo();
+  }
+}
+
+// Expose to global for inline handlers
+window.showSystemTab = showSystemTab;
+
+// Fetch and render network info
+async function fetchNetworkInfo() {
+  try {
+    const ipv4El = document.getElementById('net-ipv4-list');
+    const listEl = document.getElementById('network-interfaces');
+    if (ipv4El) ipv4El.textContent = 'Loading...';
+    if (listEl) listEl.innerHTML = '';
+
+    const resp = await fetch('/get-network-info');
+    const data = await resp.json();
+
+    if (ipv4El) ipv4El.textContent = (data.ipv4 && data.ipv4.length) ? data.ipv4.join(', ') : '-';
+
+    if (listEl && Array.isArray(data.interfaces)) {
+      data.interfaces.forEach((itf) => {
+        const card = document.createElement('div');
+        card.style.border = '1px solid #2e3a4a';
+        card.style.borderRadius = '8px';
+        card.style.padding = '10px';
+        card.style.background = '#101a24';
+
+        const title = document.createElement('div');
+        title.style.display = 'flex';
+        title.style.justifyContent = 'space-between';
+        title.style.alignItems = 'center';
+        title.style.marginBottom = '6px';
+        title.innerHTML = `
+          <strong style="color:#dbe7ff;">${itf.name || 'iface'}</strong>
+          <span style="color:${itf.state === 'UP' ? '#6ad46a' : '#bfc9da'}; font-size:0.9em;">${itf.state || '-'}</span>
+        `;
+        card.appendChild(title);
+
+        const meta = document.createElement('div');
+        meta.style.color = '#bfc9da';
+        meta.style.fontSize = '0.9em';
+        meta.style.marginBottom = '6px';
+        meta.textContent = `MAC: ${itf.mac || '-'}  •  MTU: ${itf.mtu || '-'}  •  Index: ${itf.index || '-'}`;
+        card.appendChild(meta);
+
+        const addrs = document.createElement('ul');
+        addrs.style.listStyle = 'none';
+        addrs.style.padding = '0';
+        addrs.style.margin = '0';
+        (itf.addresses || []).forEach((a) => {
+          const li = document.createElement('li');
+          li.style.color = '#9fb2c7';
+          const fam = a.family || '';
+          const ip = a.local || '-';
+          const pfx = (a.prefixlen != null) ? `/${a.prefixlen}` : '';
+          const scope = a.scope ? ` (${a.scope})` : '';
+          li.textContent = `${fam}: ${ip}${pfx}${scope}`;
+          addrs.appendChild(li);
+        });
+        if ((itf.addresses || []).length === 0) {
+          const li = document.createElement('li');
+          li.style.color = '#9fb2c7';
+          li.textContent = 'No addresses';
+          addrs.appendChild(li);
+        }
+        card.appendChild(addrs);
+
+        listEl.appendChild(card);
+      });
+    }
+
+    if (data.error) {
+      console.warn('Network info error:', data.error);
+    }
+  } catch (e) {
+    console.error('Failed to fetch network info', e);
+    const ipv4El = document.getElementById('net-ipv4-list');
+    if (ipv4El) ipv4El.textContent = 'Error';
+  }
+}
+
+// Expose to global for inline handlers
+window.fetchNetworkInfo = fetchNetworkInfo;
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("mDVR Web Interface loaded");

@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 
 from flask import Blueprint, jsonify, request, send_from_directory
 from datetime import timedelta, datetime
@@ -38,6 +39,57 @@ def get_service_status(service_name):
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@web_bp.route('/get-network-info')
+def get_network_info():
+    """Return network info: interfaces and IP addresses.
+    Uses `ip -j addr` if available. Falls back to `hostname -I` on error.
+    """
+    try:
+        # Try JSON output from iproute2
+        raw = subprocess.check_output(["ip", "-j", "addr"], text=True)
+        arr = json.loads(raw)
+        interfaces = []
+        for itf in arr:
+            addrs = []
+            for ai in itf.get('addr_info', []):
+                addrs.append({
+                    'family': ai.get('family'),
+                    'local': ai.get('local'),
+                    'prefixlen': ai.get('prefixlen'),
+                    'scope': ai.get('scope')
+                })
+            interfaces.append({
+                'name': itf.get('ifname'),
+                'index': itf.get('ifindex'),
+                'mtu': itf.get('mtu'),
+                'state': itf.get('operstate'),
+                'mac': itf.get('address'),
+                'addresses': addrs
+            })
+
+        # Quick summary of IPv4 addresses
+        ipv4_list = []
+        for itf in interfaces:
+            for a in itf['addresses']:
+                if a.get('family') == 'inet' and a.get('local'):
+                    ipv4_list.append(a['local'])
+
+        return jsonify({
+            'interfaces': interfaces,
+            'ipv4': ipv4_list
+        })
+    except Exception as e:
+        try:
+            ips = subprocess.check_output(["hostname", "-I"], text=True).strip()
+        except Exception:
+            ips = ""
+        return jsonify({
+            'interfaces': [],
+            'ipv4': [ip for ip in ips.split() if ip],
+            'error': str(e)
+        })
 
 
 @web_bp.route('/get-service-logs/<service_name>')
