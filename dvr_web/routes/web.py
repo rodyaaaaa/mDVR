@@ -120,6 +120,20 @@ def get_iptables_rules():
         }), 500
 
 
+@web_bp.route('/reboot', methods=['POST'])
+def reboot_device():
+    """Initiate a system reboot.
+
+    Returns JSON {"success": true} on success. The web UI will soon become unavailable.
+    """
+    try:
+        # Use reboot command; assumes the service has sufficient privileges.
+        subprocess.Popen(['reboot'])
+        return jsonify({"success": True, "message": "Reboot initiated"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @web_bp.route('/about-info')
 def get_about_info():
     """Collect basic hardware and application package info for the About tab."""

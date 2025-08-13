@@ -471,3 +471,37 @@ function getLocalFormattedDateTime() {
 
   return `${year}/${month}/${day} ${hrs}:${mins}:${secs}`;
 }
+
+// Reboot device from Control tab
+async function rebootDevice() {
+  try {
+    if (!confirm("Are you sure you want to restart the device now?")) return;
+    const btn = document.getElementById('reboot-device-btn');
+    if (btn) btn.disabled = true;
+    showPreloader();
+    const res = await fetch('/reboot', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.success === false) {
+      const err = (data && data.error) ? data.error : `HTTP ${res.status}`;
+      showNotification(`Failed to initiate reboot: ${err}`, true);
+      if (btn) btn.disabled = false;
+      hidePreloader();
+      return;
+    }
+    showNotification('Reboot initiated. The page will become unavailable shortly.');
+    // Give user a visual countdown before the page likely drops
+    let seconds = 10;
+    const int = setInterval(() => {
+      seconds -= 1;
+      if (seconds <= 0) {
+        clearInterval(int);
+      }
+    }, 1000);
+  } catch (e) {
+    console.error('rebootDevice error', e);
+    showNotification(`Failed to initiate reboot: ${e}`, true);
+  }
+}
+
+// Expose to global for inline handler
+window.rebootDevice = rebootDevice;

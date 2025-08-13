@@ -36,6 +36,13 @@
     height: auto;
 }
 
+/* Output text (EXT5V_V) */
+.output-text {
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+}
+
 .equipment-section {
     flex: 1;
     padding: 15px;
@@ -184,6 +191,10 @@
     align-items: center;
 }
 
+/* Chart helpers */
+.chart-canvas { display: block; margin: 0 auto; }
+.chart-caption { text-align: center; margin-top: 5px; font-size: 0.95em; color: #bfc9da; }
+
 @media (max-width: 1024px) {
     .system-info-card {
         gap: 15px;
@@ -271,11 +282,4 @@
 #auto-stop-time {
     font-weight: bold;
     color: #ff9800;
-}
-
-#ext5v-v-output {
-    word-break: break-word;
-    white-space: normal;
-    overflow-wrap: break-word;
-    width: 100%;
 }

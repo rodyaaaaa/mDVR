@@ -50,7 +50,7 @@
                     </div>
                     <div class="card-content">
                         <div class="voltage-section">
-                            <div id="ext5v-v-output" style="font-size: 2em; font-weight: bold; text-align: center;">Loading...</div>
+                            <div id="ext5v-v-output" class="output-text">Loading...</div>
                         </div>
                     </div>
                     <div class="resize-handle"></div>
@@ -64,12 +64,12 @@
                     <div class="card-content">
                         <div class="cpu-mem-charts-row">
                             <div class="cpu-chart-container">
-                                <canvas id="cpu-load-chart" width="150" height="100" style="display:block; margin:0 auto;"></canvas>
-                                <div style="text-align:center; margin-top:5px; font-size:0.95em; color:#bfc9da;">CPU</div>
+                                <canvas id="cpu-load-chart" width="150" height="100" class="chart-canvas"></canvas>
+                                <div class="chart-caption">CPU</div>
                             </div>
                             <div class="mem-chart-container">
-                                <canvas id="mem-usage-chart" width="150" height="100" style="display:block; margin:0 auto;"></canvas>
-                                <div style="text-align:center; margin-top:5px; font-size:0.95em; color:#bfc9da;">Memory</div>
+                                <canvas id="mem-usage-chart" width="150" height="100" class="chart-canvas"></canvas>
+                                <div class="chart-caption">Memory</div>
                             </div>
                         </div>
 
@@ -204,7 +204,7 @@
                 <div class="settings-section-header photo-mode">
                     <h2 class="photo-mode">Photo Settings</h2>
                 </div>
-                <div class="input-row photo-mode" style="display: none;">
+                <div class="input-row photo-mode hidden">
                     <label for="photo-timeout">Photo Timeout (seconds):</label>
                     <input type="number" id="photo-timeout" value="{{ photo_timeout }}" placeholder="10">
                 </div>
@@ -311,7 +311,7 @@
                     <h2>VPN config</h2>
                     <div class="ftp-header-actions">
                         <button onclick="saveVpnConfig()">Save</button>
-                        <button onclick="deleteVpnConfig()" style="margin-left:8px;">Delete</button>
+                        <button onclick="deleteVpnConfig()" class="ml-8">Delete</button>
                         <div class="ftp-toggle">
                             <span class="ftp-toggle-label">Enable VPN</span>
                             <label class="toggle-switch small">
@@ -319,7 +319,7 @@
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <div class="ftp-toggle" style="margin-left:16px;">
+                        <div class="ftp-toggle ml-16">
                             <span class="ftp-toggle-label">Non-priority VPN</span>
                             <label class="toggle-switch small">
                                 <input type="checkbox" id="vpn-non-priority" onchange="applyVpnNonPriority(this)">
@@ -379,88 +379,88 @@
                     <h2>Network</h2>
                     <button onclick="fetchNetworkInfo()">Refresh</button>
                 </div>
-                <div class="network-summary" style="margin-bottom:12px; color:#bfc9da;">
+                <div class="network-summary text-secondary mb-12">
                     <strong>IPv4:</strong> <span id="net-ipv4-list">-</span>
                 </div>
-                <div id="network-interfaces" class="network-interfaces" style="display:flex; flex-direction:column; gap:10px;"></div>
+                <div id="network-interfaces" class="network-interfaces flex-col gap-10"></div>
 
-                <div class="iptables-section" style="margin-top:16px;">
-                    <h3 style="color:#dbe7ff; margin-bottom:8px;">iptables — Raw Filter rules</h3>
-                    <pre id="ipt-filter-rules" style="background:#0c151f; color:#9fb2c7; padding:8px; border:1px solid #2e3a4a; border-radius:8px; overflow:auto; max-height:240px; white-space:pre-wrap;">Loading...</pre>
+                <div class="iptables-section mt-16">
+                    <h3 class="section-title mb-8">iptables — Raw Filter rules</h3>
+                    <pre id="ipt-filter-rules" class="code-block">Loading...</pre>
                 </div>
             </div>
             <div id="system-control-content" class="settings-content">
-                <div class="settings-section-header" style="display:flex; align-items:center; gap:10px;">
-                    <h2 style="margin-right:auto;">Control</h2>
+                <div class="settings-section-header flex align-center gap-10">
+                    <h2 class="mr-auto">Control</h2>
                     <button id="term-disconnect-btn" onclick="disconnectTerminal()" disabled>Disconnect</button>
                 </div>
-                <div class="terminal-auth" style="display:flex; gap:10px; align-items:flex-end; margin-bottom:12px;">
-                    <div class="input-row" style="margin:0;">
+                <div class="terminal-auth flex gap-10 align-end mb-12">
+                    <div class="input-row m-0">
                         <label for="term-username">Username:</label>
                         <input type="text" id="term-username" placeholder="user">
                     </div>
-                    <div class="input-row" style="margin:0;">
+                    <div class="input-row m-0">
                         <label for="term-password">Password:</label>
-                        <input type="password" id="term-password" placeholder="password">
+                        <input type="password" id="term-password" placeholder="••••••">
                     </div>
                     <button id="term-connect-btn" onclick="connectTerminal()">Connect</button>
                 </div>
-                <div id="terminal-container" style="background:#0b1320; border:1px solid #2e3a4a; border-radius:8px; min-height:300px; max-height:60vh; overflow:hidden; padding:0;">
-                    <div id="xterm" style="width:100%; height:100%;"></div>
+                <div id="terminal-container" class="terminal-container">
+                    <div id="xterm" class="full-size"></div>
                 </div>
-                <div style="display:flex; gap:10px; margin-top:8px;">
+                <div class="flex gap-10 mt-8">
                     <button onclick="clearTerminal()">Clear</button>
                     <button onclick="focusTerminal()">Focus</button>
                 </div>
-                <div id="terminal-status" style="margin-top:8px; color:#9fb2c7; font-size:0.9em;">Disconnected</div>
+                <div id="terminal-status" class="status-text mt-8">Disconnected</div>
+                <div class="flex justify-end mt-12">
+                    <button id="reboot-device-btn" class="stop-button" onclick="rebootDevice()">Restart Device</button>
+                </div>
             </div>
          </div>
 
         <div id="about" class="tab">
-            <div class="settings-section-header" style="display:flex; align-items:center; gap:10px;">
-                <h2 style="margin-right:auto;">About</h2>
+            <div class="settings-section-header flex align-center gap-10">
+                <h2 class="mr-auto">About</h2>
                 <button onclick="fetchAboutInfo()">Refresh</button>
             </div>
-            <div id="about-error" style="color:#ff6b6b; display:none; margin-bottom:8px;"></div>
-            <div class="about-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
-                <div class="about-card" style="border:1px solid #2e3a4a; border-radius:8px; padding:12px; background:#101a24;">
-                    <h3 style="margin-top:0; color:#dbe7ff;">Hardware</h3>
-                    <ul id="about-hw" style="list-style:none; padding:0; margin:0; color:#bfc9da;">
-                        <li>Loading...</li>
-                    </ul>
+            <div id="about-error" class="error-text hidden mb-8"></div>
+            <div class="about-grid">
+                <div class="about-card">
+                    <h3 class="card-title">Hardware</h3>
+                    <ul id="about-hw" class="list-unstyled text-secondary"></ul>
                 </div>
-                <div class="about-card" style="border:1px solid #2e3a4a; border-radius:8px; padding:12px; background:#101a24;">
-                    <h3 style="margin-top:0; color:#dbe7ff;">Program</h3>
-                    <div id="about-program" style="color:#bfc9da;">Loading...</div>
+                <div class="about-card">
+                    <h3 class="card-title">Program</h3>
+                    <div id="about-program" class="text-secondary">Loading...</div>
                 </div>
             </div>
         </div>
 
         <div id="materials" class="tab">
             <h2>Materials</h2>
-            <div class="materials-filters" style="display:flex; gap:12px; align-items:center; margin:8px 0 12px;">
-                <label for="materials-date-from" style="color:#bfc9da;">From:</label>
-                <input type="date" id="materials-date-from" style="background:#14202c; color:#dbe7ff; border:1px solid #2e3a4a; border-radius:6px; padding:6px;" />
-                <label for="materials-date-to" style="color:#bfc9da;">To:</label>
-                <input type="date" id="materials-date-to" style="background:#14202c; color:#dbe7ff; border:1px solid #2e3a4a; border-radius:6px; padding:6px;" />
+            <div class="materials-filters flex gap-12 align-center mt-8 mb-12">
+                <label for="materials-date-from" class="text-secondary">From:</label>
+                <input type="date" id="materials-date-from" class="input-dark" />
+                <label for="materials-date-to" class="text-secondary">To:</label>
+                <input type="date" id="materials-date-to" class="input-dark" />
                 <button id="materials-apply" onclick="applyMaterialsFilter()">Apply</button>
                 <button id="materials-clear" onclick="clearMaterialsFilter()">Clear</button>
             </div>
-            <div class="materials-container" style="display:flex; gap:16px; align-items:flex-start;">
-                <div class="materials-list" style="min-width:320px; max-height:60vh; overflow:auto; border:1px solid #2e3a4a; border-radius:8px; padding:8px;">
-                    <ul id="materials-files" style="list-style:none; padding:0; margin:0;"></ul>
+            <div class="materials-container flex gap-16 align-start">
+                <div class="materials-list">
+                    <ul id="materials-files" class="list-unstyled"></ul>
                 </div>
-                <div class="materials-player" style="flex:1;">
+                <div class="materials-player flex-1">
                     <div class="video-container">
-                        <video id="materials-video" controls style="width:100%; max-height:60vh; background:#000;" playsinline></video>
+                        <video id="materials-video" controls class="video-responsive" playsinline></video>
                     </div>
-                    <div id="materials-meta" style="margin-top:8px; color:#bfc9da;"></div>
+                    <div id="materials-meta" class="mt-8 text-secondary"></div>
                 </div>
             </div>
         </div>
     </main>
 </div>
-
 
 <div id="checkCamModal" class="modal">
     <div class="modal-content">

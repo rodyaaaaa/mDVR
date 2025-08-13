@@ -1085,3 +1085,72 @@
     transition: 0.3s ease;
     font-size: 16px;
 }
+
+/* --- Moved inline styles from index.html --- */
+/* Terminal */
+.terminal-container {
+    background: #0b1320;
+    border: 1px solid #2e3a4a;
+    border-radius: 8px;
+    min-height: 300px;
+    max-height: 60vh;
+    overflow: hidden;
+    padding: 0;
+}
+
+.status-text {
+    color: #9fb2c7;
+    font-size: 0.9em;
+}
+
+/* Code block (iptables rules) */
+.code-block {
+    background: #0c151f;
+    color: #9fb2c7;
+    padding: 8px;
+    border: 1px solid #2e3a4a;
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 240px;
+    white-space: pre-wrap;
+}
+
+/* About section */
+.about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.about-card {
+    border: 1px solid #2e3a4a;
+    border-radius: 8px;
+    padding: 12px;
+    background: #101a24;
+}
+
+.card-title {
+    margin-top: 0;
+    color: #dbe7ff;
+}
+
+.error-text { color: #ff6b6b; }
+
+/* Materials */
+
+.materials-list {
+    min-width: 320px;
+    max-height: 60vh;
+    overflow: auto;
+    border: 1px solid #2e3a4a;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+
+.video-responsive {
+    width: 100%;
+    max-height: 60vh;
+    background: #000;
+    display: block;
+}
