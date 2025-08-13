@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/grid-layout.css') }}">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
 </head>
 <body>
 <header>
@@ -318,6 +319,7 @@
             <div class="settings-tabs">
                 <button id="system-services-tab" class="settings-tab active" onclick="showSystemTab('system-services-content')">Services</button>
                 <button id="system-network-tab" class="settings-tab" onclick="showSystemTab('system-network-content')">Network</button>
+                <button id="system-control-tab" class="settings-tab" onclick="showSystemTab('system-control-content')">Control</button>
             </div>
 
             <div id="system-services-content" class="settings-content active">
@@ -328,7 +330,7 @@
                             <option value="" disabled selected hidden>Select a service...</option>
                             <option value="engine">mDVR Engine</option>
                             <option value="mdvr_web.service">mDVR Web Service</option>
-                            <option value="mdvr_upload.timer">mDVR Upload Timer</option>
+                            <option value="mdvr_upload">mDVR Upload</option>
                             <option value="mdvr_space_check.timer">mDVR Space Check Timer</option>
                             <option value="mdvr_system_guard.timer">mDVR System Guard Timer</option>
                             <option value="mdvr_vpn_check.timer">mDVR VPN Check Timer</option>
@@ -359,6 +361,31 @@
                     <h3 style="color:#dbe7ff; margin-bottom:8px;">iptables — Raw Filter rules</h3>
                     <pre id="ipt-filter-rules" style="background:#0c151f; color:#9fb2c7; padding:8px; border:1px solid #2e3a4a; border-radius:8px; overflow:auto; max-height:240px; white-space:pre-wrap;">Loading...</pre>
                 </div>
+            </div>
+            <div id="system-control-content" class="settings-content">
+                <div class="settings-section-header" style="display:flex; align-items:center; gap:10px;">
+                    <h2 style="margin-right:auto;">Control</h2>
+                    <button id="term-disconnect-btn" onclick="disconnectTerminal()" disabled>Disconnect</button>
+                </div>
+                <div class="terminal-auth" style="display:flex; gap:10px; align-items:flex-end; margin-bottom:12px;">
+                    <div class="input-row" style="margin:0;">
+                        <label for="term-username">Username:</label>
+                        <input type="text" id="term-username" placeholder="user">
+                    </div>
+                    <div class="input-row" style="margin:0;">
+                        <label for="term-password">Password:</label>
+                        <input type="password" id="term-password" placeholder="password">
+                    </div>
+                    <button id="term-connect-btn" onclick="connectTerminal()">Connect</button>
+                </div>
+                <div id="terminal-container" style="background:#0b1320; border:1px solid #2e3a4a; border-radius:8px; min-height:300px; max-height:60vh; overflow:hidden; padding:0;">
+                    <div id="xterm" style="width:100%; height:100%;"></div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button onclick="clearTerminal()">Clear</button>
+                    <button onclick="focusTerminal()">Focus</button>
+                </div>
+                <div id="terminal-status" style="margin-top:8px; color:#9fb2c7; font-size:0.9em;">Disconnected</div>
             </div>
         </div>
 
@@ -436,5 +463,8 @@
 <script src="{{ url_for('static', filename='js/grid-layout.js') }}"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 <script src="{{ url_for('static', filename='js/materials.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit/lib/xterm-addon-fit.min.js"></script>
+<script src="{{ url_for('static', filename='js/terminal.js') }}"></script>
 </body>
 </html>

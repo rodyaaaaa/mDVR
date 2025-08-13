@@ -1,7 +1,12 @@
 import time
 import threading
+import os
+import pty
+import select
+import signal
 
 from flask_socketio import SocketIO, emit
+from flask import request
 
 from dvr_web.utils import load_config, read_reed_switch_state
 from dvr_web.constants import REED_SWITCH_AUTOSTOP_SECONDS
@@ -9,6 +14,7 @@ from dvr_web.reed_switch_interface import RSFactory
 
 socketio = None
 reed_switch_monitor_active = False
+term_sessions = {}
 
 def init_socketio(app):
     global socketio
@@ -41,7 +47,129 @@ def init_socketio(app):
         global reed_switch_monitor_active
         reed_switch_monitor_active = False
 
+    # Terminal namespace: '/term'
+    @socketio.on('connect', namespace='/term')
+    def term_connect():
+        # No-op; client will send term_open with credentials
+        emit('term_status', {"status": "connected"}, namespace='/term')
+
+    @socketio.on('term_open', namespace='/term')
+    def term_open(data):
+        # data: { username, password }
+        sid = request.sid
+        username = (data or {}).get('username') or ''
+        password = (data or {}).get('password') or ''
+
+        # Clean any existing session
+        _close_term_session(sid)
+
+        # Fork a PTY and run su - <user> -s /bin/bash
+        try:
+            pid, fd = pty.fork()
+            if pid == 0:
+                # Child
+                # Exec su to switch user and start bash as login shell
+                os.execvp('su', ['su', '-', username, '-s', '/bin/bash'])
+            else:
+                # Parent: save session
+                term_sessions[sid] = { 'pid': pid, 'fd': fd, 'password': password, 'pass_sent': False }
+
+                # Start reader thread to stream output
+                reader = threading.Thread(target=_term_reader, args=(sid,))
+                reader.daemon = True
+                reader.start()
+
+                emit('term_status', {"status": "started"}, namespace='/term', to=sid)
+        except Exception as e:
+            emit('term_error', {"error": str(e)}, namespace='/term', to=sid)
+
+    @socketio.on('term_input', namespace='/term')
+    def term_input(data):
+        sid = request.sid
+        ch = (data or {}).get('data')
+        sess = term_sessions.get(sid)
+        if not sess:
+            emit('term_error', {"error": "no_session"}, namespace='/term', to=sid)
+            return
+        if ch is None:
+            return
+        try:
+            os.write(sess['fd'], ch.encode('utf-8', errors='ignore'))
+        except Exception as e:
+            emit('term_error', {"error": str(e)}, namespace='/term', to=sid)
+
+    @socketio.on('disconnect', namespace='/term')
+    def term_disconnect():
+        sid = request.sid
+        _close_term_session(sid)
+
     return socketio
+
+
+def _term_reader(sid: str):
+    sess = term_sessions.get(sid)
+    if not sess:
+        return
+    fd = sess['fd']
+    pid = sess['pid']
+    try:
+        while True:
+            r, _, _ = select.select([fd], [], [], 0.5)
+            if fd in r:
+                try:
+                    data = os.read(fd, 1024)
+                except OSError:
+                    break
+                if not data:
+                    break
+                text = data.decode('utf-8', errors='ignore')
+
+                # Detect password prompt from su and send password once
+                try:
+                    sess = term_sessions.get(sid)
+                    if sess and not sess.get('pass_sent'):
+                        # case-insensitive match for password prompts in common locales
+                        low = text.lower()
+                        if ('password' in low) or ('пароль' in low):
+                            try:
+                                os.write(sess['fd'], (sess.get('password', '') + '\n').encode('utf-8', errors='ignore'))
+                                sess['pass_sent'] = True
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+
+                try:
+                    socketio.emit('term_output', { 'data': text }, namespace='/term', to=sid)
+                except Exception:
+                    pass
+            # Optionally, check if child is alive
+            try:
+                pid_ret, _ = os.waitpid(pid, os.WNOHANG)
+                if pid_ret == pid:
+                    break
+            except ChildProcessError:
+                break
+    finally:
+        socketio.emit('term_closed', {}, namespace='/term', to=sid)
+        _close_term_session(sid)
+
+
+def _close_term_session(sid: str):
+    sess = term_sessions.pop(sid, None)
+    if not sess:
+        return
+    try:
+        try:
+            os.kill(sess['pid'], signal.SIGHUP)
+        except Exception:
+            pass
+        try:
+            os.close(sess['fd'])
+        except Exception:
+            pass
+    except Exception:
+        pass
 
 
 def monitor_reed_switch(impulse):
