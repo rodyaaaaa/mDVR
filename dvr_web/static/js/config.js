@@ -41,6 +41,96 @@ function saveVideoOptions() {
         });
 }
 
+// VPN enable/disable
+function updateVpnStatusUI(enabled) {
+    const checkbox = document.getElementById('vpn-enabled');
+    if (checkbox) checkbox.checked = !!enabled;
+}
+
+function loadVpnStatus() {
+    fetch('/get-service-status/wg-quick@wg0.service')
+        .then(r => r.json())
+        .then(data => {
+            const enabled = !!data.enabled;
+            updateVpnStatusUI(enabled);
+        })
+        .catch(() => updateVpnStatusUI(false));
+}
+
+function toggleVpn(enabled) {
+    showPreloader();
+    fetch('/set-vpn-enabled', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !!enabled })
+    })
+        .then(r => r.json())
+        .then(result => {
+            hidePreloader();
+            if (result.success) {
+                updateVpnStatusUI(!!result.enabled);
+                showNotification(`VPN ${result.enabled ? 'enabled' : 'disabled'}`);
+            } else {
+                showNotification('ERROR: ' + (result.error || 'toggle failed'), true);
+                loadVpnStatus();
+            }
+        })
+        .catch(err => {
+            hidePreloader();
+            showNotification('ERROR: ' + err.message, true);
+            loadVpnStatus();
+        });
+}
+
+// FTP Upload enable/disable (mdvr_upload.timer)
+function updateFtpUploadStatusUI(enabled, statusText) {
+    const checkbox = document.getElementById('ftp-upload-enabled');
+    const statusEl = document.getElementById('ftp-upload-status');
+    if (checkbox) checkbox.checked = !!enabled;
+    if (statusEl) statusEl.textContent = `Status: ${statusText || (enabled ? 'active' : 'inactive')}`;
+}
+
+function loadFtpUploadStatus() {
+    const statusEl = document.getElementById('ftp-upload-status');
+    if (statusEl) statusEl.textContent = 'Status: loading...';
+    fetch('/get-service-status/mdvr_upload.timer')
+        .then(r => r.json())
+        .then(data => {
+            const enabled = !!data.enabled;
+            const status = data.status || 'unknown';
+            updateFtpUploadStatusUI(enabled, status);
+        })
+        .catch(err => {
+            console.error('Error fetching upload timer status:', err);
+            updateFtpUploadStatusUI(false, 'error');
+        });
+}
+
+function toggleFtpUpload(enabled) {
+    showPreloader();
+    fetch('/set-upload-enabled', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !!enabled })
+    })
+        .then(r => r.json())
+        .then(result => {
+            hidePreloader();
+            if (result.success) {
+                updateFtpUploadStatusUI(!!result.enabled, result.status);
+                showNotification(`FTP Upload ${result.enabled ? 'enabled' : 'disabled'}`);
+            } else {
+                showNotification('ERROR: ' + (result.error || 'toggle failed'), true);
+                loadFtpUploadStatus();
+            }
+        })
+        .catch(err => {
+            hidePreloader();
+            showNotification('ERROR: ' + err.message, true);
+            loadFtpUploadStatus();
+        });
+}
+
 function saveRSConfig() {
     showPreloader();
 
@@ -278,6 +368,14 @@ function showSettingsTab(tabId) {
     if (activeTab) {
         activeTab.classList.add('active');
     }
+    // When showing FTP settings, refresh upload timer status
+    if (tabId === 'ftp-settings-content') {
+        loadFtpUploadStatus();
+    }
+    // When showing VPN settings, refresh VPN service status
+    if (tabId === 'vpn-settings-content') {
+        loadVpnStatus();
+    }
 }
 
 // Initialize configuration functionality
@@ -293,6 +391,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('sensors-settings-tab').addEventListener('click', () => showSettingsTab('sensors-settings-content'));
     document.getElementById('ftp-settings-tab').addEventListener('click', () => showSettingsTab('ftp-settings-content'));
     document.getElementById('vpn-settings-tab').addEventListener('click', () => showSettingsTab('vpn-settings-content'));
+    // Preload statuses for initial active tab if needed
+    const activeSettings = document.querySelector('.settings-content.active');
+    if (activeSettings && activeSettings.id === 'ftp-settings-content') {
+        loadFtpUploadStatus();
+    }
+    if (activeSettings && activeSettings.id === 'vpn-settings-content') {
+        loadVpnStatus();
+    }
 });
 
 // Validate car name input - allow only numbers and uppercase letters

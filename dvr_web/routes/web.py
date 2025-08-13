@@ -218,6 +218,65 @@ def save_ftp_config():
         return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
 
 
+@web_bp.route('/set-upload-enabled', methods=['POST'])
+def set_upload_enabled():
+    """Enable/disable mdvr_upload.timer and start/stop it accordingly.
+    Request JSON: {"enabled": true|false}
+    Response JSON: {"success": bool, "enabled": bool, "status": "active"|"inactive"|..., "error"?: str}
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        target_enabled = bool(data.get('enabled'))
+
+        if target_enabled:
+            os.system("systemctl enable mdvr_upload.timer")
+            os.system("systemctl start mdvr_upload.timer")
+        else:
+            os.system("systemctl stop mdvr_upload.timer")
+            os.system("systemctl disable mdvr_upload.timer")
+
+        status = os.popen("systemctl is-active mdvr_upload.timer").read().strip()
+        enabled = os.popen("systemctl is-enabled mdvr_upload.timer").read().strip() == "enabled"
+        return jsonify({
+            "success": True,
+            "enabled": enabled,
+            "status": status
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@web_bp.route('/set-vpn-enabled', methods=['POST'])
+def set_vpn_enabled():
+    """Enable/disable WireGuard service wg-quick@wg0 and start/stop accordingly.
+    Request JSON: {"enabled": true|false}
+    Response JSON: {"success": bool, "enabled": bool, "status": str}
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        target_enabled = bool(data.get('enabled'))
+
+        unit = 'wg-quick@wg0.service'
+        unit_base = 'wg-quick@wg0'
+
+        if target_enabled:
+            os.system(f"systemctl enable {unit_base}")
+            os.system(f"systemctl start {unit_base}")
+        else:
+            os.system(f"systemctl stop {unit_base}")
+            os.system(f"systemctl disable {unit_base}")
+
+        status = os.popen(f"systemctl is-active {unit}").read().strip()
+        enabled = os.popen(f"systemctl is-enabled {unit}").read().strip() == "enabled"
+        return jsonify({
+            "success": True,
+            "enabled": enabled,
+            "status": status
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @web_bp.route('/save-video-options', methods=['POST'])
 def save_video_options():
     data = request.get_json()

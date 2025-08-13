@@ -266,7 +266,16 @@
             <div id="ftp-settings-content" class="settings-content">
                 <div class="settings-section-header">
                     <h2>FTP settings</h2>
-                    <button onclick="saveFtpConfig()">Save</button>
+                    <div class="ftp-header-actions">
+                        <button onclick="saveFtpConfig()">Save</button>
+                        <div class="ftp-toggle">
+                            <span class="ftp-toggle-label">Enable FTP Upload</span>
+                            <label id="tg-switch" class="toggle-switch small">
+                                <input type="checkbox" id="ftp-upload-enabled" onchange="toggleFtpUpload(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <div class="input-row">
@@ -299,7 +308,16 @@
             <div id="vpn-settings-content" class="settings-content">
                 <div class="settings-section-header">
                     <h2>VPN config</h2>
-                    <button onclick="saveVpnConfig()">Save</button>
+                    <div class="ftp-header-actions">
+                        <button onclick="saveVpnConfig()">Save</button>
+                        <div class="ftp-toggle">
+                            <span class="ftp-toggle-label">Enable VPN</span>
+                            <label class="toggle-switch small">
+                                <input type="checkbox" id="vpn-enabled" onchange="toggleVpn(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div class="vpn-config-options">
                     <div class="vpn-config-textarea">
