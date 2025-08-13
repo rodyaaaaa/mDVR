@@ -1,5 +1,5 @@
 [Unit]
-Description=Run mdvr rs engine
+Description=Timer for mDVR reed switch daemon (boot, then every 30 minutes)
 
 [Timer]
 Unit=mdvr_rs.service

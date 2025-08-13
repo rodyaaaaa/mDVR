@@ -1,5 +1,5 @@
 [Unit]
-Description=Run mdvr engine
+Description=Timer for mDVR recording service (on boot)
 
 [Timer]
 Unit=mdvr.service

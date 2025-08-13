@@ -1,5 +1,5 @@
 [Unit]
-Description=run space_check every day
+Description=Timer for materials folder size check (daily)
 
 [Timer]
 Unit=mdvr_space_check.service

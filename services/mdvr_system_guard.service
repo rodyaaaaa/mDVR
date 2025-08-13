@@ -1,5 +1,5 @@
 [Unit]
-Description=Monitoring the state of hardware and network
+Description=Monitor hardware and network health
 Wants=mdvr_system_guard.timer
 
 [Service]

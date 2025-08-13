@@ -1,5 +1,5 @@
 [Unit]
-Description=run mdvr_system_guard every 3 hours
+Description=Timer for system guard (boot, then every 30 minutes)
 
 [Timer]
 Unit=mdvr_system_guard.service

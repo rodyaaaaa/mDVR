@@ -1,5 +1,5 @@
 [Unit]
-Description=Run check modem scripts every 1 hour
+Description=Timer for modem connector (boot, then every 30 minutes)
 
 [Timer]
 Unit=mdvr_modem.service

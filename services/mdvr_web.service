@@ -1,5 +1,5 @@
 [Unit]
-Description=mDVR web
+Description=mDVR web server
 After=network.target
 
 [Service]

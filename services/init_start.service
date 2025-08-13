@@ -1,5 +1,5 @@
 [Unit]
-Description=init start
+Description=Initialize mDVR project setup
 After=network.target
 
 [Service]

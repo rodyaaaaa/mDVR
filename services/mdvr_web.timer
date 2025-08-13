@@ -1,5 +1,5 @@
 [Unit]
-Description=Run mdvr web
+Description=Timer for mDVR web server (on boot)
 
 [Timer]
 Unit=mdvr_web.service

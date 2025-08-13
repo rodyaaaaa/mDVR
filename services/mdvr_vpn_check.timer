@@ -1,5 +1,5 @@
 [Unit]
-Description=Timer for daemon that check vpn connection
+Description=Timer for VPN connectivity check (boot, then every 10 minutes)
 
 [Timer]
 Unit=mdvr_vpn_check.service

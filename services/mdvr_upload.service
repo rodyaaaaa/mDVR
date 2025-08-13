@@ -1,5 +1,5 @@
 [Unit]
-Description=control daemon
+Description=Run FTP upload script
 Wants=mdvr_upload.timer
 
 [Service]

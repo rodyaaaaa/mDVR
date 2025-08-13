@@ -1,5 +1,5 @@
 [Unit]
-Description=mDVR Reed Switch wire service
+Description=mDVR reed switch monitoring daemon
 After=network.target
 
 [Service]

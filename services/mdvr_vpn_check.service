@@ -1,5 +1,5 @@
 [Unit]
-Description=Daemon for check vpn
+Description=Run VPN connectivity check
 Wants=mdvr_vpn_check.timer
 
 [Service]

@@ -1,5 +1,5 @@
 [Unit]
-Description=control daemon
+Description=Run modem connector script
 Wants=mdvr_modem.timer
 
 [Service]

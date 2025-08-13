@@ -1,5 +1,5 @@
 [Unit]
-Description=Upload video to ftp
+Description=Timer for FTP upload (boot, then every 3 minutes)
 
 [Timer]
 Unit=mdvr_upload.service

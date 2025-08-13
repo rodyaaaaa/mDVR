@@ -1,5 +1,5 @@
 [Unit]
-Description=Daemon that control folder size "materials" of project mDVR
+Description=Check and limit size of the "materials" folder
 Wants=mdvr_space_check.timer
 
 [Service]

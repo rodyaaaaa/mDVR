@@ -1,5 +1,5 @@
 [Unit]
-Description=control daemon
+Description=mDVR video recording daemon
 After=network.target
 
 [Service]
