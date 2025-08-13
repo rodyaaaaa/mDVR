@@ -270,15 +270,17 @@ async function fetchNetworkInfo() {
   try {
     const ipv4El = document.getElementById('net-ipv4-list');
     const listEl = document.getElementById('network-interfaces');
+    const tableBody = document.querySelector('#network-table tbody');
     if (ipv4El) ipv4El.textContent = 'Loading...';
     if (listEl) listEl.innerHTML = '';
+    if (tableBody) tableBody.innerHTML = '';
 
     const resp = await fetch('/get-network-info');
     const data = await resp.json();
 
     if (ipv4El) ipv4El.textContent = (data.ipv4 && data.ipv4.length) ? data.ipv4.join(', ') : '-';
 
-    if (listEl && Array.isArray(data.interfaces)) {
+    if ((listEl || tableBody) && Array.isArray(data.interfaces)) {
       data.interfaces.forEach((itf) => {
         const card = document.createElement('div');
         card.style.border = '1px solid #2e3a4a';
@@ -326,7 +328,32 @@ async function fetchNetworkInfo() {
         }
         card.appendChild(addrs);
 
-        listEl.appendChild(card);
+        if (listEl) listEl.appendChild(card);
+
+        // Populate table row
+        if (tableBody) {
+          const tr = document.createElement('tr');
+
+          const ipv4s = (itf.addresses || [])
+            .filter(a => a && a.family === 'inet' && a.local)
+            .map(a => a.local);
+
+          const priority = (itf.priority === 0 || itf.priority) ? String(itf.priority) : '-';
+          const metrics = Array.isArray(itf.route_metrics) && itf.route_metrics.length
+            ? itf.route_metrics.join(', ')
+            : '-';
+
+          tr.innerHTML = `
+            <td>${itf.name || '-'}</td>
+            <td>${itf.state || '-'}</td>
+            <td>${ipv4s.length ? ipv4s.join(', ') : '-'}</td>
+            <td>${itf.mac || '-'}</td>
+            <td>${itf.mtu != null ? itf.mtu : '-'}</td>
+            <td>${priority}</td>
+            <td>${metrics}</td>
+          `;
+          tableBody.appendChild(tr);
+        }
       });
     }
 

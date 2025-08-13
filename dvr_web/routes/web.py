@@ -77,6 +77,45 @@ def get_network_info():
                 'addresses': addrs
             })
 
+        # Collect routing metrics per interface (from main table)
+        route_metrics = {}
+        default_metrics = {}
+        try:
+            routes_raw = subprocess.check_output(["ip", "-j", "route", "show", "table", "main"], text=True)
+            routes = json.loads(routes_raw)
+            for r in routes:
+                dev = r.get('dev')
+                if not dev:
+                    continue
+                metric = r.get('metric')
+                if dev not in route_metrics:
+                    route_metrics[dev] = set()
+                if metric is not None:
+                    route_metrics[dev].add(metric)
+                # Capture default route metric(s) specifically
+                dst = r.get('dst') or r.get('destination')
+                if dst in (None, 'default', '0.0.0.0/0', '::/0'):
+                    default_metrics.setdefault(dev, [])
+                    if metric is not None:
+                        default_metrics[dev].append(metric)
+        except Exception:
+            # Ignore routing errors; priorities will be absent
+            pass
+
+        # Enrich interfaces with priority/metrics
+        for itf in interfaces:
+            name = itf.get('name')
+            metrics_list = sorted(route_metrics.get(name, [])) if name else []
+            itf['route_metrics'] = metrics_list
+            # Priority: prefer default route metric, else min of metrics_list
+            dms = default_metrics.get(name, []) if name else []
+            if dms:
+                itf['priority'] = min(dms)
+            elif metrics_list:
+                itf['priority'] = metrics_list[0]
+            else:
+                itf['priority'] = None
+
         # Quick summary of IPv4 addresses
         ipv4_list = []
         for itf in interfaces:
