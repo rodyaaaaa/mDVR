@@ -24,8 +24,8 @@ async def main():
     ftp = FTPCon(server, port, user, password, car_name)
 
     await ftp.upload_start_system_log()
-    await ftp.upload_to_ftp(logger)
     await ftp.upload_logs_to_ftp(logger)
+    await ftp.upload_to_ftp(logger)
 
 
 if __name__ == "__main__":
