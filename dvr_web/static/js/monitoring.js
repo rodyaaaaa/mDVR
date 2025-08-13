@@ -74,6 +74,130 @@ function updateServiceStatus() {
         return;
     }
 
+    // mDVR VPN Check: show combined vpn check service + timer
+    if (value === 'mdvr_vpn_check') {
+        const units = [
+            { key: 'mdvr_vpn_check.service', label: 'mDVR VPN Check Service' },
+            { key: 'mdvr_vpn_check.timer', label: 'mDVR VPN Check Timer' },
+        ];
+
+        Promise.all(
+            units.map(u => fetch(`/get-service-status/${u.key}`)
+                .then(r => r.json())
+                .then(d => ({ u, d }))
+                .catch(e => ({ u, d: { error: String(e) } })))
+        ).then(results => {
+            const renderRow = (label, d, key) => {
+                if (d && d.error) {
+                    return `
+                        <div class="service-row" data-unit="${key}">
+                            <p>${label}: <span class="error">Error</span></p>
+                            <p class="error">${d.error}</p>
+                            <button type="button" class="logs-toggle">Show logs</button>
+                            <div class="logs-panel"><pre class="logs-content"></pre></div>
+                        </div>
+                    `;
+                }
+                const activeClass = d.status === 'active' ? '' : 'error';
+                const enabledClass = d.enabled ? '' : 'error';
+                const enabledText = d.enabled ? 'Yes' : 'No';
+                return `
+                    <div class="service-row" data-unit="${key}">
+                        <p>${label} — Active: <span class="${activeClass}">${d.status}</span></p>
+                        <p>Enabled: <span class="${enabledClass}">${enabledText}</span></p>
+                        <p class="service-desc">Description: <span>${d.description || '-'} </span></p>
+                        <button type="button" class="logs-toggle">Show logs</button>
+                        <div class="logs-panel"><pre class="logs-content"></pre></div>
+                    </div>
+                `;
+            };
+
+            const rows = results
+                .map(({ u, d }) => renderRow(u.label, d, u.key))
+                .join('');
+
+            statusContainer.innerHTML = `
+                <div class="engine-grid">
+                    <div class="engine-col">
+                        <h3>mDVR VPN Check</h3>
+                        ${rows}
+                    </div>
+                </div>
+            `;
+
+            statusContainer.querySelectorAll('.service-row').forEach(row => {
+                const unitKey = row.getAttribute('data-unit');
+                if (unitKey) attachLogsHandlers(row, unitKey);
+            });
+        }).catch(error => {
+            showNotification('Error fetching mDVR VPN Check statuses', true);
+            console.error('mDVR VPN Check fetch error:', error);
+        });
+        return;
+    }
+
+    // mDVR System Guard: show combined system guard service + timer
+    if (value === 'mdvr_system_guard') {
+        const units = [
+            { key: 'mdvr_system_guard.service', label: 'mDVR System Guard Service' },
+            { key: 'mdvr_system_guard.timer', label: 'mDVR System Guard Timer' },
+        ];
+
+        Promise.all(
+            units.map(u => fetch(`/get-service-status/${u.key}`)
+                .then(r => r.json())
+                .then(d => ({ u, d }))
+                .catch(e => ({ u, d: { error: String(e) } })))
+        ).then(results => {
+            const renderRow = (label, d, key) => {
+                if (d && d.error) {
+                    return `
+                        <div class="service-row" data-unit="${key}">
+                            <p>${label}: <span class="error">Error</span></p>
+                            <p class="error">${d.error}</p>
+                            <button type="button" class="logs-toggle">Show logs</button>
+                            <div class="logs-panel"><pre class="logs-content"></pre></div>
+                        </div>
+                    `;
+                }
+                const activeClass = d.status === 'active' ? '' : 'error';
+                const enabledClass = d.enabled ? '' : 'error';
+                const enabledText = d.enabled ? 'Yes' : 'No';
+                return `
+                    <div class="service-row" data-unit="${key}">
+                        <p>${label} — Active: <span class="${activeClass}">${d.status}</span></p>
+                        <p>Enabled: <span class="${enabledClass}">${enabledText}</span></p>
+                        <p class="service-desc">Description: <span>${d.description || '-'} </span></p>
+                        <button type="button" class="logs-toggle">Show logs</button>
+                        <div class="logs-panel"><pre class="logs-content"></pre></div>
+                    </div>
+                `;
+            };
+
+            const rows = results
+                .map(({ u, d }) => renderRow(u.label, d, u.key))
+                .join('');
+
+            statusContainer.innerHTML = `
+                <div class="engine-grid">
+                    <div class="engine-col">
+                        <h3>mDVR System Guard</h3>
+                        ${rows}
+                    </div>
+                </div>
+            `;
+
+            statusContainer.querySelectorAll('.service-row').forEach(row => {
+                const unitKey = row.getAttribute('data-unit');
+                if (unitKey) attachLogsHandlers(row, unitKey);
+            });
+        }).catch(error => {
+            showNotification('Error fetching mDVR System Guard statuses', true);
+            console.error('mDVR System Guard fetch error:', error);
+        });
+        return;
+    }
+
     // mDVR Upload: show combined upload service + timer
     if (value === 'mdvr_upload') {
         const units = [
@@ -133,6 +257,69 @@ function updateServiceStatus() {
         }).catch(error => {
             showNotification('Error fetching mDVR Upload statuses', true);
             console.error('mDVR Upload fetch error:', error);
+        });
+        return;
+    }
+
+    // mDVR Space Check: show combined space check service + timer
+    if (value === 'mdvr_space_check') {
+        const units = [
+            { key: 'mdvr_space_check.service', label: 'mDVR Space Check Service' },
+            { key: 'mdvr_space_check.timer', label: 'mDVR Space Check Timer' },
+        ];
+
+        Promise.all(
+            units.map(u => fetch(`/get-service-status/${u.key}`)
+                .then(r => r.json())
+                .then(d => ({ u, d }))
+                .catch(e => ({ u, d: { error: String(e) } })))
+        ).then(results => {
+            const renderRow = (label, d, key) => {
+                if (d && d.error) {
+                    return `
+                        <div class="service-row" data-unit="${key}">
+                            <p>${label}: <span class="error">Error</span></p>
+                            <p class="error">${d.error}</p>
+                            <button type="button" class="logs-toggle">Show logs</button>
+                            <div class="logs-panel"><pre class="logs-content"></pre></div>
+                        </div>
+                    `;
+                }
+                const activeClass = d.status === 'active' ? '' : 'error';
+                const enabledClass = d.enabled ? '' : 'error';
+                const enabledText = d.enabled ? 'Yes' : 'No';
+                return `
+                    <div class="service-row" data-unit="${key}">
+                        <p>${label} — Active: <span class="${activeClass}">${d.status}</span></p>
+                        <p>Enabled: <span class="${enabledClass}">${enabledText}</span></p>
+                        <p class="service-desc">Description: <span>${d.description || '-'} </span></p>
+                        <button type="button" class="logs-toggle">Show logs</button>
+                        <div class="logs-panel"><pre class="logs-content"></pre></div>
+                    </div>
+                `;
+            };
+
+            const rows = results
+                .map(({ u, d }) => renderRow(u.label, d, u.key))
+                .join('');
+
+            statusContainer.innerHTML = `
+                <div class="engine-grid">
+                    <div class="engine-col">
+                        <h3>mDVR Space Check</h3>
+                        ${rows}
+                    </div>
+                </div>
+            `;
+
+            // Attach logs handlers for both rows
+            statusContainer.querySelectorAll('.service-row').forEach(row => {
+                const unitKey = row.getAttribute('data-unit');
+                if (unitKey) attachLogsHandlers(row, unitKey);
+            });
+        }).catch(error => {
+            showNotification('Error fetching mDVR Space Check statuses', true);
+            console.error('mDVR Space Check fetch error:', error);
         });
         return;
     }
