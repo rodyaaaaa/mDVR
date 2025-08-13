@@ -310,10 +310,18 @@
                     <h2>VPN config</h2>
                     <div class="ftp-header-actions">
                         <button onclick="saveVpnConfig()">Save</button>
+                        <button onclick="deleteVpnConfig()" style="margin-left:8px;">Delete</button>
                         <div class="ftp-toggle">
                             <span class="ftp-toggle-label">Enable VPN</span>
                             <label class="toggle-switch small">
                                 <input type="checkbox" id="vpn-enabled" onchange="toggleVpn(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="ftp-toggle" style="margin-left:16px;">
+                            <span class="ftp-toggle-label">Non-priority VPN</span>
+                            <label class="toggle-switch small">
+                                <input type="checkbox" id="vpn-non-priority" onchange="applyVpnNonPriority(this)">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>

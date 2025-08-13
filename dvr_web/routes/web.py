@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import shutil
 
 from flask import Blueprint, jsonify, request, send_from_directory
 from datetime import timedelta, datetime
@@ -365,6 +366,148 @@ def save_vpn_config():
         update_imei()
 
         return jsonify({"success": True, "message": "VPN config saved successfully"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@web_bp.route('/get-vpn-config')
+def get_vpn_config():
+    try:
+        if not os.path.exists(VPN_CONFIG_PATH):
+            return jsonify({"config": "", "error": f"Config not found: {VPN_CONFIG_PATH}"}), 404
+        with open(VPN_CONFIG_PATH, 'r') as f:
+            content = f.read()
+        return jsonify({"config": content})
+    except Exception as e:
+        return jsonify({"config": "", "error": str(e)}), 500
+
+
+@web_bp.route('/delete-vpn-config', methods=['POST'])
+def delete_vpn_config():
+    """Backup and clear the WireGuard config file contents."""
+    try:
+        if not os.path.exists(VPN_CONFIG_PATH):
+            return jsonify({"success": True, "message": "Config not present"})
+
+        # Backup existing config
+        try:
+            shutil.copy2(VPN_CONFIG_PATH, VPN_CONFIG_PATH + '.bak')
+        except Exception:
+            pass
+
+        # Truncate file atomically
+        tmp_path = VPN_CONFIG_PATH + '.tmp'
+        with open(tmp_path, 'w') as f:
+            f.write('')
+        os.replace(tmp_path, VPN_CONFIG_PATH)
+
+        return jsonify({"success": True, "message": "VPN config deleted"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@web_bp.route('/apply-vpn-non-priority', methods=['POST'])
+def apply_vpn_non_priority():
+    """
+    Make WireGuard VPN non-priority by:
+      1) Removing DNS line(s) from [Interface]
+      2) Ensuring 'Table = off' in [Interface]
+      3) Ensuring 'PersistentKeepAlive = 25' in each [Peer]
+      4) Restarting wg-quick@wg0 if it's enabled
+    """
+    try:
+        # Read existing config
+        if not os.path.exists(VPN_CONFIG_PATH):
+            return jsonify({"success": False, "error": f"Config not found: {VPN_CONFIG_PATH}"}), 404
+
+        with open(VPN_CONFIG_PATH, 'r') as f:
+            lines = f.readlines()
+
+        new_lines = []
+        section = None  # 'interface' | 'peer' | None
+        interface_table_present = False
+        peer_keepalive_present = False
+
+        def flush_section_footer(next_header=False):
+            nonlocal section, interface_table_present, peer_keepalive_present, new_lines
+            if section == 'interface' and not interface_table_present:
+                new_lines.append('Table = off\n')
+            if section == 'peer' and not peer_keepalive_present:
+                new_lines.append('PersistentKeepAlive = 25\n')
+            if next_header:
+                # Reset flags when a new section header is about to be processed
+                if section == 'interface':
+                    interface_table_present = False
+                if section == 'peer':
+                    peer_keepalive_present = False
+            section = None
+
+        for raw in lines:
+            line = raw
+            stripped = line.strip()
+
+            # Detect section headers
+            if stripped.startswith('[') and stripped.endswith(']'):
+                # Flush any missing required keys before starting the next section
+                flush_section_footer(next_header=True)
+                header = stripped.lower()
+                if header == '[interface]':
+                    section = 'interface'
+                elif header == '[peer]':
+                    section = 'peer'
+                else:
+                    section = None
+                new_lines.append(line)
+                continue
+
+            # Process key-value lines based on current section
+            if section == 'interface':
+                # Skip DNS lines
+                if stripped.lower().startswith('dns'):
+                    continue
+                # Normalize/ensure Table = off
+                if stripped.lower().startswith('table'):
+                    new_lines.append('Table = off\n')
+                    interface_table_present = True
+                    continue
+
+            if section == 'peer':
+                # Normalize/ensure PersistentKeepAlive = 25
+                if stripped.lower().startswith('persistentkeepalive'):
+                    new_lines.append('PersistentKeepAlive = 25\n')
+                    peer_keepalive_present = True
+                    continue
+
+            # Default: keep line as-is
+            new_lines.append(line)
+
+        # End of file: flush for the last open section
+        if section is not None:
+            flush_section_footer(next_header=False)
+
+        # Backup existing config
+        try:
+            shutil.copy2(VPN_CONFIG_PATH, VPN_CONFIG_PATH + '.bak')
+        except Exception:
+            # Best-effort backup; ignore backup errors
+            pass
+
+        # Write updated config atomically
+        tmp_path = VPN_CONFIG_PATH + '.tmp'
+        with open(tmp_path, 'w') as f:
+            f.writelines(new_lines)
+        os.replace(tmp_path, VPN_CONFIG_PATH)
+
+        # Restart wg-quick@wg0 if enabled
+        unit = 'wg-quick@wg0'
+        enabled_state = os.popen(f"systemctl is-enabled {unit}").read().strip()
+        if enabled_state == 'enabled':
+            os.system(f"systemctl restart {unit}")
+
+        return jsonify({
+            "success": True,
+            "message": "Applied non-priority VPN settings",
+        })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

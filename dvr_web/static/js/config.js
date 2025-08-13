@@ -57,6 +57,48 @@ function loadVpnStatus() {
         .catch(() => updateVpnStatusUI(false));
 }
 
+// Load current VPN config into textarea
+function loadVpnConfig() {
+    const ta = document.getElementById('vpn-config-text');
+    if (!ta) return;
+    fetch('/get-vpn-config')
+        .then(r => r.json())
+        .then(data => {
+            if (typeof data.config === 'string') {
+                ta.value = data.config;
+                updateVpnNonPriorityUIFromConfig();
+            }
+        })
+        .catch(err => {
+            console.error('Error fetching VPN config:', err);
+        });
+}
+
+// Delete VPN config file (clear contents after confirmation)
+function deleteVpnConfig() {
+    const ta = document.getElementById('vpn-config-text');
+    const proceed = confirm('Are you sure you want to delete the VPN config? This will clear wg0.conf contents (a backup will be made).');
+    if (!proceed) return;
+    showPreloader();
+    fetch('/delete-vpn-config', { method: 'POST' })
+        .then(r => r.json())
+        .then(result => {
+            hidePreloader();
+            if (result.success) {
+                if (ta) ta.value = '';
+                showNotification('VPN config deleted');
+                // Sync non-priority checkbox (will become unchecked on empty config)
+                updateVpnNonPriorityUIFromConfig();
+            } else {
+                showNotification('ERROR: ' + (result.error || 'delete failed'), true);
+            }
+        })
+        .catch(err => {
+            hidePreloader();
+            showNotification('ERROR: ' + err.message, true);
+        });
+}
+
 function toggleVpn(enabled) {
     showPreloader();
     fetch('/set-vpn-enabled', {
@@ -80,6 +122,49 @@ function toggleVpn(enabled) {
             showNotification('ERROR: ' + err.message, true);
             loadVpnStatus();
         });
+}
+
+// Apply non-priority VPN settings (one-time action)
+function applyVpnNonPriority(el) {
+    showPreloader();
+    fetch('/apply-vpn-non-priority', {
+        method: 'POST'
+    })
+        .then(r => r.json())
+        .then(result => {
+            hidePreloader();
+            if (result.success) {
+                showNotification('Applied non-priority VPN settings');
+                // If VPN service is enabled, it was restarted by backend; refresh status indicator
+                loadVpnStatus();
+                loadVpnConfig(); // will also sync the non-priority checkbox
+            } else {
+                showNotification('ERROR: ' + (result.error || 'apply failed'), true);
+            }
+        })
+        .catch(err => {
+            hidePreloader();
+            showNotification('ERROR: ' + err.message, true);
+        });
+}
+
+// Determine if current config represents non-priority setup
+function isConfigNonPriority(text) {
+    if (typeof text !== 'string' || !text.trim()) return false;
+    // Must have Table = off within [Interface]
+    const hasTableOffInInterface = /\[Interface\][\s\S]*?table\s*=\s*off/i.test(text);
+    // Must have PersistentKeepAlive = 25 somewhere (backend ensures in each [Peer])
+    const hasPersistentKeepAlive = /persistentkeepalive\s*=\s*25/i.test(text);
+    return hasTableOffInInterface && hasPersistentKeepAlive;
+}
+
+// Sync Non-priority VPN checkbox with current config
+function updateVpnNonPriorityUIFromConfig() {
+    const ta = document.getElementById('vpn-config-text');
+    const cb = document.getElementById('vpn-non-priority');
+    if (!cb) return;
+    const text = ta ? ta.value : '';
+    cb.checked = isConfigNonPriority(text);
 }
 
 // FTP Upload enable/disable (mdvr_upload.timer)
@@ -241,6 +326,8 @@ function saveVpnConfig() {
             if (result.success) {
                 showNotification('VPN config saved successfully!');
                 setTimeout(updateImei, 1000);
+                // Sync non-priority checkbox with current textarea content
+                updateVpnNonPriorityUIFromConfig();
             } else {
                 showNotification(`ERROR: ${result.error}`, true);
             }
@@ -282,6 +369,8 @@ function uploadVpnConfigFile() {
                 if (result.success) {
                     showNotification('VPN config file uploaded and saved successfully!');
                     setTimeout(updateImei, 1000);
+                    // Sync non-priority checkbox with current textarea content
+                    updateVpnNonPriorityUIFromConfig();
                 } else {
                     showNotification(`ERROR: ${result.error}`, true);
                 }
@@ -375,6 +464,7 @@ function showSettingsTab(tabId) {
     // When showing VPN settings, refresh VPN service status
     if (tabId === 'vpn-settings-content') {
         loadVpnStatus();
+        loadVpnConfig();
     }
 }
 
@@ -398,6 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (activeSettings && activeSettings.id === 'vpn-settings-content') {
         loadVpnStatus();
+        loadVpnConfig();
     }
 });
 
