@@ -580,21 +580,21 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Edit mode button
         const editButton = document.createElement('button');
-        editButton.textContent = 'Редагувати розташування';
+        editButton.textContent = 'Edit layout';
         editButton.className = 'edit-layout-btn';
         editButton.onclick = () => {
             gridLayout.editMode = !gridLayout.editMode;
             
             // Update button text and class
             if (gridLayout.editMode) {
-                editButton.textContent = 'Завершити редагування';
+                editButton.textContent = 'Finish editing';
                 editButton.classList.add('active');
                 document.getElementById('dashboard-grid').classList.add('edit-mode');
             } else {
                 // Save layout when exiting edit mode
                 gridLayout.saveLayoutConfig();
                 
-                editButton.textContent = 'Редагувати розташування';
+                editButton.textContent = 'Edit layout';
                 editButton.classList.remove('active');
                 document.getElementById('dashboard-grid').classList.remove('edit-mode');
             }
@@ -602,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Reset button
         const resetButton = document.createElement('button');
-        resetButton.textContent = 'Скинути розташування';
+        resetButton.textContent = 'Reset layout';
         resetButton.className = 'reset-layout-btn';
         resetButton.onclick = resetDashboardLayout;
         
