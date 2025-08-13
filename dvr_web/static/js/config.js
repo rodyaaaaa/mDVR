@@ -124,27 +124,31 @@ function toggleVpn(enabled) {
         });
 }
 
-// Apply non-priority VPN settings (one-time action)
+// Toggle Non-priority VPN settings: checked -> apply non-priority; unchecked -> restore priority (original config)
 function applyVpnNonPriority(el) {
+    const makeNonPriority = !el ? true : !!el.checked;
+    const url = makeNonPriority ? '/apply-vpn-non-priority' : '/apply-vpn-priority';
     showPreloader();
-    fetch('/apply-vpn-non-priority', {
-        method: 'POST'
-    })
+    fetch(url, { method: 'POST' })
         .then(r => r.json())
         .then(result => {
             hidePreloader();
             if (result.success) {
-                showNotification('Applied non-priority VPN settings');
+                showNotification(makeNonPriority ? 'Applied non-priority VPN settings' : 'Restored priority VPN settings');
                 // If VPN service is enabled, it was restarted by backend; refresh status indicator
                 loadVpnStatus();
                 loadVpnConfig(); // will also sync the non-priority checkbox
             } else {
                 showNotification('ERROR: ' + (result.error || 'apply failed'), true);
+                // Re-sync UI to actual config
+                loadVpnConfig();
             }
         })
         .catch(err => {
             hidePreloader();
             showNotification('ERROR: ' + err.message, true);
+            // Re-sync UI to actual config
+            loadVpnConfig();
         });
 }
 

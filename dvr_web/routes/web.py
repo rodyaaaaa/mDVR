@@ -7,6 +7,10 @@ from flask import Blueprint, jsonify, request, send_from_directory
 from datetime import timedelta, datetime
 
 from dvr_web.constants import VPN_CONFIG_PATH, MATERIALS_DIR
+
+# Paths for preserving and restoring original WireGuard config
+BACKUP_DIR = "/etc/mdvr"
+ORIGINAL_VPN_BACKUP_PATH = os.path.join(BACKUP_DIR, "wg0.conf.original")
 from dvr_web.utils import generate_nginx_configs, get_camera_ports, load_config, restart_mdvr_engine, update_imei, update_watchdog, get_config_path
 
 
@@ -485,7 +489,16 @@ def apply_vpn_non_priority():
         if section is not None:
             flush_section_footer(next_header=False)
 
-        # Backup existing config
+        # Ensure a one-time backup of the original config in /etc/mdvr/ for restore
+        try:
+            os.makedirs(BACKUP_DIR, exist_ok=True)
+            if not os.path.exists(ORIGINAL_VPN_BACKUP_PATH):
+                shutil.copy2(VPN_CONFIG_PATH, ORIGINAL_VPN_BACKUP_PATH)
+        except Exception:
+            # Best-effort backup; ignore backup errors
+            pass
+
+        # Backup current config alongside for safety
         try:
             shutil.copy2(VPN_CONFIG_PATH, VPN_CONFIG_PATH + '.bak')
         except Exception:
@@ -507,6 +520,46 @@ def apply_vpn_non_priority():
         return jsonify({
             "success": True,
             "message": "Applied non-priority VPN settings",
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@web_bp.route('/apply-vpn-priority', methods=['POST'])
+def apply_vpn_priority():
+    """
+    Restore the original WireGuard config from /etc/mdvr/wg0.conf.original,
+    effectively making VPN priority again. Restarts wg-quick@wg0 if enabled.
+    """
+    try:
+        if not os.path.exists(ORIGINAL_VPN_BACKUP_PATH):
+            return jsonify({
+                "success": False,
+                "error": f"Original backup not found: {ORIGINAL_VPN_BACKUP_PATH}"
+            }), 404
+
+        # Best-effort backup of current config
+        try:
+            if os.path.exists(VPN_CONFIG_PATH):
+                shutil.copy2(VPN_CONFIG_PATH, VPN_CONFIG_PATH + '.bak')
+        except Exception:
+            pass
+
+        # Restore original config atomically
+        tmp_path = VPN_CONFIG_PATH + '.tmp'
+        with open(ORIGINAL_VPN_BACKUP_PATH, 'r') as src, open(tmp_path, 'w') as dst:
+            dst.write(src.read())
+        os.replace(tmp_path, VPN_CONFIG_PATH)
+
+        # Restart wg-quick@wg0 if enabled
+        unit = 'wg-quick@wg0'
+        enabled_state = os.popen(f"systemctl is-enabled {unit}").read().strip()
+        if enabled_state == 'enabled':
+            os.system(f"systemctl restart {unit}")
+
+        return jsonify({
+            "success": True,
+            "message": "Restored original VPN config (priority mode)",
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
