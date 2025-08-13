@@ -361,14 +361,11 @@ def save_vpn_config():
         with open(VPN_CONFIG_PATH, 'w') as file:
             file.write(data['vpn_config'])
 
-        os.system("systemctl enable wg-quick@wg0")
-        os.system("systemctl restart wg-quick@wg0")
-
+        # Only save configuration. Service control is managed by the VPN toggle.
         update_imei()
 
         return jsonify({"success": True, "message": "VPN config saved successfully"})
     except Exception as e:
-        os.system("systemctl restart wg-quick@wg0")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
