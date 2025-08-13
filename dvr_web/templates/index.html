@@ -38,6 +38,7 @@
         <button onclick="showTab('video-options')">Settings</button>
         <button onclick="showTab('system')">System</button>
         <button onclick="showTab('materials')">Materials</button>
+        <button onclick="showTab('about')">About</button>
     </aside>
     <main class="content">
         <div id="home" class="tab active">
@@ -412,6 +413,26 @@
                     <button onclick="focusTerminal()">Focus</button>
                 </div>
                 <div id="terminal-status" style="margin-top:8px; color:#9fb2c7; font-size:0.9em;">Disconnected</div>
+            </div>
+         </div>
+
+        <div id="about" class="tab">
+            <div class="settings-section-header" style="display:flex; align-items:center; gap:10px;">
+                <h2 style="margin-right:auto;">About</h2>
+                <button onclick="fetchAboutInfo()">Refresh</button>
+            </div>
+            <div id="about-error" style="color:#ff6b6b; display:none; margin-bottom:8px;"></div>
+            <div class="about-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
+                <div class="about-card" style="border:1px solid #2e3a4a; border-radius:8px; padding:12px; background:#101a24;">
+                    <h3 style="margin-top:0; color:#dbe7ff;">Hardware</h3>
+                    <ul id="about-hw" style="list-style:none; padding:0; margin:0; color:#bfc9da;">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+                <div class="about-card" style="border:1px solid #2e3a4a; border-radius:8px; padding:12px; background:#101a24;">
+                    <h3 style="margin-top:0; color:#dbe7ff;">Program</h3>
+                    <div id="about-program" style="color:#bfc9da;">Loading...</div>
+                </div>
             </div>
         </div>
 

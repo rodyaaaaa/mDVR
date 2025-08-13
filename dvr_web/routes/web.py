@@ -120,6 +120,211 @@ def get_iptables_rules():
         }), 500
 
 
+@web_bp.route('/about-info')
+def get_about_info():
+    """Collect basic hardware and application package info for the About tab."""
+    info = {
+        "hardware": {},
+        "program": {}
+    }
+    try:
+        # Hardware: Model
+        model = None
+        try:
+            # Common on SBCs
+            paths = [
+                "/sys/firmware/devicetree/base/model",
+                "/proc/device-tree/model"
+            ]
+            for p in paths:
+                if os.path.exists(p):
+                    with open(p, 'r', errors='ignore') as f:
+                        model = f.read().strip('\x00').strip()
+                        if model:
+                            break
+        except Exception:
+            pass
+
+        # Hardware: CPU model
+        cpu_model = None
+        try:
+            with open('/proc/cpuinfo', 'r', errors='ignore') as f:
+                for line in f:
+                    if ':' in line:
+                        key, val = [s.strip() for s in line.split(':', 1)]
+                        if key in ('model name', 'Hardware', 'Processor'):
+                            cpu_model = val
+                            break
+        except Exception:
+            pass
+
+        # Hardware: Memory total (kB)
+        mem_total_kb = None
+        try:
+            with open('/proc/meminfo', 'r', errors='ignore') as f:
+                for line in f:
+                    if line.startswith('MemTotal:'):
+                        parts = line.split()
+                        if len(parts) >= 2 and parts[1].isdigit():
+                            mem_total_kb = int(parts[1])
+                        break
+        except Exception:
+            pass
+
+        # Hardware: Kernel and Arch
+        try:
+            uname_r = subprocess.check_output(["uname", "-r"], text=True).strip()
+        except Exception:
+            uname_r = ""
+        try:
+            uname_m = subprocess.check_output(["uname", "-m"], text=True).strip()
+        except Exception:
+            uname_m = ""
+
+        # Disk (root filesystem)
+        disk = {}
+        try:
+            df_out = subprocess.check_output(["df", "-k", "/"], text=True).splitlines()
+            if len(df_out) >= 2:
+                # Filesystem 1K-blocks Used Available Use% Mounted on
+                cols = df_out[1].split()
+                if len(cols) >= 6:
+                    total_kb = int(cols[1])
+                    used_kb = int(cols[2])
+                    avail_kb = int(cols[3])
+                    disk = {
+                        "total_kb": total_kb,
+                        "used_kb": used_kb,
+                        "avail_kb": avail_kb,
+                        "use": cols[4],
+                        "mount": cols[5]
+                    }
+        except Exception:
+            pass
+
+        info["hardware"] = {
+            "model": model,
+            "cpu_model": cpu_model,
+            "mem_total_kb": mem_total_kb,
+            "kernel": uname_r,
+            "arch": uname_m,
+            "disk_root": disk,
+        }
+
+        # Storage and filesystem info for materials directory
+        storage = {}
+        try:
+            # Resolve mount source, fstype, and mountpoint for MATERIALS_DIR
+            fm = subprocess.check_output([
+                "findmnt", "-no", "SOURCE,FSTYPE,TARGET", "-T", MATERIALS_DIR
+            ], text=True).strip()
+            src = fstype = mnt = None
+            if fm:
+                parts = fm.split()
+                if len(parts) >= 3:
+                    src, fstype, mnt = parts[0], parts[1], parts[2]
+                elif len(parts) == 2:
+                    src, fstype = parts[0], parts[1]
+            if not src or not fstype:
+                # Fallback using df -P -T <path>
+                try:
+                    dfp = subprocess.check_output(["df", "-P", "-T", MATERIALS_DIR], text=True).splitlines()
+                    if len(dfp) >= 2:
+                        cols = dfp[1].split()
+                        if len(cols) >= 7:
+                            # Filesystem Type 1K-blocks Used Available Use% Mounted on
+                            src = cols[0]
+                            fstype = cols[1]
+                            mnt = cols[-1]
+                except Exception:
+                    pass
+
+            dev = src or ""
+            storage.update({
+                "path": MATERIALS_DIR,
+                "mount_source": dev,
+                "fstype": fstype,
+                "mount_point": mnt,
+            })
+
+            # Determine base disk device and attributes (rotational, model, type)
+            base = None
+            if dev.startswith('/dev/'):
+                devnode = dev
+                try:
+                    # Get parent kernel name (base disk), e.g., sda for sda1, nvme0n1 for nvme0n1p1
+                    pk = subprocess.check_output(["lsblk", "-no", "PKNAME", devnode], text=True).strip()
+                    base = pk if pk else devnode.replace('/dev/', '')
+                except Exception:
+                    base = devnode.replace('/dev/', '')
+
+            # Read rotational flag
+            rotational = None
+            if base:
+                rot_path = f"/sys/block/{base}/queue/rotational"
+                try:
+                    with open(rot_path, 'r') as f:
+                        rotational = f.read().strip() == '1'
+                except Exception:
+                    rotational = None
+
+            # Query lsblk for model and type
+            model = None
+            dtype = None
+            try:
+                if base:
+                    model = subprocess.check_output(["lsblk", "-no", "MODEL", f"/dev/{base}"], text=True).strip() or None
+                    dtype = subprocess.check_output(["lsblk", "-no", "TYPE", f"/dev/{base}"], text=True).strip() or None
+            except Exception:
+                pass
+
+            storage.update({
+                "device_base": (f"/dev/{base}" if base else None),
+                "device_model": model,
+                "device_type": dtype,  # e.g., disk
+                "device_rotational": rotational,  # True for HDD, False for SSD/flash, None unknown
+            })
+
+        except Exception:
+            # Ignore storage detection errors
+            pass
+
+        info["hardware"]["storage_materials"] = storage
+
+        # Program/package info: mdvr deb package (and optional mdvr-web)
+        def read_dpkg_status(pkg: str):
+            try:
+                out = subprocess.check_output(["dpkg", "-s", pkg], text=True, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError:
+                return None
+            data = {}
+            for line in out.splitlines():
+                if ':' in line:
+                    k, v = line.split(':', 1)
+                    data[k.strip()] = v.strip()
+            return {
+                "package": data.get("Package", pkg),
+                "status": data.get("Status"),
+                "version": data.get("Version"),
+                "architecture": data.get("Architecture"),
+                "maintainer": data.get("Maintainer"),
+                "installed_size": data.get("Installed-Size"),
+                "description": data.get("Description"),
+            }
+
+        program = {}
+        for candidate in ("mdvr", "mdvr-web", "mdvr_web"):
+            pkg_info = read_dpkg_status(candidate)
+            if pkg_info:
+                program[candidate] = pkg_info
+
+        info["program"] = program
+
+        return jsonify(info)
+    except Exception as e:
+        return jsonify({"error": str(e), **info}), 500
+
+
 @web_bp.route('/get-service-logs/<service_name>')
 def get_service_logs(service_name):
     """

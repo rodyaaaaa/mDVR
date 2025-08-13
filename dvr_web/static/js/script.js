@@ -223,6 +223,11 @@ function showTab(tabId) {
     clearInterval(cpuChartInterval);
     clearInterval(memChartInterval);
   }
+
+  // Top-level About tab handling
+  if (tabId === 'about') {
+    if (typeof fetchAboutInfo === 'function') fetchAboutInfo();
+  }
 }
 
 // Show System Tab (sub-tabs: Services, Network)
@@ -250,6 +255,10 @@ function showSystemTab(tabId) {
   // Load network info when opening Network tab
   if (tabId === 'system-network-content') {
     window.fetchNetworkInfo();
+  }
+  // Load about info when opening About tab
+  if (tabId === 'system-about-content') {
+    if (typeof fetchAboutInfo === 'function') fetchAboutInfo();
   }
 }
 
@@ -348,6 +357,97 @@ async function fetchNetworkInfo() {
 
 // Expose to global for inline handlers
 window.fetchNetworkInfo = fetchNetworkInfo;
+
+// Fetch and render About info (hardware + program)
+async function fetchAboutInfo() {
+  const errEl = document.getElementById('about-error');
+  const hwList = document.getElementById('about-hw');
+  const progEl = document.getElementById('about-program');
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  if (hwList) { hwList.innerHTML = '<li>Loading...</li>'; }
+  if (progEl) { progEl.textContent = 'Loading...'; }
+
+  try {
+    const resp = await fetch('/about-info');
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data && data.error ? data.error : 'Failed to load');
+
+    // Hardware rendering
+    if (hwList) {
+      const items = [];
+      const hw = data.hardware || {};
+      const toGB = (kb) => kb != null ? (kb / 1024 / 1024).toFixed(2) + ' GB' : '-';
+      if (hw.model) items.push(`<li><strong style="color:#dbe7ff;">Model:</strong> <span style="color:#bfc9da;">${hw.model}</span></li>`);
+      if (hw.cpu_model) items.push(`<li><strong style="color:#dbe7ff;">CPU:</strong> <span style="color:#bfc9da;">${hw.cpu_model}</span></li>`);
+      if (hw.mem_total_kb != null) items.push(`<li><strong style="color:#dbe7ff;">Memory:</strong> <span style="color:#bfc9da;">${toGB(hw.mem_total_kb)}</span></li>`);
+      if (hw.kernel || hw.arch) items.push(`<li><strong style="color:#dbe7ff;">Kernel/Arch:</strong> <span style="color:#bfc9da;">${hw.kernel || '-'} / ${hw.arch || '-'}</span></li>`);
+      const d = hw.disk_root || {};
+      if (d.total_kb != null) {
+        const fmt = (kb) => (kb / 1024 / 1024).toFixed(2) + ' GB';
+        items.push(`<li><strong style="color:#dbe7ff;">Disk (/):</strong> <span style="color:#bfc9da;">${fmt(d.total_kb)} total, ${fmt(d.used_kb || 0)} used, ${fmt(d.avail_kb || 0)} free (${d.use || '-'})</span></li>`);
+      }
+      // Storage for materials dir
+      const st = hw.storage_materials || {};
+      if (st.fstype || st.mount_source || st.mount_point) {
+        items.push(`<li><strong style="color:#dbe7ff;">Materials mount:</strong> <span style="color:#bfc9da;">${st.mount_point || '-'} (${st.fstype || '-'})</span></li>`);
+        if (st.mount_source) items.push(`<li><strong style=\"color:#dbe7ff;\">Device:</strong> <span style=\"color:#bfc9da;\">${st.mount_source}</span></li>`);
+      }
+      if (st.device_base || st.device_model || st.device_type || st.device_rotational != null) {
+        if (st.device_base) items.push(`<li><strong style=\"color:#dbe7ff;\">Base device:</strong> <span style=\"color:#bfc9da;\">${st.device_base}</span></li>`);
+        if (st.device_model) items.push(`<li><strong style=\"color:#dbe7ff;\">Model:</strong> <span style=\"color:#bfc9da;\">${st.device_model}</span></li>`);
+        if (st.device_type) items.push(`<li><strong style=\"color:#dbe7ff;\">Type:</strong> <span style=\"color:#bfc9da;\">${st.device_type}</span></li>`);
+        if (st.device_rotational != null) items.push(`<li><strong style=\"color:#dbe7ff;\">Rotational:</strong> <span style=\"color:#bfc9da;\">${st.device_rotational ? 'Yes (HDD)' : 'No (SSD/Flash)'}</span></li>`);
+      }
+      hwList.innerHTML = items.length ? items.join('') : '<li>No data</li>';
+    }
+
+    // Program rendering
+    if (progEl) {
+      const pr = data.program || {};
+      const pkgs = Object.keys(pr);
+      if (pkgs.length === 0) {
+        progEl.textContent = 'No mdvr-related packages found';
+      } else {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.gap = '8px';
+        pkgs.forEach((name) => {
+          const p = pr[name] || {};
+          const card = document.createElement('div');
+          card.style.border = '1px solid #2e3a4a';
+          card.style.borderRadius = '8px';
+          card.style.padding = '10px';
+          card.style.background = '#0f1a24';
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong style="color:#dbe7ff;">${p.package || name}</strong>
+              <span style="color:#9fb2c7; font-size:0.9em;">${p.status || ''}</span>
+            </div>
+            <div style="color:#bfc9da; font-size:0.95em;">
+              <div><strong style="color:#dbe7ff;">Version:</strong> ${p.version || '-'}</div>
+              <div><strong style="color:#dbe7ff;">Arch:</strong> ${p.architecture || '-'}</div>
+              <div><strong style="color:#dbe7ff;">Installed size:</strong> ${p.installed_size || '-'}</div>
+              <div><strong style="color:#dbe7ff;">Maintainer:</strong> ${p.maintainer || '-'}</div>
+              ${p.description ? `<div style="margin-top:4px; color:#9fb2c7;">${p.description}</div>` : ''}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+        progEl.innerHTML = '';
+        progEl.appendChild(container);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to fetch about info', e);
+    if (errEl) { errEl.textContent = String(e); errEl.style.display = 'block'; }
+    if (hwList) { hwList.innerHTML = '<li>Error</li>'; }
+    if (progEl) { progEl.textContent = 'Error'; }
+  }
+}
+
+// Expose to global for inline handler
+window.fetchAboutInfo = fetchAboutInfo;
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("mDVR Web Interface loaded");
