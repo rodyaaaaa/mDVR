@@ -4,6 +4,8 @@ import os
 import pty
 import select
 import signal
+import crypt
+import spwd
 
 from flask_socketio import SocketIO, emit
 from flask import request
@@ -63,8 +65,23 @@ def init_socketio(app):
         # Clean any existing session
         _close_term_session(sid)
 
-        # Fork a PTY and run su - <user> -s /bin/bash
+        # Authenticate using shadow (since app runs as root, PAM prompt won't trigger for su)
         try:
+            try:
+                spw = spwd.getspnam(username)
+            except KeyError:
+                emit('term_error', {"error": "auth_failed"}, namespace='/term', to=sid)
+                return
+            hashed = spw.sp_pwdp or ''
+            # Locked or disabled accounts often have '!' or '*' at start
+            if not hashed or hashed[0] in ('!', '*'):
+                emit('term_error', {"error": "auth_failed"}, namespace='/term', to=sid)
+                return
+            if crypt.crypt(password, hashed) != hashed:
+                emit('term_error', {"error": "auth_failed"}, namespace='/term', to=sid)
+                return
+
+            # Fork a PTY and run su - <user> -s /bin/bash
             pid, fd = pty.fork()
             if pid == 0:
                 # Child
@@ -72,7 +89,7 @@ def init_socketio(app):
                 os.execvp('su', ['su', '-', username, '-s', '/bin/bash'])
             else:
                 # Parent: save session
-                term_sessions[sid] = { 'pid': pid, 'fd': fd, 'password': password, 'pass_sent': False }
+                term_sessions[sid] = { 'pid': pid, 'fd': fd }
 
                 # Start reader thread to stream output
                 reader = threading.Thread(target=_term_reader, args=(sid,))
@@ -122,25 +139,8 @@ def _term_reader(sid: str):
                     break
                 if not data:
                     break
-                text = data.decode('utf-8', errors='ignore')
-
-                # Detect password prompt from su and send password once
                 try:
-                    sess = term_sessions.get(sid)
-                    if sess and not sess.get('pass_sent'):
-                        # case-insensitive match for password prompts in common locales
-                        low = text.lower()
-                        if ('password' in low) or ('пароль' in low):
-                            try:
-                                os.write(sess['fd'], (sess.get('password', '') + '\n').encode('utf-8', errors='ignore'))
-                                sess['pass_sent'] = True
-                            except Exception:
-                                pass
-                except Exception:
-                    pass
-
-                try:
-                    socketio.emit('term_output', { 'data': text }, namespace='/term', to=sid)
+                    socketio.emit('term_output', { 'data': data.decode('utf-8', errors='ignore') }, namespace='/term', to=sid)
                 except Exception:
                     pass
             # Optionally, check if child is alive
