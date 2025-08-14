@@ -23,9 +23,6 @@ logger = CustomFactory.create_logger('mdvr_engine', "engine.log")
 notifier = SystemdNotifier()
 notifier.notify('READY=1')
 
-# GPIO.setmode(GPIO.BCM)
-# DOOR_SENSOR_PIN = 17
-# GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 async def async_write_video(current_link, file_name):
     stream = ffmpeg.input(
@@ -97,6 +94,7 @@ async def main():
             if door_state is False:
                 loop = asyncio.get_running_loop()
                 for process in jobs:
+                    print("PROCESS RETURNCODE: " + process.returncode)
                     try:
                         process.send_signal(signal.SIGINT)
                         await loop.run_in_executor(None, process.wait)

@@ -324,6 +324,69 @@ function updateServiceStatus() {
         return;
     }
 
+    // mDVR Web: show combined web service + timer
+    if (value === 'mdvr_web.service') {
+        const units = [
+            { key: 'mdvr_web.service', label: 'mDVR Web Service' },
+            { key: 'mdvr_web.timer', label: 'mDVR Web Timer' },
+        ];
+
+        Promise.all(
+            units.map(u => fetch(`/get-service-status/${u.key}`)
+                .then(r => r.json())
+                .then(d => ({ u, d }))
+                .catch(e => ({ u, d: { error: String(e) } })))
+        ).then(results => {
+            const renderRow = (label, d, key) => {
+                if (d && d.error) {
+                    return `
+                        <div class="service-row" data-unit="${key}">
+                            <p>${label}: <span class="error">Error</span></p>
+                            <p class="error">${d.error}</p>
+                            <button type="button" class="logs-toggle">Show logs</button>
+                            <div class="logs-panel"><pre class="logs-content"></pre></div>
+                        </div>
+                    `;
+                }
+                const activeClass = d.status === 'active' ? '' : 'error';
+                const enabledClass = d.enabled ? '' : 'error';
+                const enabledText = d.enabled ? 'Yes' : 'No';
+                return `
+                    <div class="service-row" data-unit="${key}">
+                        <p>${label} — Active: <span class="${activeClass}">${d.status}</span></p>
+                        <p>Enabled: <span class="${enabledClass}">${enabledText}</span></p>
+                        <p class="service-desc">Description: <span>${d.description || '-'} </span></p>
+                        <button type="button" class="logs-toggle">Show logs</button>
+                        <div class="logs-panel"><pre class="logs-content"></pre></div>
+                    </div>
+                `;
+            };
+
+            const rows = results
+                .map(({ u, d }) => renderRow(u.label, d, u.key))
+                .join('');
+
+            statusContainer.innerHTML = `
+                <div class="engine-grid">
+                    <div class="engine-col">
+                        <h3>mDVR Web</h3>
+                        ${rows}
+                    </div>
+                </div>
+            `;
+
+            // Attach logs handlers for both rows
+            statusContainer.querySelectorAll('.service-row').forEach(row => {
+                const unitKey = row.getAttribute('data-unit');
+                if (unitKey) attachLogsHandlers(row, unitKey);
+            });
+        }).catch(error => {
+            showNotification('Error fetching mDVR Web statuses', true);
+            console.error('mDVR Web fetch error:', error);
+        });
+        return;
+    }
+
     // If any logs panel is open, avoid re-rendering to prevent closing it while the user scrolls
     if (statusContainer && statusContainer.querySelector('.logs-panel.open')) {
         return;
