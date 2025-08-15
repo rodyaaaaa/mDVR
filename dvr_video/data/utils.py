@@ -1,9 +1,11 @@
 import asyncio
 import json
+import time
 import os
 import re
 import shutil
 import subprocess
+import threading
 
 from datetime import datetime
 from typing import List
@@ -37,7 +39,7 @@ async def get_date(video):
     return date
 
 
-async def move():
+def move():
     content = os.listdir("temp")
 
     for i in content:
@@ -94,3 +96,78 @@ def get_ext5v_v():
     except Exception as e:
         return f"Error: {e}"
     return None
+
+
+def stop_ffmpeg(proc, logger, timeout: float = 5.0):
+    """
+    Correct process termination: SIGINT -> wait(timeout) -> SIGTERM -> wait -> SIGKILL.
+    Returns returncode or None on error.
+    """
+    if proc is None:
+        return None
+
+    if proc.poll() is not None:
+        return proc.returncode
+
+    try:
+        proc.send_signal(signal.SIGINT)
+    except Exception:
+        try:
+            proc.terminate()
+        except Exception:
+            pass
+
+    try:
+        proc.wait(timeout=timeout)
+        return proc.returncode
+    except subprocess.TimeoutExpired:
+        logger.warning("ffmpeg did not respond to SIGINT, sending SIGTERM.")
+        try:
+            proc.terminate()
+        except Exception:
+            pass
+        try:
+            proc.wait(timeout=timeout)
+            return proc.returncode
+        except subprocess.TimeoutExpired:
+            logger.warning("ffmpeg did not terminate, sending SIGKILL.")
+            try:
+                proc.kill()
+            except Exception:
+                pass
+            try:
+                proc.wait()
+            except Exception:
+                pass
+            return proc.returncode
+    
+
+def monitor_ffmpeg(proc, logger, camera_name: str, stop_event: threading.Event, max_restarts: int = 0):
+    """
+    Reads process stderr line by line, logs and raises errors in the logger.
+    If the process has exited — returns. For simplicity, restarts are not performed by default (max_restarts=0). 
+    If auto-restart is needed, max_restarts can be increased.
+    """
+    restarts = 0
+    while not stop_event.is_set():
+        if proc.poll() is not None:
+            rc = proc.returncode
+            if rc != 0 and rc != 255:
+                logger.error(f"ffmpeg process ({camera_name}) exited with code {rc}")
+            break
+
+        if proc.stderr is None:
+            time.sleep(0.1)
+            continue
+
+        raw = proc.stderr.readline()
+
+        if not raw:
+            time.sleep(0.05)
+            continue
+
+        line = raw.decode('utf-8', errors='replace').strip()
+        logger.debug(f"[ffmpeg {camera_name}] {line}")
+        lower = line.lower()
+        if 'error' in lower or 'failed' in lower or 'connection timed out' in lower or 'server returned' in lower:
+            logger.error(f"FFMPEG ERROR [{camera_name}]: {line}")
