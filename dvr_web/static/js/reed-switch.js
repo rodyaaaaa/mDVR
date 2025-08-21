@@ -60,6 +60,28 @@ function updateReedSwitchMode() {
     .catch((error) => console.error("Error fetching reed switch mode:", error));
 }
 
+// Fetch and update Sensors ON/OFF radio state
+function loadReedSwitchStatus() {
+  fetch("/reed-switch/get-reed-switch-status")
+    .then((response) => response.json())
+    .then((data) => {
+      const onRadio = document.getElementById("reed-switch-on");
+      const offRadio = document.getElementById("reed-switch-off");
+      if (!onRadio || !offRadio) return;
+
+      if (data && data.state === "on") {
+        onRadio.checked = true;
+        offRadio.checked = false;
+      } else {
+        offRadio.checked = true;
+        onRadio.checked = false;
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching reed switch status:", error);
+    });
+}
+
 function toggleReedSwitchMode() {
   showPreloader();
   const mode = document.querySelector(

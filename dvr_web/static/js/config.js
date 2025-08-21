@@ -470,6 +470,12 @@ function showSettingsTab(tabId) {
         loadVpnStatus();
         loadVpnConfig();
     }
+    // When showing Sensors settings, sync Reed Switch state and mode
+    if (tabId === 'sensors-settings-content') {
+        if (typeof loadReedSwitchStatus === 'function') loadReedSwitchStatus();
+        if (typeof updateReedSwitchMode === 'function') updateReedSwitchMode();
+        if (typeof updateReedSwitchTimeout === 'function') updateReedSwitchTimeout();
+    }
 }
 
 // Initialize configuration functionality

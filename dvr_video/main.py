@@ -84,7 +84,8 @@ def main():
             links_names.append(str(current_link + 1) + "24" + file_name)
 
         for process in jobs:
-            process.wait()
+            proc = process.get("proc")
+            proc.wait()
         if not photo_mode:
             for count, process in enumerate(jobs):
                 proc = process.get("proc")
