@@ -9,6 +9,12 @@ header {
     border-bottom: 2px solid #415a77;
 }
 
+/* Sidebar menu mode switch (hidden on desktop by default) */
+.menu-mode-switch {
+    display: none;
+    margin-bottom: 12px;
+}
+
 /* Hamburger (hidden on desktop by default) */
 .hamburger {
     display: none;
@@ -391,11 +397,9 @@ header p {
         flex-direction: column;
     }
 
-    /* Show hamburger on tablet/mobile */
-    .hamburger {
-        display: inline-block;
-        margin-right: 10px;
-    }
+    /* Tablets: show hamburger, header not clickable */
+    .hamburger { display: inline-block; margin-right: 10px; }
+    header { justify-content: space-between; cursor: default; user-select: auto; }
 
     /* Mobile sidebar becomes an overlay */
     .sidebar {
@@ -426,6 +430,9 @@ header p {
         margin: 0; /* ensure full width when sidebar overlays */
     }
 
+    /* Show mobile mode switch in the overlay sidebar */
+    .menu-mode-switch { display: block; }
+
     input, textarea, select {
         font-size: 14px;
     }
@@ -453,6 +460,52 @@ header p {
 }
 
 @media (max-width: 600px) {
+    /* Sidebar drops from top under header on phones */
+    .sidebar {
+        top: 56px;              /* place just below header */
+        left: 0;
+        right: 0;
+        width: 100vw;           /* span full viewport width */
+        max-width: none;        /* ensure independent of content */
+        box-sizing: border-box;
+        height: calc(100vh - 56px); /* fill full screen below header */
+        max-height: none;
+        overflow-y: auto;
+        overflow-x: hidden;     /* prevent horizontal scroll due to content */
+        border-right: none;
+        border-bottom: 2px solid #415a77;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+        transform: translateY(-100%);
+        transition: transform 0.25s ease-out;
+    }
+
+    .sidebar.open {
+        transform: translateY(0);
+    }
+
+    /* Backdrop covers content area below header */
+    .sidebar-backdrop.show {
+        display: block;
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 56px;              /* approx header height */
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 998;
+    }
+
+    /* Phones: header minimal and clickable, hide hamburger & extra info */
+    .hamburger { display: none; }
+    header { justify-content: center; cursor: pointer; user-select: none; position: relative; z-index: 1001; }
+    header .mode-switch { display: none; }
+    header .imei { display: none; }
+    header h1 { display: block !important; }
+
+    /* Phones: no right-shift on hover/active; active shifts slightly upward */
+    .sidebar button:hover { transform: none; }
+    .sidebar button.active { transform: translateY(-6px); }
+
     .cam-field {
         flex-direction: column;
         gap: 5px;
@@ -470,6 +523,8 @@ header p {
     button {
         font-size: 14px;
     }
+
+    /* Keep default header elements small-screen overrides below if needed */
 
     #videoPlayer {
         height: 200px;

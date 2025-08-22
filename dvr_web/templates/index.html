@@ -30,11 +30,24 @@
         <label for="mode-photo">Photo</label>
     </div>
     <h1>mDVR</h1>
-    <p aria-placeholder="None">IMEI: {{ program_options.imei }}</p>
+    <p class="imei" aria-placeholder="None">IMEI: {{ program_options.imei }}</p>
 </header>
 <div class="container">
     <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
     <aside id="sidebar" class="sidebar">
+        <div class="menu-mode-switch">
+            <div class="radio-group">
+                <input type="radio" id="menu-mode-video" name="write_mode_mobile" value="video"
+                       {% if program_options.photo_mode == 0 %}checked{% endif %}
+                       onchange="updateWriteModeMobile(this)">
+                <label for="menu-mode-video">Video</label>
+
+                <input type="radio" id="menu-mode-photo" name="write_mode_mobile" value="photo"
+                       {% if program_options.photo_mode == 1 %}checked{% endif %}
+                       onchange="updateWriteModeMobile(this)">
+                <label for="menu-mode-photo">Photo</label>
+            </div>
+        </div>
         <button class="active" onclick="showTab('home')">Home</button>
         <button onclick="showTab('cam-config')">RTSP</button>
         <button onclick="showTab('video-options')">Settings</button>
@@ -483,6 +496,7 @@
                 <h2 class="mr-auto">About</h2>
                 <button onclick="fetchAboutInfo()">Refresh</button>
             </div>
+            <div class="about-meta text-secondary mb-8">IMEI: <span id="about-imei">{{ program_options.imei }}</span></div>
             <div id="about-error" class="error-text hidden mb-8"></div>
             <div class="about-grid">
                 <div class="about-card">

@@ -409,6 +409,8 @@ function updateWriteMode() {
             if (result.success) {
                 toggleModeSettings(selectedMode);
                 showNotification('Recording mode updated!');
+                // Keep mobile radios in sync with desktop radios
+                syncWriteModeRadios(selectedMode);
             } else {
                 showNotification(`ERROR: ${result.error}`, true);
             }
@@ -428,6 +430,26 @@ function toggleModeSettings(mode) {
     photoModeElements.forEach(el => el.style.display = isPhotoMode ? 'flex' : 'none');
 }
 
+// Sync helper between header (desktop) radios and sidebar (mobile) radios
+function syncWriteModeRadios(mode) {
+    const desktopSelector = `input[name="write_mode"][value="${mode}"]`;
+    const mobileSelector = `input[name="write_mode_mobile"][value="${mode}"]`;
+    const desktopRadio = document.querySelector(desktopSelector);
+    const mobileRadio = document.querySelector(mobileSelector);
+    if (desktopRadio) desktopRadio.checked = true;
+    if (mobileRadio) mobileRadio.checked = true;
+}
+
+// Handler for mobile radios inside the sidebar
+function updateWriteModeMobile(el) {
+    if (!el) return;
+    const mode = el.value;
+    // Set the desktop radio to match, then reuse existing save flow
+    const desktopRadio = document.querySelector(`input[name="write_mode"][value="${mode}"]`);
+    if (desktopRadio) desktopRadio.checked = true;
+    updateWriteMode();
+}
+
 // IMEI update function
 function updateImei() {
     fetch('/get-imei')
@@ -436,6 +458,10 @@ function updateImei() {
             if (data.imei) {
                 const imeiElement = document.querySelector('header p');
                 imeiElement.textContent = `IMEI: ${data.imei}`;
+                const aboutImeiEl = document.getElementById('about-imei');
+                if (aboutImeiEl) {
+                    aboutImeiEl.textContent = data.imei;
+                }
             }
         })
         .catch(error => console.error('Error fetching IMEI:', error));
@@ -480,8 +506,10 @@ function showSettingsTab(tabId) {
 
 // Initialize configuration functionality
 document.addEventListener('DOMContentLoaded', () => {
-    const initialMode = document.querySelector('input[name="write_mode"]:checked').value;
+    const initialChecked = document.querySelector('input[name="write_mode"]:checked');
+    const initialMode = initialChecked ? initialChecked.value : 'video';
     toggleModeSettings(initialMode);
+    syncWriteModeRadios(initialMode);
     
     updateImei();
     

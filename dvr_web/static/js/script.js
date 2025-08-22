@@ -148,6 +148,10 @@ function openMobileMenu() {
   if (sidebar) sidebar.classList.add('open');
   if (backdrop) backdrop.classList.add('show');
   if (burger) burger.setAttribute('aria-expanded', 'true');
+  // On phones, prevent body scroll when dropdown menu is open
+  if (window.matchMedia('(max-width: 600px)').matches) {
+    document.body.classList.add('noscroll');
+  }
 }
 
 function closeMobileMenu() {
@@ -157,12 +161,14 @@ function closeMobileMenu() {
   if (sidebar) sidebar.classList.remove('open');
   if (backdrop) backdrop.classList.remove('show');
   if (burger) burger.setAttribute('aria-expanded', 'false');
+  document.body.classList.remove('noscroll');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const burger = document.getElementById('hamburger-btn');
   const backdrop = document.getElementById('sidebar-backdrop');
   const sidebar = document.getElementById('sidebar');
+  const headerEl = document.querySelector('header');
 
   if (burger) {
     burger.addEventListener('click', () => {
@@ -181,13 +187,25 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+  // Toggle menu by clicking header on smartphones only
+  if (headerEl) {
+    headerEl.addEventListener('click', (e) => {
+      // Only act on phone widths
+      if (!window.matchMedia('(max-width: 600px)').matches) return;
+      // Avoid toggling when clicking interactive controls inside header (if any)
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'LABEL' || target.closest('.mode-switch'))) return;
+      const isOpen = sidebar && sidebar.classList.contains('open');
+      if (isOpen) closeMobileMenu(); else openMobileMenu();
+    });
+  }
   // Close with Esc
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeMobileMenu();
   });
-  // Ensure closed when resizing to desktop
+  // Ensure closed when resizing out of phone breakpoint
   window.addEventListener('resize', () => {
-    if (window.innerWidth > 1024) closeMobileMenu();
+    if (window.innerWidth > 600) closeMobileMenu();
   });
 });
 
