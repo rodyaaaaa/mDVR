@@ -140,6 +140,57 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// Mobile sidebar controls
+function openMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  const burger = document.getElementById('hamburger-btn');
+  if (sidebar) sidebar.classList.add('open');
+  if (backdrop) backdrop.classList.add('show');
+  if (burger) burger.setAttribute('aria-expanded', 'true');
+}
+
+function closeMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  const burger = document.getElementById('hamburger-btn');
+  if (sidebar) sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('show');
+  if (burger) burger.setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const burger = document.getElementById('hamburger-btn');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  const sidebar = document.getElementById('sidebar');
+
+  if (burger) {
+    burger.addEventListener('click', () => {
+      const isOpen = sidebar && sidebar.classList.contains('open');
+      if (isOpen) closeMobileMenu(); else openMobileMenu();
+    });
+  }
+  if (backdrop) {
+    backdrop.addEventListener('click', closeMobileMenu);
+  }
+  if (sidebar) {
+    sidebar.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Close menu after selecting a tab on mobile
+        if (window.matchMedia('(max-width: 1024px)').matches) closeMobileMenu();
+      });
+    });
+  }
+  // Close with Esc
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMobileMenu();
+  });
+  // Ensure closed when resizing to desktop
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1024) closeMobileMenu();
+  });
+});
+
 // Tab switching function
 function showTab(tabId) {
   const currentTab = document.querySelector(".tab.active");
@@ -164,6 +215,10 @@ function showTab(tabId) {
       );
       activeButton.classList.add("active");
 
+      // Close mobile menu if open
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar && sidebar.classList.contains('open')) closeMobileMenu();
+
       if (tabId === "home") {
         setTimeout(optimizeDashboardLayout, 300);
       }
@@ -185,6 +240,10 @@ function showTab(tabId) {
       `.sidebar button[onclick="showTab('${tabId}')"]`,
     );
     activeButton.classList.add("active");
+
+    // Close mobile menu if open
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('open')) closeMobileMenu();
 
     if (tabId === "home") {
       setTimeout(optimizeDashboardLayout, 300);
