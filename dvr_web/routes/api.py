@@ -3,6 +3,11 @@ import subprocess
 import time
 import os
 import threading
+import math
+try:
+    import speedtest
+except Exception:
+    speedtest = None
 
 from flask import Blueprint, jsonify, request, send_from_directory
 from dvr_web.utils import load_config
@@ -409,3 +414,61 @@ def serve_stream_file(stream_id, filename):
     except Exception as e:
         print(f"Error serving stream file: {str(e)}")
         return jsonify({'error': str(e)}), 404
+
+
+@api_bp.route('/network-speedtest', methods=['GET'])
+def network_speedtest():
+    """Run a network speed test and return ping, download, and upload.
+
+    Returns JSON like:
+    {
+      "success": true,
+      "ping_ms": 21.5,
+      "download_mbps": 45.23,
+      "upload_mbps": 9.87,
+      "server": {"sponsor": "ISP", "name": "City", "country": "XX", "host": "..."},
+      "timestamp": 1712345678
+    }
+    """
+    try:
+        if speedtest is None:
+            return jsonify({
+                'success': False,
+                'error': 'speedtest-cli is not available on server'
+            }), 500
+
+        st = speedtest.Speedtest()
+        # Find best server
+        st.get_servers([])
+        best = st.get_best_server()
+
+        # Measure download and upload (bits per second)
+        down_bps = st.download()
+        up_bps = st.upload(pre_allocate=False)
+
+        ping_ms = float(best.get('latency')) if 'latency' in best else float(st.results.ping)
+
+        def bps_to_mbps(v):
+            if v is None:
+                return None
+            return round(float(v) / 1_000_000.0, 2)
+
+        result = {
+            'success': True,
+            'ping_ms': round(ping_ms, 2) if ping_ms is not None else None,
+            'download_mbps': bps_to_mbps(down_bps),
+            'upload_mbps': bps_to_mbps(up_bps),
+            'server': {
+                'sponsor': best.get('sponsor'),
+                'name': best.get('name'),
+                'country': best.get('country'),
+                'host': best.get('host'),
+            },
+            'timestamp': int(time.time())
+        }
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

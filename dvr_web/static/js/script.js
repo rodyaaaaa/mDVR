@@ -385,6 +385,67 @@ async function fetchNetworkInfo() {
 // Expose to global for inline handlers
 window.fetchNetworkInfo = fetchNetworkInfo;
 
+// Run network speed test and render results
+async function runNetworkSpeedtest() {
+  const btn = document.getElementById('speedtest-btn');
+  const statusEl = document.getElementById('speedtest-status');
+  const resultsEl = document.getElementById('speedtest-results');
+  const restoreBtn = () => {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Run Speed Test';
+    }
+  };
+  try {
+    if (statusEl) statusEl.textContent = 'Running speed test... This may take up to 1–2 minutes.';
+    if (resultsEl) resultsEl.textContent = '';
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Running...';
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 180000); // 3 min safety timeout
+    const res = await fetch('/api/network-speedtest', { signal: controller.signal });
+    clearTimeout(timeout);
+
+    let data = {};
+    try { data = await res.json(); } catch (_) { /* ignore */ }
+    if (!res.ok) {
+      const msg = (data && (data.error || data.message)) ? data.error || data.message : `HTTP ${res.status}`;
+      throw new Error(msg);
+    }
+
+    if (!data || data.success === false) {
+      const msg = (data && (data.error || data.message)) ? data.error || data.message : 'Unknown error';
+      throw new Error(msg);
+    }
+
+    const lines = [];
+    if (data.ping_ms != null) lines.push(`Ping: ${Number(data.ping_ms).toFixed(1)} ms`);
+    if (data.download_mbps != null) lines.push(`Download: ${Number(data.download_mbps).toFixed(2)} Mbps`);
+    if (data.upload_mbps != null) lines.push(`Upload: ${Number(data.upload_mbps).toFixed(2)} Mbps`);
+    if (data.server) {
+      const s = data.server;
+      const label = [s.sponsor, s.name, s.country].filter(Boolean).join(' — ');
+      lines.push(`Server: ${label}${s.host ? ` (${s.host})` : ''}`);
+    }
+    if (data.timestamp) lines.push(`Time: ${data.timestamp}`);
+
+    if (statusEl) statusEl.textContent = 'Completed';
+    if (resultsEl) resultsEl.textContent = lines.join('\n');
+  } catch (e) {
+    console.error('Speedtest error', e);
+    if (statusEl) statusEl.textContent = 'Error';
+    if (resultsEl) resultsEl.textContent = `Failed to run speed test: ${e && e.message ? e.message : e}`;
+  } finally {
+    restoreBtn();
+  }
+}
+
+// Expose to global for inline handler
+window.runNetworkSpeedtest = runNetworkSpeedtest;
+
 // Fetch and render About info (hardware + program)
 async function fetchAboutInfo() {
   const errEl = document.getElementById('about-error');

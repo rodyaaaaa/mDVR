@@ -377,12 +377,21 @@
             <div id="system-network-content" class="settings-content">
                 <div class="settings-section-header">
                     <h2>Network</h2>
-                    <button onclick="fetchNetworkInfo()">Refresh</button>
+                    <div class="flex gap-10">
+                        <button onclick="fetchNetworkInfo()">Refresh</button>
+                        <button id="speedtest-btn" onclick="runNetworkSpeedtest()">Run Speed Test</button>
+                    </div>
                 </div>
                 <div class="network-summary text-secondary mb-12">
                     <strong>IPv4:</strong> <span id="net-ipv4-list">-</span>
                 </div>
                 <div id="network-interfaces" class="network-interfaces flex-col gap-10"></div>
+
+                <div class="speedtest-section mt-16">
+                    <h3 class="section-title mb-8">Speed Test</h3>
+                    <div id="speedtest-status" class="text-secondary mb-8">Idle</div>
+                    <div id="speedtest-results" class="code-block" style="white-space: pre-wrap;">Press "Run Speed Test" to measure ping, download, upload.</div>
+                </div>
 
                 <div class="iptables-section mt-16">
                     <h3 class="section-title mb-8">iptables — Raw Filter rules</h3>
