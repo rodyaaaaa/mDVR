@@ -36,7 +36,8 @@
     box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     pointer-events: none; /* Prevent interaction with contents while dragging */
     animation: none; /* Disable any animations during drag */
-    transition: none; /* Disable transitions during drag for responsiveness */
+    transition: none !important; /* Disable transitions during drag for responsiveness */
+    transform: none !important; /* Reset any transforms */
     cursor: grabbing;
 }
 

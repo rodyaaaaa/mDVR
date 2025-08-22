@@ -14,6 +14,10 @@ class GridLayout {
         this.editMode = false;
         this.lastSwapTime = null;
         this.gridSize = { cols: 6, rows: 0 }; // Кількість колонок у сітці
+        // Small visual offset so the ghost card sits to the left of the cursor
+        // Load from localStorage if available; otherwise use a tuned default
+        const savedOffsetX = parseInt(localStorage.getItem('dragGhostOffsetX'), 10);
+        this.dragVisualOffset = { x: Number.isFinite(savedOffsetX) ? savedOffsetX : 140, y: 0 };
         
         this.init();
     }
@@ -155,29 +159,29 @@ class GridLayout {
         this.isDragging = true;
         this.dragItem = item;
         
-        // Store initial position - use offset from cursor to card corner
+        // Store half width and height to center the card on cursor
         this.dragStartPosition = {
             x: clientX,
             y: clientY,
-            offsetX: clientX - rect.left,
-            offsetY: clientY - rect.top
+            offsetX: rect.width / 2,
+            offsetY: rect.height / 2
         };
         
-        // Set the item's position to absolute to keep it with the cursor
-        item.style.position = 'absolute';
+        // Create placeholder before moving the item
+        this.createPlaceholder(item);
+        
+        // Set the item's position to fixed for viewport-relative positioning
+        item.style.position = 'fixed';
         item.style.width = `${rect.width}px`;
         item.style.height = `${rect.height}px`;
         item.style.zIndex = '1000';
         
-        // Position it exactly where it is currently to avoid jumps
-        item.style.top = `${rect.top}px`;
-        item.style.left = `${rect.left}px`;
+        // Center it on the cursor with a slight left visual offset
+        item.style.left = `${clientX - rect.width / 2 - this.dragVisualOffset.x}px`;
+        item.style.top = `${clientY - rect.height / 2}px`;
         
         // Add dragging class
         item.classList.add('dragging');
-        
-        // Create placeholder
-        this.createPlaceholder(item);
     }
     
     onDragMove(e) {
@@ -189,13 +193,9 @@ class GridLayout {
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         
-        // Calculate actual page position (accounting for scroll)
-        const scrollX = window.scrollX || window.pageXOffset;
-        const scrollY = window.scrollY || window.pageYOffset;
-        
-        // Set direct position rather than using transform for more stable dragging
-        // Adjust position by the initial offset to keep cursor on the same spot on the card
-        const left = clientX - this.dragStartPosition.offsetX;
+        // Center the card on the cursor with a slight left visual offset
+        // Since we're using fixed positioning, use viewport coordinates directly
+        const left = clientX - this.dragStartPosition.offsetX - this.dragVisualOffset.x;
         const top = clientY - this.dragStartPosition.offsetY;
         
         // Use requestAnimationFrame for smoother updates
@@ -274,31 +274,30 @@ class GridLayout {
             const placeholder = this.container.querySelector('.grid-item-placeholder');
             
             if (placeholder) {
-                // Get grid position from placeholder
-                const gridColumnStart = placeholder.style.gridColumn.split(' ')[0];
-                const gridRowStart = placeholder.style.gridRow.split(' ')[0];
-                
                 // Apply grid position to the dragged item
                 this.dragItem.style.gridColumn = placeholder.style.gridColumn;
                 this.dragItem.style.gridRow = placeholder.style.gridRow;
                 
-                // Reset the item's position to static and clear inline styles
-                this.dragItem.style.position = '';
-                this.dragItem.style.top = '';
-                this.dragItem.style.left = '';
-                this.dragItem.style.width = '';
-                this.dragItem.style.height = '';
-                this.dragItem.style.zIndex = '';
-                
                 // Remove the placeholder
                 this.container.removeChild(placeholder);
             }
+            
+            // Reset the item's position to static and clear inline styles
+            this.dragItem.style.position = '';
+            this.dragItem.style.top = '';
+            this.dragItem.style.left = '';
+            this.dragItem.style.width = '';
+            this.dragItem.style.height = '';
+            this.dragItem.style.zIndex = '';
             
             // Remove dragging class
             this.dragItem.classList.remove('dragging');
             
             // Save the new layout
             this.saveLayoutConfig();
+            
+            // Clean up reference
+            this.dragItem = null;
         }
     }
     
@@ -559,6 +558,14 @@ class GridLayout {
         // Force a layout recalculation
         this.refreshLayout();
     }
+    
+    // Allow tuning the drag ghost horizontal offset at runtime and persist it
+    setDragGhostOffset(px) {
+        const val = parseInt(px, 10);
+        if (!Number.isFinite(val)) return;
+        this.dragVisualOffset.x = val;
+        try { localStorage.setItem('dragGhostOffsetX', String(val)); } catch (e) {}
+    }
 }
 
 // Reset layout function - can be called from console or added as a button
@@ -570,6 +577,8 @@ function resetDashboardLayout() {
 // Initialize grid layout when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     const gridLayout = new GridLayout('dashboard-grid');
+    // Expose for console tuning: window.gridLayout.setDragGhostOffset(130)
+    window.gridLayout = gridLayout;
     
     // Add edit mode toggle and reset buttons to the dashboard
     const homeTab = document.getElementById('home');
