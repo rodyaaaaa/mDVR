@@ -99,6 +99,11 @@
     border-radius: 12px;
     transition: all 0.2s ease;
     animation: pulsePlaceholder 1.5s infinite;
+    /* Ensure sizing matches real cards */
+    position: relative;
+    box-sizing: border-box;
+    padding: 20px; /* same as .grid-item */
+    pointer-events: none;
 }
 
 @keyframes pulsePlaceholder {

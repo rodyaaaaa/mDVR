@@ -14,6 +14,8 @@ class GridLayout {
         this.editMode = false;
         this.lastSwapTime = null;
         this.gridSize = { cols: 6, rows: 0 }; // Кількість колонок у сітці
+        // Track last valid placeholder position during drag
+        this.lastValidPosition = null;
         // Small visual offset so the ghost card sits to the left of the cursor
         // Load from localStorage if available; otherwise use a tuned default
         const savedOffsetX = parseInt(localStorage.getItem('dragGhostOffsetX'), 10);
@@ -155,6 +157,8 @@ class GridLayout {
         
         // Get item's current position and size
         const rect = item.getBoundingClientRect();
+        // Cache dragged item rect for placeholder sizing
+        this.dragItemRect = rect;
         
         this.isDragging = true;
         this.dragItem = item;
@@ -222,14 +226,14 @@ class GridLayout {
         const cellHeight = 190; // Приблизна висота комірки з урахуванням відступів
         
         // Визначаємо розмір картки в комірках сітки
-        let colSpan = 2; // За замовчуванням, маленька картка (size-1x1) займає 2 колонки
-        if (this.dragItem.classList.contains('size-2x1') || this.dragItem.classList.contains('size-2x2')) {
-            colSpan = 4; // Велика картка займає 4 колонки
-        }
+        const { colSpan, rowSpan } = this.getItemSpan(this.dragItem);
         
         // Визначаємо найближчу комірку для лівого верхнього кута картки
-        const cellX = Math.max(0, Math.floor(x / cellWidth));
-        const cellY = Math.max(0, Math.floor(y / cellHeight));
+        let cellX = Math.max(0, Math.floor(x / cellWidth));
+        let cellY = Math.max(0, Math.floor(y / cellHeight));
+        // Обмежуємо, щоб картка повністю помістилась у сітці
+        cellX = Math.min(cellX, this.gridSize.cols - colSpan);
+        if (cellX < 0) cellX = 0;
         
         // Знаходимо всі картки, щоб перевірити, чи є вільне місце
         const items = Array.from(this.container.querySelectorAll('.grid-item:not(.dragging)'));
@@ -240,27 +244,30 @@ class GridLayout {
             this.container.removeChild(placeholder);
         }
         
-        // Створюємо новий placeholder в потрібній позиції
-        const newPlaceholder = document.createElement('div');
-        newPlaceholder.className = 'grid-item-placeholder';
-        
-        // Встановлюємо розмір placeholder відповідно до розміру картки
-        if (this.dragItem.classList.contains('size-1x1')) {
-            newPlaceholder.style.gridColumn = `${cellX + 1} / span 2`;
-            newPlaceholder.style.gridRow = `${cellY + 1} / span 1`;
-        } else if (this.dragItem.classList.contains('size-1x2')) {
-            newPlaceholder.style.gridColumn = `${cellX + 1} / span 2`;
-            newPlaceholder.style.gridRow = `${cellY + 1} / span 2`;
-        } else if (this.dragItem.classList.contains('size-2x1')) {
-            newPlaceholder.style.gridColumn = `${cellX + 1} / span 4`;
-            newPlaceholder.style.gridRow = `${cellY + 1} / span 1`;
-        } else if (this.dragItem.classList.contains('size-2x2')) {
-            newPlaceholder.style.gridColumn = `${cellX + 1} / span 4`;
-            newPlaceholder.style.gridRow = `${cellY + 1} / span 2`;
+        // Кандидатна позиція
+        const startCol = cellX + 1;
+        const startRow = cellY + 1;
+
+        // Перевірка на перетин з іншими картками
+        const valid = this.isPositionAvailable(startCol, startRow, colSpan, rowSpan, this.dragItem);
+
+        if (valid) {
+            const newPlaceholder = document.createElement('div');
+            newPlaceholder.className = 'grid-item-placeholder';
+            newPlaceholder.style.gridColumn = `${startCol} / span ${colSpan}`;
+            newPlaceholder.style.gridRow = `${startRow} / span ${rowSpan}`;
+            // Make placeholder visually match dragged item height
+            if (this.dragItemRect) {
+                newPlaceholder.style.height = `${this.dragItemRect.height}px`;
+                newPlaceholder.style.minHeight = `${this.dragItemRect.height}px`;
+            }
+            this.container.appendChild(newPlaceholder);
+            // Запам'ятовуємо останню валідну позицію
+            this.lastValidPosition = { startCol, startRow, colSpan, rowSpan };
+        } else {
+            // Якщо позиція невалідна — не додаємо placeholder, тим самим забороняємо розміщення
+            // Можна додатково підсвітити dragItem як невалідний
         }
-        
-        // Додаємо placeholder до контейнера
-        this.container.appendChild(newPlaceholder);
     }
     
     onDragEnd(e) {
@@ -280,6 +287,10 @@ class GridLayout {
                 
                 // Remove the placeholder
                 this.container.removeChild(placeholder);
+            } else if (this.lastValidPosition) {
+                // Якщо placeholder відсутній, але є остання валідна позиція — застосовуємо її
+                this.dragItem.style.gridColumn = `${this.lastValidPosition.startCol} / span ${this.lastValidPosition.colSpan}`;
+                this.dragItem.style.gridRow = `${this.lastValidPosition.startRow} / span ${this.lastValidPosition.rowSpan}`;
             }
             
             // Reset the item's position to static and clear inline styles
@@ -298,6 +309,8 @@ class GridLayout {
             
             // Clean up reference
             this.dragItem = null;
+            this.lastValidPosition = null;
+            this.dragItemRect = null;
         }
     }
     
@@ -388,9 +401,103 @@ class GridLayout {
             placeholder.style.gridColumn = 'span 4';
             placeholder.style.gridRow = 'span 2';
         }
+        // Ensure placeholder height matches the dragged item's current height
+        const r = this.dragItemRect || item.getBoundingClientRect();
+        if (r) {
+            placeholder.style.height = `${r.height}px`;
+            placeholder.style.minHeight = `${r.height}px`;
+        }
         
         // Insert placeholder at the same position
         this.container.insertBefore(placeholder, item);
+    }
+
+    // Повертає розмір елемента у термінах сітки (колонки/ряди)
+    getItemSpan(item) {
+        let colSpan = 2;
+        let rowSpan = 1;
+        if (item.classList.contains('size-1x2')) rowSpan = 2;
+        if (item.classList.contains('size-2x1')) colSpan = 4;
+        if (item.classList.contains('size-2x2')) { colSpan = 4; rowSpan = 2; }
+        return { colSpan, rowSpan };
+    }
+
+    // Розбір позиції елемента у сітці (початкові кол/ряд і span)
+    parseGridPosition(item) {
+        const style = item.style;
+        const computed = window.getComputedStyle(item);
+
+        // Спроба прочитати inline-стиль «gridColumn: "X / span N"»
+        const parsePair = (value, startProp, endProp) => {
+            if (value) {
+                const parts = value.split('/').map(s => s.trim());
+                const start = parseInt(parts[0], 10);
+                let span = null;
+                if (parts[1]) {
+                    const m = parts[1].match(/span\s+(\d+)/);
+                    if (m) span = parseInt(m[1], 10);
+                }
+                return { start, span };
+            }
+            // Фолбек: беремо обчислені значення
+            const startStr = computed.getPropertyValue(startProp);
+            const endStr = computed.getPropertyValue(endProp);
+            const start = parseInt(startStr, 10);
+            let span = null;
+            if (/span/.test(endStr)) {
+                const m = endStr.match(/span\s+(\d+)/);
+                if (m) span = parseInt(m[1], 10);
+            } else {
+                const end = parseInt(endStr, 10);
+                if (Number.isFinite(start) && Number.isFinite(end)) span = Math.max(1, end - start);
+            }
+            if (!Number.isFinite(start) || !Number.isFinite(span)) return null;
+            return { start, span };
+        };
+
+        const col = parsePair(style.gridColumn, 'grid-column-start', 'grid-column-end');
+        const row = parsePair(style.gridRow, 'grid-row-start', 'grid-row-end');
+        if (!col || !row) return null;
+        return { startCol: col.start, colSpan: col.span, startRow: row.start, rowSpan: row.span };
+    }
+
+    // Збір зайнятих прямокутників сітки іншими елементами
+    getOccupiedRects(excludeEl = null) {
+        const rects = [];
+        this.items.forEach(it => {
+            if (excludeEl && it === excludeEl) return;
+            const pos = this.parseGridPosition(it);
+            if (!pos) return;
+            rects.push({
+                startCol: pos.startCol,
+                endCol: pos.startCol + pos.colSpan - 1,
+                startRow: pos.startRow,
+                endRow: pos.startRow + pos.rowSpan - 1
+            });
+        });
+        return rects;
+    }
+
+    // Перевірка колізій для прямокутника (startCol/startRow з розміром colSpan/rowSpan)
+    isPositionAvailable(startCol, startRow, colSpan, rowSpan, excludeEl = null) {
+        // Вихід за межі
+        if (startCol < 1 || startRow < 1) return false;
+        if (startCol + colSpan - 1 > this.gridSize.cols) return false;
+
+        const cand = {
+            startCol,
+            endCol: startCol + colSpan - 1,
+            startRow,
+            endRow: startRow + rowSpan - 1
+        };
+        const others = this.getOccupiedRects(excludeEl);
+        // Перевіряємо перетин прямокутників
+        for (const r of others) {
+            const colOverlap = !(cand.endCol < r.startCol || cand.startCol > r.endCol);
+            const rowOverlap = !(cand.endRow < r.startRow || cand.startRow > r.endRow);
+            if (colOverlap && rowOverlap) return false;
+        }
+        return true;
     }
     
     saveLayoutConfig() {
