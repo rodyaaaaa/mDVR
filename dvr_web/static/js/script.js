@@ -181,9 +181,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (sidebar) {
     sidebar.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        // Close menu after selecting a tab on mobile
-        if (window.matchMedia('(max-width: 1024px)').matches) closeMobileMenu();
+      btn.addEventListener('click', (e) => {
+        // Close menu after selecting a tab on mobile, except when opening a submenu
+        if (!window.matchMedia('(max-width: 1024px)').matches) return;
+        // If a mobile submenu is currently open, do not auto-close on main button clicks
+        if (sidebar.classList && sidebar.classList.contains('mobile-submenu-open')) return;
+        // On phones, prevent auto-close for buttons that open submenus (Settings/System)
+        const oc = btn.getAttribute('onclick') || '';
+        const isPhone = window.matchMedia('(max-width: 600px)').matches;
+        const opensSubmenu = isPhone && (oc.includes("showTab('video-options')") || oc.includes("showTab('system')"));
+        if (opensSubmenu) return;
+        closeMobileMenu();
       });
     });
   }
@@ -207,6 +215,149 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', () => {
     if (window.innerWidth > 600) closeMobileMenu();
   });
+
+  // Mobile submenu setup for Settings and System
+  if (sidebar) {
+    // Ensure submenu container exists
+    let submenuContainer = sidebar.querySelector('.mobile-submenu-container');
+    if (!submenuContainer) {
+      submenuContainer = document.createElement('div');
+      submenuContainer.className = 'mobile-submenu-container';
+      sidebar.appendChild(submenuContainer);
+    }
+
+    const createBackButton = (label = 'Back') => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mobile-back-btn';
+      btn.innerHTML = `
+        <span aria-hidden="true">&#8592;</span>
+        <span>${label}</span>
+      `;
+      btn.addEventListener('click', () => closeMobileSubmenu());
+      return btn;
+    };
+
+    const clearSubmenu = () => {
+      if (submenuContainer) submenuContainer.innerHTML = '';
+    };
+
+    const openMobileSubmenu = (context) => {
+      if (!window.matchMedia('(max-width: 600px)').matches) return false; // Only on phones
+      clearSubmenu();
+      const list = document.createElement('div');
+      list.className = 'mobile-submenu-list';
+
+      if (context === 'settings') {
+        // Build from #video-options .settings-tab buttons
+        const tabs = document.querySelectorAll('#video-options .settings-tab');
+        tabs.forEach((tabBtn) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'submenu-item';
+          item.textContent = tabBtn.textContent.trim();
+          // Derive content id from the tab id, or fallback by parsing onclick
+          let contentId = '';
+          if (tabBtn.id && tabBtn.id.endsWith('-tab')) {
+            contentId = tabBtn.id.replace(/-tab$/, '-content');
+          } else {
+            const oc = tabBtn.getAttribute('onclick') || '';
+            const m = oc.match(/showSettingsTab\('([^']+)'\)/);
+            if (m) contentId = m[1];
+          }
+          item.addEventListener('click', () => {
+            showTab('video-options');
+            if (typeof showSettingsTab === 'function' && contentId) {
+              showSettingsTab(contentId);
+            }
+            // Close menus on selection
+            closeMobileSubmenu();
+            closeMobileMenu();
+          });
+          list.appendChild(item);
+        });
+        submenuContainer.appendChild(createBackButton('Back'));
+        submenuContainer.appendChild(list);
+        sidebar.classList.add('mobile-submenu-open');
+        return true;
+      }
+
+      if (context === 'system') {
+        const tabs = document.querySelectorAll('#system .settings-tab');
+        tabs.forEach((tabBtn) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'submenu-item';
+          item.textContent = tabBtn.textContent.trim();
+          let contentId = '';
+          if (tabBtn.id && tabBtn.id.endsWith('-tab')) {
+            contentId = tabBtn.id.replace(/-tab$/, '-content');
+          } else {
+            const oc = tabBtn.getAttribute('onclick') || '';
+            const m = oc.match(/showSystemTab\('([^']+)'\)/);
+            if (m) contentId = m[1];
+          }
+          item.addEventListener('click', () => {
+            showTab('system');
+            if (typeof showSystemTab === 'function' && contentId) {
+              showSystemTab(contentId);
+            }
+            closeMobileSubmenu();
+            closeMobileMenu();
+          });
+          list.appendChild(item);
+        });
+        submenuContainer.appendChild(createBackButton('Back'));
+        submenuContainer.appendChild(list);
+        sidebar.classList.add('mobile-submenu-open');
+        return true;
+      }
+
+      return false;
+    };
+
+    const closeMobileSubmenu = () => {
+      clearSubmenu();
+      sidebar.classList.remove('mobile-submenu-open');
+    };
+
+    // Hook Settings and System buttons
+    const btnSettings = sidebar.querySelector('button[onclick="showTab(\'video-options\')"]');
+    const btnSystem = sidebar.querySelector('button[onclick="showTab(\'system\')"]');
+
+    if (btnSettings) {
+      const original = btnSettings.onclick;
+      btnSettings.onclick = function (e) {
+        if (e) e.stopPropagation();
+        if (window.matchMedia('(max-width: 600px)').matches) {
+          e && e.preventDefault();
+          if (!openMobileSubmenu('settings') && original) original.call(this, e);
+        } else if (original) {
+          original.call(this, e);
+        }
+      };
+    }
+
+    if (btnSystem) {
+      const original = btnSystem.onclick;
+      btnSystem.onclick = function (e) {
+        if (e) e.stopPropagation();
+        if (window.matchMedia('(max-width: 600px)').matches) {
+          e && e.preventDefault();
+          if (!openMobileSubmenu('system') && original) original.call(this, e);
+        } else if (original) {
+          original.call(this, e);
+        }
+      };
+    }
+
+    // Close submenu when leaving mobile width
+    window.addEventListener('resize', () => {
+      if (!window.matchMedia('(max-width: 600px)').matches) {
+        closeMobileSubmenu();
+      }
+    });
+  }
 });
 
 // Tab switching function
