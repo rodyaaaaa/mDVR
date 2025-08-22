@@ -319,6 +319,11 @@
     100% { opacity: 1; }
 }
 
+/* Hide the corner resize icon on cards */
+.resize-handle {
+    display: none !important;
+}
+
 /* Responsive adjustments */
 @media (min-width: 1025px) {
     .grid-container {
@@ -345,4 +350,9 @@
     .grid-item {
         grid-column: span 2 !important;
     }
-} 
+}
+
+/* Force-hide dashboard controls panel */
+.dashboard-controls {
+    display: none !important;
+}
