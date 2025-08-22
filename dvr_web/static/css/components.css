@@ -1187,3 +1187,11 @@
     background: #000;
     display: block;
 }
+
+/* Hide in-page settings tabs on phones; mobile submenu in sidebar is used */
+@media (max-width: 600px) {
+    #video-options .settings-tabs,
+    #system .settings-tabs {
+        display: none !important;
+    }
+}

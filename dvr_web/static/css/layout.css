@@ -564,6 +564,12 @@ body.noscroll {
     /* Mobile submenu container spacing */
     .mobile-submenu-container { margin-top: 6px; }
 
+    /* Hide in-page sub-tab bars on phones; use sidebar submenu instead */
+    #system .settings-tabs,
+    #video-options .settings-tabs {
+        display: none;
+    }
+
     .cam-field {
         flex-direction: column;
         gap: 5px;
