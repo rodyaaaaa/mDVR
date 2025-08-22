@@ -557,6 +557,45 @@ body.noscroll {
     header .imei { display: none; }
     header h1 { display: block !important; }
 
+    /* Border outline for the arrow (placed under the white arrow) */
+    header::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: -6px; /* keep 2px lower than the white arrow to create a visible border */
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 10px solid #415a77; /* same as header bottom border color */
+        pointer-events: none;
+        transition: transform 0.2s ease;
+    }
+
+    /* Down arrow indicator at the bottom center of header on phones */
+    header::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: -4px; /* slightly overlaps the border to sit on the edge */
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 8px solid #ffffff; /* white downward triangle */
+        opacity: 0.85;
+        pointer-events: none; /* don't block taps on header */
+        transition: transform 0.2s ease;
+    }
+
+    /* When menu is open (body gains noscroll), rotate arrow upwards smoothly */
+    body.noscroll header::before,
+    body.noscroll header::after {
+        transform: translateX(-50%) rotate(180deg);
+    }
+
     /* Phones: no right-shift on hover/active; active shifts slightly upward */
     .sidebar button:hover { transform: none; }
     .sidebar button.active { transform: translateY(-6px); }
