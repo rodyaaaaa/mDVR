@@ -347,6 +347,7 @@
                 <button id="system-services-tab" class="settings-tab active" onclick="showSystemTab('system-services-content')">Services</button>
                 <button id="system-network-tab" class="settings-tab" onclick="showSystemTab('system-network-content')">Network</button>
                 <button id="system-control-tab" class="settings-tab" onclick="showSystemTab('system-control-content')">Control</button>
+                <button id="system-logs-tab" class="settings-tab" onclick="showSystemTab('system-logs-content')">Logs</button>
             </div>
 
             <div id="system-services-content" class="settings-content active">
@@ -441,6 +442,36 @@
                 <div id="terminal-status" class="status-text mt-8">Disconnected</div>
                 <div class="flex justify-end mt-12">
                     <button id="reboot-device-btn" class="stop-button" onclick="rebootDevice()">Restart Device</button>
+                </div>
+            </div>
+            <div id="system-logs-content" class="settings-content">
+                <div class="settings-section-header flex align-center gap-10">
+                    <h2 class="mr-auto">Logs</h2>
+                    <button onclick="reloadLogsView()">Refresh</button>
+                </div>
+                <div class="flex gap-12 align-start mt-8">
+                    <div class="flex-col gap-8" style="min-width: 260px;">
+                        <div class="input-row">
+                            <label for="logs-service-select">Service:</label>
+                            <select id="logs-service-select" class="input-dark" onchange="onLogsServiceChange()">
+                                <option value="" disabled selected hidden>Select service...</option>
+                            </select>
+                        </div>
+                        <div class="input-row mt-8">
+                            <label for="logs-file-select">File:</label>
+                            <select id="logs-file-select" class="input-dark" onchange="onLogsFileChange()">
+                                <option value="" disabled selected hidden>Select file...</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-12 mt-8">
+                            <button class="btn-dark" onclick="loadNewerLogs()">Newer</button>
+                            <button class="btn-dark" onclick="loadOlderLogs()">Older</button>
+                        </div>
+                        <div class="text-secondary" id="logs-meta">-</div>
+                    </div>
+                    <div class="flex-1">
+                        <pre id="logs-viewer" class="code-block" style="min-height: 360px; white-space: pre-wrap;">Select a service and a file...</pre>
+                    </div>
                 </div>
             </div>
          </div>

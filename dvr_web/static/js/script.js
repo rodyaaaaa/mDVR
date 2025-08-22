@@ -256,6 +256,10 @@ function showSystemTab(tabId) {
   if (tabId === 'system-network-content') {
     window.fetchNetworkInfo();
   }
+  // Initialize Logs tab
+  if (tabId === 'system-logs-content') {
+    if (typeof initLogsTab === 'function') initLogsTab();
+  }
   // Load about info when opening About tab
   if (tabId === 'system-about-content') {
     if (typeof fetchAboutInfo === 'function') fetchAboutInfo();
@@ -593,3 +597,157 @@ async function rebootDevice() {
 
 // Expose to global for inline handler
 window.rebootDevice = rebootDevice;
+
+// ================= Logs Tab =================
+const logsState = {
+  service: '',
+  file: '',
+  offset: 0,
+  limit: 200,
+};
+
+async function initLogsTab() {
+  try {
+    // Reset state
+    logsState.service = '';
+    logsState.file = '';
+    logsState.offset = 0;
+    const svcSel = document.getElementById('logs-service-select');
+    const fileSel = document.getElementById('logs-file-select');
+    const viewer = document.getElementById('logs-viewer');
+    const meta = document.getElementById('logs-meta');
+    if (svcSel) { svcSel.innerHTML = '<option value="" disabled selected hidden>Select service...</option>'; }
+    if (fileSel) { fileSel.innerHTML = '<option value="" disabled selected hidden>Select file...</option>'; }
+    if (viewer) viewer.textContent = 'Loading services...';
+    if (meta) meta.textContent = '-';
+    await fetchLogServices();
+    if (viewer && (!logsState.service || !logsState.file)) {
+      viewer.textContent = 'Select a service and a file...';
+    }
+  } catch (e) {
+    console.error('initLogsTab error', e);
+  }
+}
+
+async function fetchLogServices() {
+  const svcSel = document.getElementById('logs-service-select');
+  try {
+    const res = await fetch('/logs/list-services');
+    const data = await res.json();
+    const services = Array.isArray(data.services) ? data.services : [];
+    if (svcSel) {
+      // Preserve first placeholder
+      services.forEach((s) => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        svcSel.appendChild(opt);
+      });
+    }
+  } catch (e) {
+    console.error('fetchLogServices error', e);
+  }
+}
+
+async function onLogsServiceChange() {
+  const svcSel = document.getElementById('logs-service-select');
+  const fileSel = document.getElementById('logs-file-select');
+  const viewer = document.getElementById('logs-viewer');
+  const svc = svcSel ? svcSel.value : '';
+  logsState.service = svc;
+  logsState.file = '';
+  logsState.offset = 0;
+  if (fileSel) {
+    fileSel.innerHTML = '<option value="" disabled selected hidden>Select file...</option>';
+  }
+  if (viewer) viewer.textContent = 'Loading files...';
+  await fetchLogFiles(svc);
+  if (viewer) viewer.textContent = 'Select a file...';
+}
+
+async function fetchLogFiles(service) {
+  const fileSel = document.getElementById('logs-file-select');
+  try {
+    const url = new URL('/logs/list-files', window.location.origin);
+    url.searchParams.set('service', service);
+    const res = await fetch(url);
+    const data = await res.json();
+    const files = Array.isArray(data.files) ? data.files : [];
+    if (fileSel) {
+      files.sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+      files.forEach((f) => {
+        const opt = document.createElement('option');
+        opt.value = f.name;
+        const date = f.mtime ? new Date(f.mtime * 1000).toLocaleString() : '';
+        opt.textContent = date ? `${f.name} — ${date}` : f.name;
+        fileSel.appendChild(opt);
+      });
+    }
+  } catch (e) {
+    console.error('fetchLogFiles error', e);
+  }
+}
+
+async function onLogsFileChange() {
+  const fileSel = document.getElementById('logs-file-select');
+  const f = fileSel ? fileSel.value : '';
+  logsState.file = f;
+  logsState.offset = 0;
+  await loadLogsPage();
+}
+
+async function loadLogsPage() {
+  const viewer = document.getElementById('logs-viewer');
+  const meta = document.getElementById('logs-meta');
+  if (!logsState.service || !logsState.file) {
+    if (viewer) viewer.textContent = 'Select a service and a file...';
+    if (meta) meta.textContent = '-';
+    return;
+  }
+  try {
+    if (viewer) viewer.textContent = 'Loading...';
+    const url = new URL('/logs/read', window.location.origin);
+    url.searchParams.set('service', logsState.service);
+    url.searchParams.set('file', logsState.file);
+    url.searchParams.set('limit', String(logsState.limit));
+    url.searchParams.set('offset', String(logsState.offset));
+    const res = await fetch(url);
+    const data = await res.json();
+    const lines = Array.isArray(data.lines) ? data.lines : [];
+    if (viewer) viewer.textContent = lines.join('\n');
+    if (meta) meta.textContent = `${logsState.service}/${logsState.file} • lines: ${lines.length} • offset: ${logsState.offset}`;
+    // Keep next_offset in state for convenience
+    if (typeof data.next_offset === 'number') logsState.next_offset = data.next_offset;
+  } catch (e) {
+    console.error('loadLogsPage error', e);
+    if (viewer) viewer.textContent = 'Error loading logs';
+  }
+}
+
+async function loadOlderLogs() {
+  if (!logsState.service || !logsState.file) return;
+  // Increase offset to move further back in time
+  logsState.offset = typeof logsState.next_offset === 'number'
+    ? logsState.next_offset
+    : logsState.offset + logsState.limit;
+  await loadLogsPage();
+}
+
+async function loadNewerLogs() {
+  if (!logsState.service || !logsState.file) return;
+  // Decrease offset towards 0 (newest)
+  logsState.offset = Math.max(0, logsState.offset - logsState.limit);
+  await loadLogsPage();
+}
+
+async function reloadLogsView() {
+  await loadLogsPage();
+}
+
+// Expose to global for inline handlers
+window.initLogsTab = initLogsTab;
+window.onLogsServiceChange = onLogsServiceChange;
+window.onLogsFileChange = onLogsFileChange;
+window.loadOlderLogs = loadOlderLogs;
+window.loadNewerLogs = loadNewerLogs;
+window.reloadLogsView = reloadLogsView;

@@ -1,4 +1,23 @@
 /* Buttons */
+.btn-dark {
+    padding: 8px 14px;
+    background: #415a77;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    font-size: 14px;
+}
+
+.btn-dark:hover {
+    background: #536a8a;
+}
+
+.btn-dark:active {
+    transform: translateY(1px);
+}
+
 .view-cam {
     background: #4caf50 !important;
     padding: 5px 12px !important;
@@ -1052,6 +1071,20 @@
     font-family: monospace;
     font-size: 12px;
     white-space: pre-wrap;
+}
+
+/* Logs meta badge */
+#logs-meta {
+    background: #0f1727;
+    color: #c7d3e1;
+    border: 1px solid #2e3a4a;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    display: inline-block;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25) inset;
+    margin-top: 8px;
 }
 
 /* Services tab sizing */

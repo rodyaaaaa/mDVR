@@ -46,6 +46,137 @@ def get_service_status(service_name):
         return jsonify({"error": str(e)}), 500
 
 
+# ===== Logs browser (files under /etc/mdvr/logs) =====
+LOGS_ROOT = "/etc/mdvr/logs"
+
+def _safe_join_logs(*parts: str) -> str:
+    """Safely join paths under LOGS_ROOT and ensure no escape is possible."""
+    base = os.path.realpath(LOGS_ROOT)
+    target = os.path.realpath(os.path.join(base, *parts))
+    if not target.startswith(base + os.sep) and target != base:
+        raise ValueError("Path escapes logs root")
+    return target
+
+
+@web_bp.route('/logs/list-services')
+def logs_list_services():
+    """List top-level services (directories) under /etc/mdvr/logs."""
+    try:
+        base = _safe_join_logs()
+        if not os.path.isdir(base):
+            return jsonify({"services": [], "message": f"Directory not found: {LOGS_ROOT}"})
+        items = []
+        for name in sorted(os.listdir(base)):
+            p = os.path.join(base, name)
+            if os.path.isdir(p):
+                items.append(name)
+        return jsonify({"services": items})
+    except Exception as e:
+        return jsonify({"services": [], "error": str(e)}), 500
+
+
+@web_bp.route('/logs/list-files')
+def logs_list_files():
+    """List files for a given service directory.
+
+    Query: service=<dir>
+    """
+    try:
+        service = (request.args.get('service') or '').strip()
+        if not service:
+            return jsonify({"files": [], "error": "Missing 'service'"}), 400
+        sdir = _safe_join_logs(service)
+        if not os.path.isdir(sdir):
+            return jsonify({"files": [], "message": f"Service not found: {service}"}), 404
+        files = []
+        for name in sorted(os.listdir(sdir)):
+            fp = os.path.join(sdir, name)
+            if os.path.isfile(fp):
+                try:
+                    st = os.stat(fp)
+                    files.append({
+                        "name": name,
+                        "size": st.st_size,
+                        "mtime": int(st.st_mtime)
+                    })
+                except Exception:
+                    files.append({"name": name, "size": None, "mtime": None})
+        return jsonify({"files": files})
+    except Exception as e:
+        return jsonify({"files": [], "error": str(e)}), 500
+
+
+@web_bp.route('/logs/read')
+def logs_read_file():
+    """Read last lines of a log file.
+
+    Query: service=<dir>&file=<filename>&limit=200&offset=0
+    Returns lines with simple offset pagination from the end of file.
+    """
+    try:
+        service = (request.args.get('service') or '').strip()
+        fname = (request.args.get('file') or '').strip()
+        limit = max(1, min(int(request.args.get('limit', 200)), 2000))
+        offset = max(0, int(request.args.get('offset', 0)))
+
+        if not service or not fname:
+            return jsonify({"lines": [], "error": "Missing 'service' or 'file'"}), 400
+
+        # Disallow path components in fname
+        if os.path.sep in fname or (os.path.altsep and os.path.altsep in fname):
+            return jsonify({"lines": [], "error": "Invalid file name"}), 400
+
+        fp = _safe_join_logs(service, fname)
+        if not os.path.isfile(fp):
+            return jsonify({"lines": [], "message": "File not found"}), 404
+
+        # Efficiently read last N lines with offset
+        try:
+            with open(fp, 'rb') as f:
+                # Read entire file if small; else tail
+                f.seek(0, os.SEEK_END)
+                size = f.tell()
+                block = 4096
+                data = b''
+                to_read = size
+                # Read chunks from end until we have enough lines (limit+offset)
+                needed = limit + offset
+                lines_found = 0
+                while to_read > 0 and lines_found <= needed:
+                    read_size = block if to_read >= block else to_read
+                    f.seek(to_read - read_size)
+                    chunk = f.read(read_size)
+                    data = chunk + data
+                    lines_found = data.count(b'\n')
+                    to_read -= read_size
+                # Split and take from end
+                all_lines = data.splitlines()
+                end_idx = len(all_lines) - offset
+                start_idx = max(0, end_idx - limit)
+                page = all_lines[start_idx:end_idx]
+                # Decode safely
+                text_lines = [ln.decode('utf-8', errors='replace') for ln in page]
+        except Exception:
+            # Fallback simple read
+            with open(fp, 'r', errors='replace') as f:
+                raw = f.read().splitlines()
+            end_idx = max(0, len(raw) - offset)
+            start_idx = max(0, end_idx - limit)
+            text_lines = raw[start_idx:end_idx]
+
+        return jsonify({
+            "service": service,
+            "file": fname,
+            "offset": offset,
+            "limit": limit,
+            "count": len(text_lines),
+            "next_offset": offset + len(text_lines),
+            "lines": text_lines
+        })
+    except Exception as e:
+        return jsonify({"lines": [], "error": str(e)}), 500
+
+
 @web_bp.route('/get-network-info')
 def get_network_info():
     """Return network info: interfaces and IP addresses.
