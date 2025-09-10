@@ -573,6 +573,12 @@
     <div class="spinner"></div>
 </div>
 
+<!-- Floating Actions (mobile only; populated by JS) -->
+<div id="fab-menu" class="fab-menu" aria-hidden="true">
+    <button id="fab-toggle" class="fab-btn" aria-label="Actions" aria-expanded="false">&#9776;</button>
+    <div id="fab-menu-sheet" class="fab-sheet" role="menu" aria-label="Quick actions"></div>
+</div>
+
 <!-- Core JS files -->
 <script src="{{ url_for('static', filename='js/core.js') }}"></script>
 <script src="{{ url_for('static', filename='js/camera.js') }}"></script>

@@ -360,6 +360,150 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ================= Floating Action Burger (FAB) =================
+(() => {
+  const isPhone = () => window.matchMedia('(max-width: 600px)').matches;
+  let fabRoot, fabBtn, fabSheet;
+
+  function ensureFab() {
+    fabRoot = document.getElementById('fab-menu');
+    fabBtn = document.getElementById('fab-toggle');
+    fabSheet = document.getElementById('fab-menu-sheet');
+    if (!fabRoot || !fabBtn || !fabSheet) return false;
+    if (!fabBtn._fabBound) {
+      // Prevent clicks/touches inside FAB from bubbling to the document handler
+      const stop = (e) => e.stopPropagation();
+      fabRoot.addEventListener('click', stop);
+      fabRoot.addEventListener('touchstart', stop, { passive: true });
+      fabBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = fabRoot.classList.toggle('open');
+        fabBtn.setAttribute('aria-expanded', String(open));
+      });
+      fabSheet.addEventListener('click', stop);
+      fabSheet.addEventListener('touchstart', stop, { passive: true });
+      document.addEventListener('click', (e) => {
+        if (!fabRoot) return;
+        if (!fabRoot.contains(e.target)) {
+          fabRoot.classList.remove('open');
+          if (fabBtn) fabBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+      fabBtn._fabBound = true;
+    }
+    return true;
+  }
+
+  function clearFab() {
+    if (fabSheet) fabSheet.innerHTML = '';
+    if (fabRoot) {
+      fabRoot.setAttribute('aria-hidden', 'true');
+      fabRoot.classList.remove('open');
+    }
+    // Remove any prior hijack markers
+    document.querySelectorAll('.fab-hijack').forEach(el => el.classList.remove('fab-hijack'));
+  }
+
+  function cloneToFab(btn) {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.textContent = btn.textContent.trim() || 'Action';
+    const oc = btn.getAttribute('onclick');
+    if (oc) {
+      item.setAttribute('onclick', oc);
+    } else {
+      item.addEventListener('click', () => btn.click());
+    }
+    // Carry data-* attributes if any
+    Array.from(btn.attributes).forEach(attr => {
+      if (attr.name.startsWith('data-')) item.setAttribute(attr.name, attr.value);
+    });
+    return item;
+  }
+
+  function findContextActions() {
+    const activeTab = document.querySelector('.tab.active');
+    if (!activeTab) return { actions: [], hijackContainer: null };
+
+    const activeSettings = activeTab.querySelector('.settings-content.active') || activeTab.querySelector('.settings-content');
+    if (activeSettings) {
+      const header = activeSettings.querySelector('.settings-section-header');
+      if (header) {
+        const buttons = Array.from(header.querySelectorAll('button'));
+        return { actions: buttons, hijackContainer: activeSettings };
+      }
+    }
+
+    const header = activeTab.querySelector('.settings-section-header');
+    if (header) {
+      const buttons = Array.from(header.querySelectorAll('button'));
+      return { actions: buttons, hijackContainer: activeTab };
+    }
+    return { actions: [], hijackContainer: null };
+  }
+
+  function updateFabForContext() {
+    if (!ensureFab()) return;
+    clearFab();
+    if (!isPhone()) return;
+
+    // Do not show FAB on Home or About
+    const activeTabEl = document.querySelector('.tab.active');
+    const activeId = activeTabEl ? activeTabEl.id : '';
+    if (activeId === 'home' || activeId === 'about') return;
+
+    const { actions, hijackContainer } = findContextActions();
+    const useful = actions.filter(b => b && !b.disabled && b.offsetParent !== null);
+    if (!useful.length) return;
+
+    useful.forEach((btn) => {
+      const item = cloneToFab(btn);
+      item.addEventListener('click', () => {
+        if (fabRoot) fabRoot.classList.remove('open');
+        if (fabBtn) fabBtn.setAttribute('aria-expanded', 'false');
+      });
+      fabSheet.appendChild(item);
+    });
+
+    if (hijackContainer) hijackContainer.classList.add('fab-hijack');
+    fabRoot.removeAttribute('aria-hidden');
+  }
+
+  window.updateFabForContext = updateFabForContext;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    ensureFab();
+    updateFabForContext();
+
+    // Update after any sidebar interaction (tab switch)
+    const sidebarEl = document.getElementById('sidebar');
+    if (sidebarEl && !sidebarEl._fabBound) {
+      sidebarEl.addEventListener('click', () => setTimeout(() => updateFabForContext(), 0));
+      sidebarEl._fabBound = true;
+    }
+
+    // Observe changes to active tab/section classes and refresh FAB
+    const observeTargets = () => {
+      const targets = [
+        ...document.querySelectorAll('.tab'),
+        ...document.querySelectorAll('.settings-content'),
+      ];
+      const obs = new MutationObserver(() => {
+        clearTimeout(rto);
+        rto = setTimeout(() => updateFabForContext(), 50);
+      });
+      targets.forEach(t => obs.observe(t, { attributes: true, attributeFilter: ['class'] }));
+    };
+    observeTargets();
+  });
+
+  let rto;
+  window.addEventListener('resize', () => {
+    clearTimeout(rto);
+    rto = setTimeout(() => updateFabForContext(), 150);
+  });
+})();
+
 // Tab switching function
 function showTab(tabId) {
   const currentTab = document.querySelector(".tab.active");
@@ -452,6 +596,11 @@ function showTab(tabId) {
     clearInterval(memChartInterval);
   }
 
+  // Update FAB based on new tab
+  if (typeof window.updateFabForContext === 'function') {
+    setTimeout(() => window.updateFabForContext(), 50);
+  }
+
   // Top-level About tab handling
   if (tabId === 'about') {
     if (typeof fetchAboutInfo === 'function') fetchAboutInfo();
@@ -492,10 +641,27 @@ function showSystemTab(tabId) {
   if (tabId === 'system-about-content') {
     if (typeof fetchAboutInfo === 'function') fetchAboutInfo();
   }
+
+  // Update FAB for System sub-tabs
+  if (typeof window.updateFabForContext === 'function') {
+    setTimeout(() => window.updateFabForContext(), 50);
+  }
 }
 
 // Expose to global for inline handlers
 window.showSystemTab = showSystemTab;
+
+// Patch showSettingsTab to also refresh FAB after switching sub-tabs
+if (typeof window.showSettingsTab === 'function') {
+  const __origShowSettingsTab = window.showSettingsTab;
+  window.showSettingsTab = function(tabId) {
+    const res = __origShowSettingsTab.call(this, tabId);
+    if (typeof window.updateFabForContext === 'function') {
+      setTimeout(() => window.updateFabForContext(), 50);
+    }
+    return res;
+  };
+}
 
 // Fetch and render network info
 async function fetchNetworkInfo() {

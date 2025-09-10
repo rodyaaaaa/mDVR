@@ -9,6 +9,61 @@ header {
     border-bottom: 2px solid #415a77;
 }
 
+/* Floating Action Burger (mobile only) */
+.fab-menu {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1500;
+    display: none; /* visible only on small screens via media query */
+}
+
+.fab-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: #415a77;
+    color: #fff;
+    font-size: 26px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    cursor: pointer;
+}
+
+.fab-btn:active { transform: scale(0.98); }
+
+.fab-sheet {
+    position: absolute;
+    right: 0;
+    bottom: 68px; /* appear above the button */
+    min-width: 160px;
+    background: #0d1b2a;
+    border: 1px solid #2e3a4a;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+    padding: 8px;
+    display: none;
+}
+
+.fab-menu.open .fab-sheet { display: block; }
+
+.fab-sheet button,
+.fab-sheet a {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #162231;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 6px 0;
+    cursor: pointer;
+}
+
+.fab-sheet button:hover,
+.fab-sheet a:hover { background: #223247; }
+
 /* Sidebar menu mode switch (hidden on desktop by default) */
 .menu-mode-switch {
     display: none;
@@ -566,9 +621,9 @@ body.noscroll {
         bottom: -6px; /* keep 2px lower than the white arrow to create a visible border */
         width: 0;
         height: 0;
-        border-left: 10px solid transparent;
-        border-right: 10px solid transparent;
-        border-top: 10px solid #415a77; /* same as header bottom border color */
+        border-left: 11px solid transparent;
+        border-right: 11px solid transparent;
+        border-top: 11px solid #415a77; /* same as header bottom border color */
         pointer-events: none;
         transition: transform 0.2s ease;
     }
@@ -632,4 +687,15 @@ body.noscroll {
     #videoPlayer {
         height: 200px;
     }
-} 
+
+    /* Show FAB on phones */
+    .fab-menu { display: block; }
+    /* But hide it when JS marks it hidden (e.g., Home/About or no actions) */
+    .fab-menu[aria-hidden="true"] { display: none; }
+
+    /* When FAB is active for a section, hide header action buttons */
+    .fab-hijack .settings-section-header > button,
+    .fab-hijack .settings-section-header .ftp-header-actions > button {
+        display: none !important;
+    }
+}
