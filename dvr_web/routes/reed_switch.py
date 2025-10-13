@@ -34,13 +34,10 @@ def api_initialize_reed_switch():
 
 @reed_switch_bp.route('/stop-reed-switch', methods=['POST'])
 def api_stop_reed_switch():
-    global reed_switch_initialized, reed_switch_object
+    global reed_switch_initialized
 
     reed_switch_initialized = False
-    print(reed_switch_object)
-    reed_switch_object.clean()
-    print(reed_switch_object)
-    reed_switch_object = None
+    # Cleanup is handled by the WebSocket monitor thread on disconnect
 
     return jsonify({"success": True})
 
