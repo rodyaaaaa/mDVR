@@ -31,6 +31,7 @@ echo "Copy new files"
 cp -r "../../services/." "$SERVICES_PATH"
 cp -r "../../dvr_video/" "$PROJECT_PATH"
 cp -r "../../dvr_web/" "$PROJECT_PATH"
+cp -r "../../scripts/" "$PROJECT_PATH"
 cp "../../requirements.txt" "$PROJECT_PATH"
 cp "../../init_project.py" "$PROJECT_PATH"
 
@@ -70,6 +71,14 @@ if [ -d "$PROJECT_PATH/dvr_video/temp" ]; then
 
   echo "Success"
 
+fi
+
+if [ -f "$PROJECT_PATH/scripts/modem_connector.sh" ]; then
+  echo "Delete modem_connector.sh"
+
+  rm "$PROJECT_PATH/scripts/modem_connector.sh"
+
+  echo "Success"
 fi
 
 if [ -f "$SERVICES_PATH/mdvr_modem.service" ]; then
