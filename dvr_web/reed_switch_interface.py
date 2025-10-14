@@ -3,6 +3,7 @@ import RPi.GPIO as GPIO
 from abc import ABC, abstractmethod
 
 from dvr_web.constants import BTN_A_PIN, BTN_B_PIN
+from dvr_web.utils import load_config
 
 class ReedSwitchInterface(ABC):
     @abstractmethod
@@ -69,8 +70,10 @@ class MexaRS(ReedSwitchInterface):
 
 class RSFactory:
     @staticmethod
-    def create(impulse: bool, **kwargs) -> ReedSwitchInterface:
+    def create(impulse: bool) -> ReedSwitchInterface:
+        config = load_config()
         if impulse:
-            return ImpulseRS(**kwargs)
+            return ImpulseRS()
         else:
-            return MexaRS(**kwargs)
+            door_sensor_pin = int(config['reed_switch']['door_sensor_pin'])
+            return MexaRS(door_sensor_pin)
