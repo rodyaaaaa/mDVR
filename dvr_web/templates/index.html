@@ -367,6 +367,7 @@
                 <button id="system-network-tab" class="settings-tab" onclick="showSystemTab('system-network-content')">Network</button>
                 <button id="system-control-tab" class="settings-tab" onclick="showSystemTab('system-control-content')">Control</button>
                 <button id="system-logs-tab" class="settings-tab" onclick="showSystemTab('system-logs-content')">Logs</button>
+                <button id="system-config-tab" class="settings-tab" onclick="showSystemTab('system-config-content')">Config</button>
             </div>
 
             <div id="system-services-content" class="settings-content active">
@@ -491,6 +492,16 @@
                     <div class="flex-1">
                         <pre id="logs-viewer" class="code-block" style="min-height: 360px; white-space: pre-wrap;">Select a service and a file...</pre>
                     </div>
+                </div>
+            </div>
+            <div id="system-config-content" class="settings-content">
+                <div class="settings-section-header flex align-center gap-10">
+                    <h2 class="mr-auto">Config: data_config.json</h2>
+                    <button onclick="fetchDataConfig()">Refresh</button>
+                </div>
+                <div class="mt-8">
+                    <pre id="data-config-view" class="code-block" style="min-height: 240px; white-space: pre-wrap;">Loading...</pre>
+                    <div id="data-config-error" class="error-text mt-8" style="display:none;"></div>
                 </div>
             </div>
          </div>

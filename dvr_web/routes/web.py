@@ -290,6 +290,31 @@ def get_iptables_rules():
         }), 500
 
 
+@web_bp.route('/get-data-config')
+def get_data_config():
+    """Return the contents of /etc/mdvr/data_config.json.
+
+    Response JSON:
+      {"config": <object>}
+      or {"error": <str>}
+    """
+    try:
+        path = "/etc/mdvr/data_config.json"
+        if not os.path.exists(path):
+            return jsonify({"error": f"Config not found: {path}"}), 404
+        with open(path, 'r', errors='replace') as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                # If invalid JSON, return raw text
+                f.seek(0)
+                raw = f.read()
+                return jsonify({"config_raw": raw, "warning": "Invalid JSON format"})
+        return jsonify({"config": data})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @web_bp.route('/reboot', methods=['POST'])
 def reboot_device():
     """Initiate a system reboot.

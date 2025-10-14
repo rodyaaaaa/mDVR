@@ -637,6 +637,10 @@ function showSystemTab(tabId) {
   if (tabId === 'system-logs-content') {
     if (typeof initLogsTab === 'function') initLogsTab();
   }
+  // Load data_config.json when opening Config tab
+  if (tabId === 'system-config-content') {
+    if (typeof fetchDataConfig === 'function') fetchDataConfig();
+  }
   // Load about info when opening About tab
   if (tabId === 'system-about-content') {
     if (typeof fetchAboutInfo === 'function') fetchAboutInfo();
@@ -843,6 +847,34 @@ async function runNetworkSpeedtest() {
 
 // Expose to global for inline handler
 window.runNetworkSpeedtest = runNetworkSpeedtest;
+
+// Fetch and render data_config.json for System > Config
+async function fetchDataConfig() {
+  const viewEl = document.getElementById('data-config-view');
+  const errEl = document.getElementById('data-config-error');
+  if (viewEl) viewEl.textContent = 'Loading...';
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  try {
+    const res = await fetch('/get-data-config');
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = data && (data.error || data.message) ? data.error || data.message : `HTTP ${res.status}`;
+      throw new Error(msg);
+    }
+    if (data.config) {
+      const pretty = JSON.stringify(data.config, null, 2);
+      if (viewEl) viewEl.textContent = pretty;
+    } else if (data.config_raw) {
+      const warn = data.warning ? `Warning: ${data.warning}\n\n` : '';
+      if (viewEl) viewEl.textContent = warn + data.config_raw;
+    } else {
+      if (viewEl) viewEl.textContent = 'Empty';
+    }
+  } catch (e) {
+    if (viewEl) viewEl.textContent = '';
+    if (errEl) { errEl.style.display = ''; errEl.textContent = `Failed to load: ${e && e.message ? e.message : e}`; }
+  }
+}
 
 // Fetch and render About info (hardware + program)
 async function fetchAboutInfo() {

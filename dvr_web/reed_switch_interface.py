@@ -33,12 +33,12 @@ class ImpulseRS(ReedSwitchInterface):
         return self.event
 
     def setup_a(self, channel):
-        print("A pressed")
-        self.event = True
+        print("A pressed. Opened.")
+        self.event = False
 
     def setup_b(self, channel):
-        print("B pressed")
-        self.event = False
+        print("B pressed. Closed.")
+        self.event = True
 
     def clean(self):
         print("Impulse clean resourses")
