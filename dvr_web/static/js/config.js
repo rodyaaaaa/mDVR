@@ -236,11 +236,23 @@ function saveRSConfig() {
         }
     }
 
+    let doorPin = null;
+    const doorPinInput = document.getElementById('door-sensor-pin-input');
+    if (doorPinInput && doorPinInput.value.trim() !== '') {
+        doorPin = doorPinInput.value.trim();
+        if (isNaN(Number(doorPin)) || Number(doorPin) < 0) {
+            hidePreloader();
+            showNotification('Please enter a valid Door Sensor Pin (BCM, >= 0)', true);
+            return;
+        }
+    }
+
     const data = {
-        rs_timeout: parseInt(rsTimeout),
+        rs_timeout: rsTimeout !== null ? parseInt(rsTimeout) : undefined,
+        door_sensor_pin: doorPin !== null ? parseInt(doorPin) : undefined,
     };
 
-    fetch('/save-rs-timeout', {
+    fetch('/save-rs-settings', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
@@ -501,6 +513,7 @@ function showSettingsTab(tabId) {
         if (typeof loadReedSwitchStatus === 'function') loadReedSwitchStatus();
         if (typeof updateReedSwitchMode === 'function') updateReedSwitchMode();
         if (typeof updateReedSwitchTimeout === 'function') updateReedSwitchTimeout();
+        if (typeof updateDoorSensorPin === 'function') updateDoorSensorPin();
     }
 }
 

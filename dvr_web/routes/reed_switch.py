@@ -96,6 +96,16 @@ def get_rs_timeout():
         return jsonify({"error": str(e)}), 500
 
 
+@reed_switch_bp.route('/get-door-sensor-pin')
+def get_door_sensor_pin():
+    try:
+        config = load_config()
+        pin = int(config['reed_switch']['door_sensor_pin'])
+        return jsonify({"pin": pin})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @reed_switch_bp.route('/toggle-reed-switch-mode', methods=['POST'])
 def toggle_reed_switch_mode():
     try:

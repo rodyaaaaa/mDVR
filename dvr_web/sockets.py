@@ -175,7 +175,9 @@ def _close_term_session(sid: str):
 def monitor_reed_switch(impulse):
     global reed_switch_monitor_active, socketio
     
-    reed_switch_object = RSFactory.create(bool(impulse))
+    config = load_config()
+    door_sensor_pin = int(config['reed_switch']['door_sensor_pin'])
+    reed_switch_object = RSFactory.create(bool(impulse), pin=door_sensor_pin)
     reed_switch_object.setup()
     
     reed_switch_monitor_active = True

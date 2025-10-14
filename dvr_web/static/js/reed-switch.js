@@ -37,6 +37,21 @@ function updateReedSwitchTimeout() {
     });
 }
 
+function updateDoorSensorPin() {
+  const input = document.getElementById("door-sensor-pin-input");
+  if (!input) return;
+  fetch("/reed-switch/get-door-sensor-pin")
+    .then((response) => response.json())
+    .then((data) => {
+      if (typeof data.pin !== "undefined") {
+        input.value = data.pin;
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching door sensor pin:", error);
+    });
+}
+
 // Function to update reed switch mode from server
 function updateReedSwitchMode() {
   fetch("/reed-switch/get-reed-switch-mode")

@@ -1,6 +1,6 @@
 import RPi.GPIO as GPIO
 
-from .constants import BTN_A_PIN, BTN_B_PIN, DOOR_SENSOR_PIN
+from .constants import BTN_A_PIN, BTN_B_PIN
     
 
 class BaseGpio:
@@ -35,19 +35,20 @@ class ImpulseRS(BaseGpio):
 
 
 class MexaRS(BaseGpio):
-    def __init__(self):
+    def __init__(self, door_sensor_pin: int = 15):
+        self.door_sensor_pin = door_sensor_pin
         self.gpio = None
 
     def setup(self):
         self.gpio = GPIO.setmode(GPIO.BCM)
-        self.gpio = GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        self.gpio = GPIO.setup(self.door_sensor_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def pressed(self):
-        event = self.gpio.input(DOOR_SENSOR_PIN)
+        event = self.gpio.input(self.door_sensor_pin)
         if event == GPIO.HIGH:
             print("Open")
             return True
-        elif event != GPIO.HIGH:
+        else:
             print("Closed")
             return False
 

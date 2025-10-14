@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 
 from abc import ABC, abstractmethod
 
-from dvr_web.constants import BTN_A_PIN, BTN_B_PIN, DOOR_SENSOR_PIN
+from dvr_web.constants import BTN_A_PIN, BTN_B_PIN
 
 class ReedSwitchInterface(ABC):
     @abstractmethod
@@ -44,8 +44,8 @@ class ImpulseRS(ReedSwitchInterface):
         GPIO.cleanup()
 
 class MexaRS(ReedSwitchInterface):
-    def __init__(self, pin=None):
-        self.pin = pin or DOOR_SENSOR_PIN
+    def __init__(self, pin: int = 15):
+        self.pin = pin
         self._gpio_initialized = False
 
     def setup(self):

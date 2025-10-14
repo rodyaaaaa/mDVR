@@ -19,7 +19,8 @@
   "photo_timeout": 120,
   "reed_switch": {
     "rs_timeout": 2,
-    "impulse": 0
+    "impulse": 0,
+    "door_sensor_pin": 0
   },
   "ftp": {
     "server": "",

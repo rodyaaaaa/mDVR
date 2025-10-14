@@ -11,7 +11,7 @@ from dvr_web.constants import VPN_CONFIG_PATH, MATERIALS_DIR
 # Paths for preserving and restoring original WireGuard config
 BACKUP_DIR = "/etc/mdvr"
 ORIGINAL_VPN_BACKUP_PATH = os.path.join(BACKUP_DIR, "wg0.conf.original")
-from dvr_web.utils import generate_nginx_configs, get_camera_ports, load_config, restart_mdvr_engine, update_imei, update_watchdog, get_config_path
+from dvr_web.utils import generate_nginx_configs, get_camera_ports, load_config, restart_mdvr_engine, update_imei, update_watchdog, get_config_path, check_reed_switch_status
 
 
 web_bp = Blueprint('web', __name__)
@@ -574,6 +574,42 @@ def save_rs_timeout():
         with open(get_config_path(), 'w') as file:
             json.dump(config, file, indent=4)
         return jsonify({"success": True, "message": "RS Timeout saved"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@web_bp.route('/save-rs-settings', methods=['POST'])
+def save_rs_settings():
+    data = request.get_json(silent=True) or {}
+    try:
+        config = load_config()
+        rs = config.get('reed_switch') or {}
+
+        if 'rs_timeout' in data and data['rs_timeout'] is not None:
+            try:
+                rs['rs_timeout'] = int(data['rs_timeout'])
+            except (TypeError, ValueError):
+                pass
+
+        if 'door_sensor_pin' in data and data['door_sensor_pin'] is not None:
+            try:
+                pin = int(data['door_sensor_pin'])
+                if pin >= 0:
+                    rs['door_sensor_pin'] = pin
+            except (TypeError, ValueError):
+                pass
+
+        config['reed_switch'] = rs
+        with open(get_config_path(), 'w') as file:
+            json.dump(config, file, indent=4)
+
+        try:
+            if check_reed_switch_status():
+                os.system("systemctl restart mdvr_rs")
+        except Exception:
+            pass
+
+        return jsonify({"success": True, "message": "RS settings saved"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

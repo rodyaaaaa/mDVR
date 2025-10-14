@@ -54,7 +54,8 @@ def main():
     photo_mode = bool(config[PROGRAM_OPTIONS_KEY]['photo_mode'])
     video_status = False
     impulseCheck = bool(config['reed_switch']['impulse'])
-    rs = RSFactory.create(impulseCheck)
+    door_sensor_pin = int(config['reed_switch']['door_sensor_pin'])
+    rs = RSFactory.create(impulseCheck, door_sensor_pin=door_sensor_pin)
     rs.setup()
 
     move()
