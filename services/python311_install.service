@@ -1,0 +1,17 @@
+[Unit]
+Description=Install Python 3.11 from local archive (one-time)
+ConditionPathExists=/opt/mdvr/scripts/install_python3.11.sh
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+# Allow overriding inside the installer; point to the archive under /opt/mdvr
+Environment=ARCHIVE_PATH=/opt/mdvr/Python-3.11.14.tar.xz
+# Skip if already installed
+ExecStart=/bin/bash -lc '[ -x /usr/local/bin/python3.11 ] || /bin/bash /opt/mdvr/scripts/install_python3.11.sh'
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

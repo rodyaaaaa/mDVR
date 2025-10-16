@@ -35,6 +35,14 @@ cp -r "../../scripts/" "$PROJECT_PATH"
 cp "../../requirements.txt" "$PROJECT_PATH"
 cp "../../init_project.py" "$PROJECT_PATH"
 
+# Copy local Python archive used by installer service (if present)
+if [ -f "../../Python-3.11.14.tar.xz" ]; then
+  echo "Copy Python-3.11.14.tar.xz to $PROJECT_PATH"
+  cp "../../Python-3.11.14.tar.xz" "$PROJECT_PATH/"
+else
+  echo "Warning: ../../Python-3.11.14.tar.xz not found. The python311_install.service may fail."
+fi
+
 echo "clear for some trash"
 
 if [ -f "$PROJECT_PATH/dvr_video/data_config.json" ]; then

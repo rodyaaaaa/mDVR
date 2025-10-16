@@ -1,8 +1,9 @@
 #!/bin/bash
 
 cd /opt/mdvr/
-python3 -m venv venv
-/opt/mdvr/venv/bin/pip install -r requirements.txt
+
+# Ensure Python 3.11 installer runs once
+systemctl enable --now python311_install.service || true
 
 systemctl stop mdvr_rs.service
 systemctl stop mdvr_rs.timer
